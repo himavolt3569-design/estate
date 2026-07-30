@@ -93,7 +93,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
             <div className="hidden text-right sm:block">
               <p className="text-sm leading-tight text-ink-900">{user.fullName ?? 'Your account'}</p>
-              <p className="label">{ROLE_LABELS[user.role as Role]}</p>
+              <p className="label">{ROLE_LABELS[user.role as keyof typeof ROLE_LABELS]}</p>
             </div>
 
             <form action={signOut}>
