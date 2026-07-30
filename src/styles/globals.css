@@ -1,0 +1,293 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+/* =============================================================================
+   Kitta design tokens — Premium Luxury Edition
+
+   The system is built to convey trust, luxury, and premium user experience.
+   We use deep rich colors (Navy, Emerald) combined with warm Champagne accents.
+   Animations are smooth, corners are rounded, and typography breathes naturally.
+   ============================================================================= */
+
+@theme {
+  /* --- Royal: Deep, rich navy conveying trust and authority. ---------- */
+  --color-royal-50: #f4f6fa;
+  --color-royal-100: #e5e9f3;
+  --color-royal-200: #c6d1e5;
+  --color-royal-300: #9cb1d2;
+  --color-royal-400: #6d8ebd;
+  --color-royal-500: #4971a6;
+  --color-royal-600: #36578a;
+  --color-royal-700: #2c4672;
+  --color-royal-800: #253b5f;
+  --color-royal-900: #213351;
+  --color-royal-950: #0a1120; /* Deep dark base */
+
+  /* --- Sand: Warm Champagne/Gold accents for luxury and premium feel. -------- */
+  --color-sand-50: #fbfaf8;
+  --color-sand-100: #f4f2ea;
+  --color-sand-200: #e6dfcd;
+  --color-sand-300: #d2c5a9;
+  --color-sand-400: #bcab80;
+  --color-sand-500: #aa935c;
+  --color-sand-600: #937948;
+  --color-sand-700: #765e3a;
+
+  /* --- Emerald: Premium green for success and verified actions. ------------- */
+  --color-emerald-50: #f0fdf6;
+  --color-emerald-100: #dcfce9;
+  --color-emerald-200: #bbf7d4;
+  --color-emerald-300: #86eab5;
+  --color-emerald-400: #4ad190;
+  --color-emerald-500: #22b173;
+  --color-emerald-600: #148e5a;
+  --color-emerald-700: #11714a;
+  --color-emerald-800: #11593c;
+  --color-emerald-900: #104933;
+
+  /* --- Ink: Sleek, high-contrast text and structure. ----------------------- */
+  --color-ink-50: #f8fafc;
+  --color-ink-100: #f1f5f9;
+  --color-ink-200: #e2e8f0;
+  --color-ink-300: #cbd5e1;
+  --color-ink-400: #94a3b8;
+  --color-ink-500: #64748b;
+  --color-ink-600: #475569;
+  --color-ink-700: #334155;
+  --color-ink-800: #1e293b;
+  --color-ink-900: #0f172a;
+
+  /* --- Clay: Premium terracotta/rust for destructive actions. --------------- */
+  --color-clay-50: #fff6f5;
+  --color-clay-100: #ffedea;
+  --color-clay-200: #ffd8d3;
+  --color-clay-600: #cc493d;
+  --color-clay-700: #a9372d;
+  --color-clay-800: #8b3028;
+
+  /* --- Ochre: Elegant warm yellow for warnings/pending. ------------------- */
+  --color-ochre-50: #fffbeb;
+  --color-ochre-100: #fef3c7;
+  --color-ochre-200: #fde68a;
+  --color-ochre-600: #d97706;
+  --color-ochre-700: #b45309;
+
+  /* --- Typography ---------------------------------------------------------- */
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+
+  /* Fluid display sizes with natural spacing for a bubbly, premium feel. */
+  --text-display-xl: clamp(2.75rem, 8vw, 6.5rem);
+  --text-display-xl--line-height: 1.1;
+  --text-display-xl--letter-spacing: 0em;
+  --text-display-xl--font-weight: 600;
+
+  --text-display-lg: clamp(2.25rem, 5.5vw, 4rem);
+  --text-display-lg--line-height: 1.15;
+  --text-display-lg--letter-spacing: 0em;
+  --text-display-lg--font-weight: 600;
+
+  --text-display-md: clamp(1.75rem, 3.5vw, 2.5rem);
+  --text-display-md--line-height: 1.2;
+  --text-display-md--letter-spacing: 0em;
+  --text-display-md--font-weight: 600;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.4rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.625rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.7rem;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.8rem;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 2.1rem;
+  --text-3xl: 2.25rem;
+  --text-3xl--line-height: 2.4rem;
+
+  /* Premium rounded corners */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+
+  /* Luxurious soft shadows */
+  --shadow-hairline: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-soft: 0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-raised: 0 12px 32px -8px rgba(15, 23, 42, 0.12);
+  --shadow-floating: 0 24px 48px -12px rgba(15, 23, 42, 0.18);
+
+  --container-8xl: 90rem;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* =============================================================================
+   Base
+   ============================================================================= */
+@layer base {
+  :root {
+    color-scheme: light;
+    --tick: var(--color-ink-300);
+  }
+
+  * {
+    border-color: var(--color-ink-100);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: var(--color-ink-700);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    color: var(--color-ink-900);
+    font-weight: 600;
+    letter-spacing: 0em;
+    text-wrap: balance;
+  }
+
+  p { text-wrap: pretty; }
+
+  /* Poppins' figures are geometric and even. Tabular + lining so a price never
+     reflows as its digits change and columns of numbers actually align. */
+  .nums {
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-royal-400);
+    outline-offset: 4px;
+    border-radius: var(--radius-md);
+  }
+
+  ::selection {
+    background-color: var(--color-royal-800);
+    color: #ffffff;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* =============================================================================
+   Components
+   ============================================================================= */
+@layer components {
+  /* The micro-label. Poppins at 11px / 500 / +0.16em reads as a technical
+     annotation on a drawing. It replaces the old mono rail entirely. */
+  .label {
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink-400);
+    line-height: 1;
+  }
+
+  .label-light { color: var(--color-royal-300); }
+
+  /* Weight-contrast pairing: the quiet half. Used for large numerals sitting
+     beside a heavy label, and for the subdivision figures on the parcel grid. */
+  .thin { font-weight: 200; }
+
+  /* Registration ticks: four L-shaped corner marks, the way a survey drawing or
+     a print crop mark is registered. The only ornament in the system. */
+  .ticked { position: relative; }
+  .ticked::before,
+  .ticked::after {
+    content: '';
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    pointer-events: none;
+  }
+  .ticked::before {
+    top: -1px; left: -1px;
+    border-top: 1px solid var(--tick);
+    border-left: 1px solid var(--tick);
+  }
+  .ticked::after {
+    bottom: -1px; right: -1px;
+    border-bottom: 1px solid var(--tick);
+    border-right: 1px solid var(--tick);
+  }
+
+  /* The subdivision rule: 1 ropani divides into 16 aana. Used as a section
+     divider so the grid motif recurs structurally, not decoratively. */
+  .subdivide {
+    height: 1px;
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--color-ink-200) 0 1px,
+      transparent 1px 6.25%
+    );
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-ink-50) 25%,
+      var(--color-ink-100) 37%,
+      var(--color-ink-50) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+  }
+
+  /* A marker only. The hidden state is set by GSAP in useLayoutEffect, which
+     runs before paint, so there is no flash — and a blocked or failed bundle
+     leaves the content visible rather than invisible. Nothing here hides it. */
+  .reveal { will-change: opacity, transform; }
+}
+
+@keyframes skeleton-sweep {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* Leaflet chrome pulled into the token system so the map does not read as a
+   bolted-on third-party widget. */
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--color-ink-50);
+}
+.leaflet-container img,
+.leaflet-tile-container img,
+.leaflet-tile {
+  max-width: none !important;
+  max-height: none !important;
+}
+.leaflet-control-attribution {
+  background: rgb(255 255 255 / 0.92) !important;
+  font-size: 10px !important;
+  color: var(--color-ink-500) !important;
+}
+.leaflet-control-zoom a {
+  border-radius: 0 !important;
+  color: var(--color-ink-700) !important;
+  border-color: var(--color-ink-200) !important;
+}

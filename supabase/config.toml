@@ -1,0 +1,121 @@
+project_id = "kitta"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+# Caps the rows any single PostgREST request can return. A client that asks for
+# 10000 listings gets 100; pagination is not optional.
+max_rows = 100
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.pooler]
+enabled = true
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[studio]
+enabled = true
+port = 54323
+
+# Local email testing. Nothing leaves the machine.
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "10MiB"
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+# Globs so a dev server on an alternate port (Next picks one when 3000 is
+# busy) does not get its callback rejected by GoTrue after Google returns.
+additional_redirect_urls = [
+  "http://localhost:3000/**",
+  "http://127.0.0.1:3000/**",
+  "http://localhost:*/auth/callback",
+  "http://127.0.0.1:*/auth/callback",
+]
+
+# 1 hour access tokens with rotating refresh tokens. Reuse detection invalidates
+# the whole family, so a replayed stolen token logs the attacker out too.
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+# Length over composition rules: composition rules push people toward
+# "Password1!" and nothing else. Breached-password rejection (HIBP) is a hosted
+# setting, enabled per-project in the dashboard.
+minimum_password_length = 10
+password_requirements = ""
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+# Email confirmation is required before a profile becomes `active`, and every
+# write policy checks is_active_user().
+enable_confirmations = true
+secure_password_change = true
+max_frequency = "1m"
+otp_length = 6
+otp_expiry = 600
+
+[auth.email.template.confirmation]
+subject = "Confirm your Kitta account"
+
+[auth.email.template.recovery]
+subject = "Reset your Kitta password"
+
+[auth.mfa]
+max_enrolled_factors = 3
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+# Google sign-in.
+#
+# Left disabled so `supabase start` works on a fresh clone without credentials.
+# To turn it on locally:
+#   1. Create an OAuth client (Web application) in Google Cloud Console.
+#   2. Authorised redirect URI: http://127.0.0.1:54321/auth/v1/callback
+#      (production: https://<project-ref>.supabase.co/auth/v1/callback)
+#   3. Put the id and secret in supabase/.env, which is gitignored:
+#        SUPABASE_AUTH_GOOGLE_CLIENT_ID=...
+#        SUPABASE_AUTH_GOOGLE_SECRET=...
+#   4. Set enabled = true below and run `supabase stop && supabase start`.
+#
+# In a hosted project this is configured in the dashboard instead, and the app
+# code is identical either way.
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
+# Our own /auth/callback handles the code exchange after Supabase's callback.
+redirect_uri = ""
+skip_nonce_check = false
+
+[auth.rate_limit]
+email_sent = 10
+sign_in_sign_ups = 30
+token_refresh = 150
+token_verifications = 30
+
+[analytics]
+enabled = false
+
+[edge_runtime]
+enabled = true
+policy = "oneshot"

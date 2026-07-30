@@ -1,0 +1,30 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Every env file except the committed template. A denylist here is how a real
+# service_role key ends up in a repo, so this is an allowlist instead.
+.env*
+!.env.example
+.claude
+
+.DS_Store
+Thumbs.db
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+.vercel
+coverage/
+.vitest/
+
+supabase/.branches
+supabase/.temp
+supabase/.env
+docs
