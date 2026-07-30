@@ -47,6 +47,21 @@ export function decodeCursor(raw: string | null | undefined): SearchCursor | nul
 }
 
 export function absoluteUrl(path: string): string {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+  let base = process.env.NEXT_PUBLIC_SITE_URL;
+  
+  if (!base) {
+    if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+      base = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+    } else if (process.env.VERCEL_URL) {
+      base = `https://${process.env.VERCEL_URL}`;
+    } else if (process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL) {
+      base = `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`;
+    } else if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+      base = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+    } else {
+      base = 'http://localhost:3000';
+    }
+  }
+
   return new URL(path, base).toString();
 }
