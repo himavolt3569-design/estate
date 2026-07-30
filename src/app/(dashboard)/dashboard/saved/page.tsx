@@ -36,7 +36,7 @@ export default async function DashboardSavedPage() {
   // Map to PropertyCardDTO so we can reuse the beautiful UI
   // Note: the `areaDisplay` and other formatting normally happens in a query layer, doing a quick map here.
   const properties: PropertyCardDTO[] = (favorites ?? [])
-    .map(f => f.property as any)
+    .map((f: any) => f.property as any)
     .filter(Boolean)
     .map((prop: any) => ({
       id: prop.id,

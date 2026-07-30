@@ -46,7 +46,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   } = await (await createClient()).auth.getUser();
   const needsPassword =
     (authUser?.identities?.length ?? 0) > 0 &&
-    !authUser?.identities?.some((identity) => identity.provider === 'email');
+    !authUser?.identities?.some((identity: any) => identity.provider === 'email');
 
   // Google sends no signup metadata, so an OAuth account is created as a
   // customer by default. account_type_chosen_at is null only when nobody has
@@ -93,7 +93,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
             <div className="hidden text-right sm:block">
               <p className="text-sm leading-tight text-ink-900">{user.fullName ?? 'Your account'}</p>
-              <p className="label">{ROLE_LABELS[user.role]}</p>
+              <p className="label">{ROLE_LABELS[user.role as Role]}</p>
             </div>
 
             <form action={signOut}>

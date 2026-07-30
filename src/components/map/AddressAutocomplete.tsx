@@ -100,7 +100,7 @@ export function AddressAutocomplete({
             </div>
           ) : (
             <ul className="py-1">
-              {suggestions.map((s, i) => (
+              {suggestions.map((s: any, i: number) => (
                 <li 
                   key={`${s.lat}-${s.lon}-${i}`} 
                   className="px-4 py-3 hover:bg-royal-50 cursor-pointer text-sm text-ink-700 flex items-start gap-3 transition-colors"
