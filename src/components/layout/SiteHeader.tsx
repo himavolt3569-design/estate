@@ -1,44 +1,51 @@
+import { Phone } from 'lucide-react';
 import Link from 'next/link';
 
 import { Wordmark } from '@/components/brand/Seal';
+import { HeaderNav, MobileNav } from '@/components/layout/HeaderNav';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { Button } from '@/components/ui/button';
 import { getTranslation } from '@/i18n';
-import { getSessionUser, isVendor } from '@/lib/auth/session';
+import { getSessionUser } from '@/lib/auth/session';
 
 /**
  * Server component. The header renders per-request with the real session, so
  * there is no flash of the signed-out state and no client-side auth check.
  */
 export async function SiteHeader() {
-  const [user, { locale, t }] = await Promise.all([getSessionUser(), getTranslation()]);
+  const [user, { t }] = await Promise.all([getSessionUser(), getTranslation()]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-ink-200 bg-white/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-8xl items-center gap-8 px-4 sm:px-6 lg:px-8">
+    /*
+     * Three stops. Buy, Rent, Land and Shops are one question, so they live in
+     * one menu; the two calculators are their own destinations. Everything about
+     * the account sits on the right, and the phone number only appears once
+     * there is room for it without crowding the actions.
+     */
+    <header className="sticky top-0 z-50 border-b border-ink-100 bg-white/95 backdrop-blur-sm">
+      <div className="mx-auto flex h-[68px] max-w-8xl items-center gap-6 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="shrink-0" aria-label={t.nav.home}>
           <Wordmark />
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-7 md:flex">
-          <HeaderLink href="/search?transaction_type=sale">{t.nav.buy}</HeaderLink>
-          <HeaderLink href="/search?transaction_type=rent">{t.nav.rent}</HeaderLink>
-          <HeaderLink href="/search?category=land">{t.nav.land}</HeaderLink>
-          <HeaderLink href="/search?category=commercial">{t.nav.commercial}</HeaderLink>
-        </nav>
+        <HeaderNav />
 
-        <div className="ml-auto flex items-center gap-3">
-          <LanguageSwitcher current={locale} className="hidden sm:flex" />
+        <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <a
+            href="tel:+9779801234567"
+            className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-50 hover:text-ink-900 xl:flex"
+          >
+            <Phone aria-hidden className="size-4 text-crimson-600" />
+            <span className="nums">+977 9801234567</span>
+          </a>
 
           {user ? (
             <>
-              {isVendor(user.role) && (
-                <Button asChild variant="secondary" size="sm" className="hidden sm:inline-flex">
-                  <Link href="/dashboard/listings/new">{t.nav.listProperty}</Link>
-                </Button>
-              )}
               <Button asChild variant="ghost" size="sm">
                 <Link href="/dashboard">{user.fullName?.split(' ')[0] ?? t.nav.dashboard}</Link>
+              </Button>
+              <Button asChild size="sm" className="hidden sm:inline-flex">
+                <Link href="/dashboard/listings/new">{t.nav.listProperty}</Link>
               </Button>
             </>
           ) : (
@@ -53,30 +60,12 @@ export async function SiteHeader() {
           )}
         </div>
       </div>
+
+      <MobileNav />
     </header>
   );
 }
 
-/**
- * The underline grows from the left rather than appearing whole. It is a 150ms
- * transform with no JavaScript, and it gives the nav a sense of direction that
- * a background-colour swap does not.
- */
-function HeaderLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      prefetch
-      className="group relative py-2 text-sm text-ink-600 transition-colors hover:text-ink-900"
-    >
-      {children}
-      <span
-        aria-hidden
-        className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-ink-900 transition-transform duration-150 ease-out group-hover:scale-x-100"
-      />
-    </Link>
-  );
-}
 
 export async function SiteFooter() {
   const { locale, t } = await getTranslation();
@@ -151,12 +140,12 @@ function FooterColumn({
   return (
     <div>
       <h3 className="label label-light">{title}</h3>
-      <ul className="mt-4 space-y-2.5">
+      <ul className="mt-3 space-y-0.5">
         {links.map((link) => (
           <li key={link.href}>
             <Link
               href={link.href}
-              className="text-sm text-royal-200 transition-colors hover:text-white"
+              className="-mx-2 inline-block rounded-lg px-2 py-1.5 text-sm text-royal-200 transition-colors hover:text-white"
             >
               {link.label}
             </Link>

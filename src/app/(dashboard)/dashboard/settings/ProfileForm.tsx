@@ -7,15 +7,19 @@ import type { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Field, Input, Surface, Textarea } from '@/components/ui/primitives';
+import { SelectMenu } from '@/components/ui/select-menu';
+import { AvatarPicker } from '@/modules/identity/components/AvatarPicker';
 import { updateProfile } from '@/modules/identity/actions';
 import { profileSchema } from '@/modules/identity/schema';
 
 type Values = z.infer<typeof profileSchema>;
 
 export function ProfileForm({
+  userId,
   email,
   defaults,
 }: {
+  userId: string;
   email: string;
   defaults: Values;
 }) {
@@ -23,11 +27,15 @@ export function ProfileForm({
     register,
     handleSubmit,
     setError,
+    setValue,
+    watch,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<Values>({
     resolver: zodResolver(profileSchema),
     defaultValues: defaults,
   });
+
+  const avatarUrl = watch('avatarUrl');
 
   async function onSubmit(values: Values) {
     const result = await updateProfile(values);
@@ -48,9 +56,19 @@ export function ProfileForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
       <Surface className="space-y-5 p-6">
-        <Field label="Avatar URL" htmlFor="avatarUrl" error={errors.avatarUrl?.message}>
-          <Input id="avatarUrl" type="url" placeholder="https://example.com/avatar.png" {...register('avatarUrl')} />
-        </Field>
+        {/* Registered so the value still travels with the form; the input
+            itself is hidden because the picker owns it now. */}
+        <input type="hidden" {...register('avatarUrl')} />
+        <AvatarPicker
+          userId={userId}
+          value={avatarUrl || null}
+          onChange={(url) => setValue('avatarUrl', url ?? '', { shouldDirty: true })}
+        />
+        {errors.avatarUrl?.message && (
+          <p role="alert" className="text-xs text-clay-700">
+            {errors.avatarUrl.message}
+          </p>
+        )}
 
         <Field label="Full name" htmlFor="fullName" required error={errors.fullName?.message}>
           <Input id="fullName" autoComplete="name" {...register('fullName')} />
@@ -90,14 +108,17 @@ export function ProfileForm({
         <p className="label">Display preferences</p>
 
         <Field label="Language" htmlFor="preferredLocale">
-          <select
+          <SelectMenu
             id="preferredLocale"
-            className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-sm focus-visible:border-royal-500 focus-visible:outline-none"
-            {...register('preferredLocale')}
-          >
-            <option value="en">English</option>
-            <option value="ne">नेपाली</option>
-          </select>
+            value={watch('preferredLocale')}
+            onValueChange={(value) =>
+              setValue('preferredLocale', value as Values['preferredLocale'], { shouldDirty: true })
+            }
+            options={[
+              { value: 'en', label: 'English' },
+              { value: 'ne', label: 'नेपाली' },
+            ]}
+          />
         </Field>
 
         <Field
@@ -108,16 +129,21 @@ export function ProfileForm({
           {/* Nepal runs two systems side by side and both are in daily use:
               ropani in the hills and the valley, bigha in the terai. Neither is
               a sensible universal default, so it is a preference. */}
-          <select
+          <SelectMenu
             id="preferredAreaUnit"
-            className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-sm focus-visible:border-royal-500 focus-visible:outline-none"
-            {...register('preferredAreaUnit')}
-          >
-            <option value="ropani">Ropani / aana / paisa / daam (hills, valley)</option>
-            <option value="bigha">Bigha / kattha / dhur (terai)</option>
-            <option value="sqft">Square feet</option>
-            <option value="sqm">Square metres</option>
-          </select>
+            value={watch('preferredAreaUnit')}
+            onValueChange={(value) =>
+              setValue('preferredAreaUnit', value as Values['preferredAreaUnit'], {
+                shouldDirty: true,
+              })
+            }
+            options={[
+              { value: 'ropani', label: 'Ropani, aana, paisa, daam', hint: 'Hills and the valley' },
+              { value: 'bigha', label: 'Bigha, kattha, dhur', hint: 'Terai' },
+              { value: 'sqft', label: 'Square feet' },
+              { value: 'sqm', label: 'Square metres' },
+            ]}
+          />
         </Field>
       </Surface>
 

@@ -1,9 +1,9 @@
+import { Bed, Bath, Square, MapPin, Heart } from 'lucide-react';
 import Link from 'next/link';
 
-import { TrustMark } from '@/components/brand/TrustLedger';
 import { PropertyImage } from '@/components/media/PropertyImage';
 import { Skeleton } from '@/components/ui/primitives';
-import { getDictionary } from '@/i18n';
+
 import { AREA_NOT_STATED } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
@@ -20,7 +20,7 @@ import type { PropertyCardDTO } from '../types';
  * brings up the corner registration ticks, so the card reads as being marked on
  * a drawing rather than lifting off the page. CSS only, no JavaScript.
  */
-export async function PropertyCard({
+export function PropertyCard({
   property,
   priority = false,
   className,
@@ -29,13 +29,11 @@ export async function PropertyCard({
   priority?: boolean;
   className?: string;
 }) {
-  const t = await getDictionary();
-
   const transactionLabel: Record<PropertyCardDTO['transactionType'], string> = {
-    sale: t.card.forSale,
-    rent: t.card.forRent,
-    lease: t.card.forLease,
-    short_stay: t.card.shortStay,
+    sale: 'For Sale',
+    rent: 'For Rent',
+    lease: 'For Lease',
+    short_stay: 'Short Stay',
   };
 
   const facts: Array<{ value: string; unit: string }> = [];
@@ -43,38 +41,28 @@ export async function PropertyCard({
   if (property.bedrooms != null) {
     facts.push({
       value: String(property.bedrooms),
-      unit: property.bedrooms === 1 ? t.card.bed : t.card.beds,
+      unit: property.bedrooms === 1 ? 'Bed' : 'Beds',
     });
   }
   if (property.bathrooms != null) {
     facts.push({
       value: String(property.bathrooms),
-      unit: property.bathrooms === 1 ? t.card.bath : t.card.baths,
+      unit: property.bathrooms === 1 ? 'Bath' : 'Baths',
     });
   }
   if (property.areaDisplay !== AREA_NOT_STATED) {
-    facts.push({ value: property.areaDisplay, unit: t.card.plot });
+    facts.push({ value: property.areaDisplay, unit: 'Plot' });
   }
 
   return (
     <article
       className={cn(
-        'group relative border border-ink-200 bg-white',
-        'transition-colors duration-200 hover:border-ink-900 focus-within:border-royal-700',
+        'group relative flex flex-col rounded-2xl border border-ink-100 bg-white shadow-sm overflow-hidden',
+        'transition-all duration-300 hover:shadow-md hover:-translate-y-1',
         className,
       )}
     >
-      {/* Registration ticks, revealed on hover. The card is being marked up. */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -top-px -left-px size-2 border-t border-l border-ink-900 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-      />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -right-px -bottom-px size-2 border-r border-b border-ink-900 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-      />
-
-      <div className="relative overflow-hidden border-b border-ink-200">
+      <div className="relative aspect-[4/3] w-full overflow-hidden">
         <PropertyImage
           renditions={property.cover?.renditions}
           alt={property.cover?.alt ?? property.title}
@@ -82,49 +70,60 @@ export async function PropertyCard({
           height={600}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
           priority={priority}
-          wrapperClassName="w-full"
-          className="transition-transform duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
+          wrapperClassName="h-full w-full"
+          className="h-full w-full object-cover transition-transform duration-[600ms] group-hover:scale-[1.04]"
         />
-        <span className="absolute top-0 left-0 bg-royal-800 px-2.5 py-1 text-2xs font-medium tracking-[0.12em] text-white uppercase">
-          {transactionLabel[property.transactionType]}
-        </span>
+        
+        {/* Badges */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+          <span className="rounded bg-royal-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">
+            {transactionLabel[property.transactionType]}
+          </span>
+          <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition-colors hover:bg-white/40">
+            <Heart className="h-4 w-4 text-white" strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
 
-      <div className="p-4">
-        <p className="label truncate">{property.locality}</p>
-
-        <p className="nums mt-2 text-xl leading-none font-semibold tracking-[-0.03em] text-ink-900">
-          {property.priceFormatted}
-        </p>
-
-        <h3 className="mt-2 line-clamp-2 text-sm leading-snug text-ink-600">
-          {/* The link carries the accessible name; the overlay makes the whole
-              card a pointer target without nesting interactive elements. */}
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="line-clamp-1 text-lg font-bold text-ink-900">
           <Link href={property.href} prefetch className="after:absolute after:inset-0">
             {property.title}
           </Link>
         </h3>
+        
+        <div className="mt-1 flex items-center gap-1.5 text-sm text-ink-500">
+          <MapPin className="h-4 w-4 shrink-0" />
+          <span className="truncate">{property.locality}</span>
+        </div>
+
+        <p className="nums mt-3 text-xl font-bold text-royal-600">
+          {property.priceFormatted}
+          {property.transactionType === 'rent' && <span className="text-sm font-normal text-ink-500"> / month</span>}
+        </p>
 
         {facts.length > 0 && (
-          <dl className="mt-4 flex flex-wrap items-baseline gap-x-5 gap-y-1 border-t border-ink-100 pt-3">
-            {facts.map((fact) => (
-              <div key={fact.unit} className="flex items-baseline gap-1.5">
-                <dd className="nums text-sm font-medium text-ink-900">{fact.value}</dd>
-                <dt className="text-2xs font-extralight tracking-wide text-ink-400">{fact.unit}</dt>
+          <div className="mt-auto pt-4 border-t border-ink-100 flex items-center gap-4 text-sm text-ink-600">
+            {property.bedrooms != null && (
+              <div className="flex items-center gap-1.5">
+                <Bed className="h-4 w-4 shrink-0 text-ink-400" />
+                <span><span className="font-medium text-ink-900">{property.bedrooms}</span> {property.bedrooms === 1 ? 'Bed' : 'Beds'}</span>
               </div>
-            ))}
-          </dl>
-        )}
-
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="text-2xs text-ink-400">{property.listedByLabel}</span>
-          <div className="flex items-center gap-2.5">
-            {property.distanceLabel && (
-              <span className="nums text-2xs text-ink-400">{property.distanceLabel}</span>
             )}
-            <TrustMark verified={property.verified} label={t.card.checked} />
+            {property.bathrooms != null && (
+              <div className="flex items-center gap-1.5">
+                <Bath className="h-4 w-4 shrink-0 text-ink-400" />
+                <span><span className="font-medium text-ink-900">{property.bathrooms}</span> {property.bathrooms === 1 ? 'Bath' : 'Baths'}</span>
+              </div>
+            )}
+            {property.areaDisplay !== AREA_NOT_STATED && (
+              <div className="flex items-center gap-1.5">
+                <Square className="h-4 w-4 shrink-0 text-ink-400" />
+                <span><span className="font-medium text-ink-900">{property.areaDisplay}</span></span>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </article>
   );

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/primitives';
+import { PageHeader } from '../components/PageHeader';
 import { getTranslation } from '@/i18n';
 import { getSessionUser } from '@/lib/auth/session';
 import { formatRelative } from '@/lib/format';
@@ -27,21 +28,18 @@ export default async function DashboardSearchesPage() {
   const rows = searches ?? [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
-          Saved Searches
-        </h1>
-        <p className="mt-1 text-sm text-ink-600">
-          Manage your saved property searches
-        </p>
-      </div>
+    <div className="space-y-7">
+      <PageHeader
+        eyebrow="Your account"
+        title="Saved searches"
+        subtitle="Searches you asked us to keep an eye on. We tell you when something new matches."
+      />
 
       {rows.length === 0 ? (
         <EmptyState
           icon={<Search className="size-6" />}
-          title="No saved searches"
-          description="When you save a search query, it will appear here."
+          title="No saved searches yet"
+          description="Run a search you like, then save it, and we will tell you when a new property matches it."
           action={
             <Button asChild>
               <Link href="/search">Start searching</Link>
@@ -49,11 +47,11 @@ export default async function DashboardSearchesPage() {
           }
         />
       ) : (
-        <div className="overflow-x-auto border border-ink-200">
-          <table className="w-full min-w-3xl border-collapse bg-white text-sm">
+        <div className="overflow-x-auto rounded-2xl border border-ink-100 bg-white shadow-soft">
+          <table className="w-full min-w-3xl border-collapse text-sm">
             <thead>
-              <tr className="border-b border-ink-200 text-left">
-                <Th>Search Name</Th>
+              <tr className="border-b border-ink-100 bg-ink-50/70 text-left">
+                <Th>Search</Th>
                 <Th>Notifications</Th>
                 <Th>Frequency</Th>
                 <Th>Created</Th>

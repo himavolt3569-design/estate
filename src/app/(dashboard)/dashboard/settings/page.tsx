@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { SectionHeading } from '@/components/ui/primitives';
+import { PageHeader } from '../components/PageHeader';
 import { getSessionUser } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 
@@ -21,10 +21,15 @@ export default async function ProfileSettingsPage() {
     .single();
 
   return (
-    <div className="max-w-2xl space-y-8 pb-10">
-      <SectionHeading eyebrow="Your account" title="Profile" />
+    <div className="max-w-2xl space-y-7 pb-10">
+      <PageHeader
+        eyebrow="Your account"
+        title="My details"
+        subtitle="Your name and picture are shown on the properties you list. Nothing else here is public."
+      />
 
       <ProfileForm
+        userId={user.id}
         email={user.email ?? ''}
         defaults={{
           fullName: profile?.full_name ?? '',

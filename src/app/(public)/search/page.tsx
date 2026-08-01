@@ -10,6 +10,7 @@ import {
   PropertyCardSkeleton,
 } from '@/modules/discovery/components/PropertyCard';
 import { countProperties, searchProperties } from '@/modules/discovery/queries';
+import { FilterSelect } from './FilterSelect';
 import type { SearchFilters } from '@/modules/discovery/types';
 
 export const metadata: Metadata = {
@@ -71,6 +72,14 @@ function parseFilters(params: SearchParams): SearchFilters {
 
   const beds = num(params, 'bedrooms_min');
   if (beds != null) filters.bedrooms_min = beds;
+
+  /*
+   * "Browse by type" on the home page has always linked to ?subtype=house, and
+   * nothing read it — the RPC's key is `subtypes`, an array — so every one of
+   * those six tiles quietly returned the unfiltered list.
+   */
+  const subtype = one(params, 'subtype');
+  if (subtype && /^[a-z_]+$/.test(subtype)) filters.subtypes = [subtype];
 
   const locationPath = one(params, 'location_path');
   if (locationPath && /^[a-z0-9_.]+$/.test(locationPath)) filters.location_path = locationPath;
@@ -206,7 +215,7 @@ function FilterBar({ params, filters }: { params: SearchParams; filters: SearchF
       action="/search"
       method="get"
       role="search"
-      className="mb-6 rounded-sm border border-ink-200 bg-white p-4"
+      className="mb-6 rounded-2xl border border-ink-100 bg-white p-5 shadow-soft"
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
@@ -219,11 +228,11 @@ function FilterBar({ params, filters }: { params: SearchParams; filters: SearchF
             type="search"
             defaultValue={one(params, 'q') ?? ''}
             placeholder="Area, landmark, building"
-            className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-sm placeholder:text-ink-300 focus-visible:border-royal-500 focus-visible:outline-none"
+            className="h-11 w-full rounded-lg border border-ink-200 bg-white px-3.5 text-sm shadow-sm transition-colors placeholder:text-ink-300 hover:border-ink-300 focus-visible:border-royal-500 focus-visible:ring-2 focus-visible:ring-royal-500/20 focus-visible:outline-none"
           />
         </div>
 
-        <Select
+        <FilterSelect
           id="transaction_type"
           label="Looking to"
           defaultValue={one(params, 'transaction_type')}
@@ -236,7 +245,7 @@ function FilterBar({ params, filters }: { params: SearchParams; filters: SearchF
           ]}
         />
 
-        <Select
+        <FilterSelect
           id="category"
           label="Type"
           defaultValue={one(params, 'category')}
@@ -248,7 +257,7 @@ function FilterBar({ params, filters }: { params: SearchParams; filters: SearchF
           ]}
         />
 
-        <Select
+        <FilterSelect
           id="sort"
           label="Sort"
           defaultValue={one(params, 'sort')}
@@ -287,34 +296,3 @@ function FilterBar({ params, filters }: { params: SearchParams; filters: SearchF
   );
 }
 
-function Select({
-  id,
-  label,
-  defaultValue,
-  options,
-}: {
-  id: string;
-  label: string;
-  defaultValue?: string;
-  options: Array<{ value: string; label: string }>;
-}) {
-  return (
-    <div>
-      <label htmlFor={id} className="label mb-1.5 block">
-        {label}
-      </label>
-      <select
-        id={id}
-        name={id}
-        defaultValue={defaultValue ?? ''}
-        className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-sm text-ink-800 focus-visible:border-royal-500 focus-visible:outline-none"
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}

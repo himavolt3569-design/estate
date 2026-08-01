@@ -4,148 +4,175 @@ import {
   Home,
   LandPlot,
   Store,
-  Trees,
   Warehouse,
+  ShieldCheck,
+  BadgeCent,
+  UserCheck,
+  Tent
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Suspense } from 'react';
 
 import { Reveal } from '@/components/motion/Motion';
 import { Button } from '@/components/ui/button';
-import { EmptyState, SectionHeading, Skeleton } from '@/components/ui/primitives';
+import { SectionHeading } from '@/components/ui/primitives';
 import { getTranslation, type Dictionary } from '@/i18n';
 import type { Locale } from '@/i18n/config';
 import { AreaConverter } from '@/modules/discovery/components/AreaConverter';
-import { LocationSearch } from '@/modules/discovery/components/LocationSearch';
-import {
-  PropertyCardSkeleton,
-  PropertyCardGrid,
-} from '@/modules/discovery/components/PropertyCard';
+import { EmiCalculator } from '@/modules/finance/components/EmiCalculator';
+import { HeroSearch } from '@/modules/discovery/components/HeroSearch';
 import { searchProperties } from '@/modules/discovery/queries';
-
-/*
- * Reading the locale cookie opts this route into dynamic rendering, so the
- * `revalidate = 300` that used to sit here no longer applies and has been
- * removed rather than left as a lie. Getting the edge cache back means putting
- * the locale in the URL (/ne/...), which is also what makes the Nepali pages
- * indexable. See src/i18n/index.ts.
- */
+import { getHeroImageUrl } from '@/modules/platform/site-media';
+import { InfiniteScrollPropertyGrid } from '@/modules/discovery/components/InfiniteScrollPropertyGrid';
+import { PropertyCardSkeleton } from '@/modules/discovery/components/PropertyCard';
 
 export default async function HomePage() {
-  const { locale, t } = await getTranslation();
+  const [{ locale, t }, heroUrl] = await Promise.all([getTranslation(), getHeroImageUrl()]);
 
   return (
     <>
-      <Hero t={t} />
+      <Hero backgroundUrl={heroUrl} />
 
-      <section className="mx-auto max-w-8xl px-4 py-16 sm:px-6 lg:px-8">
-        <SectionHeading
-          eyebrow={t.verified.eyebrow}
-          title={t.verified.title}
-          action={
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/search?verified_only=true">
-                {t.verified.seeAll} <ArrowRight aria-hidden />
-              </Link>
-            </Button>
-          }
-        />
-        <div className="mt-8">
-          <Suspense fallback={<RailSkeleton />}>
-            <VerifiedRail t={t} />
-          </Suspense>
+      <section className="mx-auto max-w-8xl px-4 py-12 sm:mt-12 sm:px-6 sm:py-16 lg:px-8">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+          <SectionHeading
+            eyebrow="Featured"
+            title="Featured Properties"
+          />
+          <Link href="/search" className="text-sm font-semibold text-royal-600 flex items-center hover:underline">
+            View All Properties <ArrowRight className="ml-1 h-4 w-4" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2">
+            <Suspense fallback={<RailSkeleton />}>
+              <FeaturedPropertiesRail t={t} />
+            </Suspense>
+          </div>
+          <div className="lg:col-span-1">
+            <RightRail />
+          </div>
         </div>
       </section>
 
-      <BrowseByType t={t} />
-      <LandUnits t={t} />
+      <BrowseByType />
+
+      <EmiSection t={t} />
+
+      <div className="bg-white">
+        <LandUnits t={t} />
+      </div>
+
+      {/* Last on the page. The two calculators are what someone came to use;
+          the province grid is a way out of the page for anyone who did not
+          find what they wanted above it. */}
       <BrowseByProvince t={t} locale={locale} />
-      <BrowseByPrice t={t} />
     </>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* Hero                                                                        */
+/* Monthly payment                                                             */
 /* -------------------------------------------------------------------------- */
 /*
- * Deliberately short. A tall hero on a marketplace is a toll gate: it pushes
- * the only thing anyone came for below the fold.
+ * This replaces the old "search by price" bands. Price bands only ever restated
+ * what the search filters already did; the question a first-time buyer in Nepal
+ * actually arrives with is whether they can carry the instalment at all.
  */
-function Hero({ t }: { t: Dictionary }) {
+function EmiSection({ t }: { t: Dictionary }) {
   return (
-    <section className="relative overflow-hidden bg-royal-900 text-white">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.07]"
-        style={{
-          backgroundImage:
-            'linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)',
-          backgroundSize: '80px 80px',
-        }}
-      />
-
-      <div className="relative mx-auto max-w-8xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        <p className="label label-light">{t.hero.eyebrow}</p>
-
-        {/* The base layer sets a dark colour on headings, so a heading on the
-            royal field has to say otherwise explicitly. */}
-        <h1 className="mt-4 max-w-3xl text-display-md text-white">
-          <span className="font-extralight text-royal-200">{t.hero.titleLight}</span>{' '}
-          {t.hero.titleBold}
-        </h1>
-
-        <div className="mt-7 max-w-3xl">
-          <LocationSearch t={t.hero} />
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {[
-            { label: t.hero.chips.checked, href: '/search?verified_only=true' },
-            { label: t.hero.chips.under1cr, href: '/search?price_max=1000000000' },
-            { label: t.hero.chips.land, href: '/search?category=land' },
-            { label: t.hero.chips.rent, href: '/search?transaction_type=rent' },
-          ].map((chip) => (
-            <Link
-              key={chip.label}
-              href={chip.href}
-              className="rounded-full border border-royal-400/50 px-3.5 py-1.5 text-xs text-royal-200 transition-colors hover:border-white hover:text-white"
-            >
-              {chip.label}
-            </Link>
-          ))}
-        </div>
+    <section className="border-t border-ink-100 bg-white">
+      <div className="mx-auto max-w-8xl px-4 py-16 sm:px-6 lg:px-8">
+        <SectionHeading eyebrow={t.emi.eyebrow} title={t.emi.title} />
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-600">{t.emi.intro}</p>
+        <Reveal className="mt-8">
+          <div className="reveal">
+            <EmiCalculator t={t.emi} />
+          </div>
+        </Reveal>
       </div>
     </section>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* Verified rail: streamed, so the hero paints without waiting on the query     */
+/* Hero                                                                        */
 /* -------------------------------------------------------------------------- */
-async function VerifiedRail({ t }: { t: Dictionary }) {
-  const { items } = await searchProperties({ verified_only: true, sort: 'newest' }, null, 8);
+/**
+ * Nothing about this section moved. The only change is that the picture behind
+ * it is whatever the master admin last uploaded, falling back to the image that
+ * ships with the build when they have not set one.
+ */
+function Hero({ backgroundUrl }: { backgroundUrl: string | null }) {
+  return (
+    <section className="relative flex min-h-[520px] flex-col items-center justify-center pt-12 pb-8 sm:min-h-[600px] sm:pt-16 sm:pb-32">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src={backgroundUrl ?? '/images/hero-bg.png'}
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover brightness-[0.85]"
+          priority
+          // An admin-supplied URL is not a build-time asset, so the optimiser
+          // has no configured remote pattern for it. Serving it directly keeps
+          // the upload working the moment it lands.
+          unoptimized={Boolean(backgroundUrl)}
+        />
+        {/* Gradient overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-royal-950/80 via-transparent to-transparent" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-8xl px-4 sm:px-6 lg:px-8 flex flex-col items-start">
+        <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-white drop-shadow-md sm:text-6xl lg:text-7xl">
+          Find Your <br /> Dream Home
+        </h1>
+        <p className="mt-5 max-w-xl text-base font-medium text-white drop-shadow-md sm:mt-6 sm:text-lg">
+          Discover the perfect property that matches your lifestyle and budget.
+        </p>
+
+        <Button asChild size="lg" className="mt-7 h-13 px-7 text-base font-semibold sm:mt-8 sm:h-14 sm:px-8 sm:text-lg">
+          <Link href="/search">
+            Explore Properties <ArrowRight className="ml-2 h-5 w-5" />
+          </Link>
+        </Button>
+      </div>
+
+      {/* Floats over the hero edge from sm up; in flow on a phone. */}
+      <div className="relative z-20 mx-auto mt-8 w-full max-w-6xl px-4 sm:absolute sm:-bottom-16 sm:mt-0 sm:px-6 lg:px-8">
+        <HeroSearch />
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Featured Properties Rail                                                    */
+/* -------------------------------------------------------------------------- */
+async function FeaturedPropertiesRail({ t }: { t: Dictionary }) {
+  const { items, nextCursor } = await searchProperties({ verified_only: true, sort: 'newest' }, null, 6);
 
   if (items.length === 0) {
     return (
-      <EmptyState
-        title={t.verified.emptyTitle}
-        description={t.verified.emptyBody}
-        action={
-          <Button asChild variant="secondary">
-            <Link href="/search">{t.verified.browseAll}</Link>
-          </Button>
-        }
-      />
+      <div className="p-12 text-center bg-ink-50 rounded-2xl border border-ink-100">
+        <h3 className="text-lg font-semibold text-ink-900">{t.verified.emptyTitle}</h3>
+        <p className="mt-2 text-ink-500 mb-6">{t.verified.emptyBody}</p>
+        <Button asChild variant="secondary">
+          <Link href="/search">{t.verified.browseAll}</Link>
+        </Button>
+      </div>
     );
   }
 
-  return <PropertyCardGrid properties={items} priorityCount={4} />;
+  return <InfiniteScrollPropertyGrid initialItems={items} initialCursor={nextCursor} />;
 }
 
 function RailSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
       {Array.from({ length: 4 }).map((_, i) => (
         <PropertyCardSkeleton key={i} />
       ))}
@@ -154,45 +181,94 @@ function RailSkeleton() {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Right Rail (Trust Badges)                                                   */
+/* -------------------------------------------------------------------------- */
+function RightRail() {
+  return (
+    <div className="sticky top-24 rounded-2xl bg-ink-50/50 border border-ink-100 p-8 flex flex-col h-full lg:h-auto">
+      <div className="space-y-8 flex-1">
+        <div className="flex gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-royal-600">
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <div>
+            <h4 className="text-base font-bold text-ink-900">Verified Properties</h4>
+            <p className="mt-1 text-sm text-ink-500">All properties are verified for your peace of mind.</p>
+          </div>
+        </div>
+
+        <div className="flex gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-royal-600">
+            <BadgeCent className="h-6 w-6" />
+          </div>
+          <div>
+            <h4 className="text-base font-bold text-ink-900">Best Price Guarantee</h4>
+            <p className="mt-1 text-sm text-ink-500">Get the best value for your money.</p>
+          </div>
+        </div>
+
+        <div className="flex gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-royal-600">
+            <UserCheck className="h-6 w-6" />
+          </div>
+          <div>
+            <h4 className="text-base font-bold text-ink-900">Expert Agents</h4>
+            <p className="mt-1 text-sm text-ink-500">Our agents are here to help you find your dream home.</p>
+          </div>
+        </div>
+      </div>
+
+      <Button asChild size="lg" className="mt-10 w-full bg-royal-600 hover:bg-royal-700 text-white rounded-lg">
+        <Link href="/about">
+          Learn More About Us <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* Browse by type                                                              */
 /* -------------------------------------------------------------------------- */
-function BrowseByType({ t }: { t: Dictionary }) {
+function BrowseByType() {
+  /*
+   * `query` rather than a bare subtype, because two of these are not subtypes
+   * at all. "Home stay" is a transaction type, and the tile labelled Villa was
+   * pointing at `warehouse`. Both were being fed into a property_subtype[] cast
+   * that rejected them, so those two tiles returned nothing at all.
+   */
   const types = [
-    { slug: 'house', icon: Home, copy: t.types.house },
-    { slug: 'apartment', icon: Building2, copy: t.types.apartment },
-    { slug: 'residential_land', icon: LandPlot, copy: t.types.residentialLand },
-    { slug: 'agricultural_land', icon: Trees, copy: t.types.farmLand },
-    { slug: 'shop', icon: Store, copy: t.types.shop },
-    { slug: 'warehouse', icon: Warehouse, copy: t.types.warehouse },
+    { query: 'subtype=house', icon: Home, label: 'Houses', note: 'Family homes', bg: 'bg-royal-50', text: 'text-royal-600' },
+    { query: 'subtype=apartment', icon: Building2, label: 'Apartments', note: 'Flats and studios', bg: 'bg-crimson-50', text: 'text-crimson-600' },
+    { query: 'category=land', icon: LandPlot, label: 'Land', note: 'Ghaderi and fields', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    { query: 'category=commercial', icon: Store, label: 'Shops and offices', note: 'For business', bg: 'bg-marigold-50', text: 'text-marigold-700' },
+    { query: 'transaction_type=short_stay', icon: Tent, label: 'Home stay', note: 'By the night', bg: 'bg-sand-100', text: 'text-sand-700' },
+    { query: 'subtype=villa', icon: Warehouse, label: 'Villas', note: 'Larger houses', bg: 'bg-ink-100', text: 'text-ink-600' },
   ];
 
   return (
-    <section className="border-t border-ink-200 bg-ink-50/40">
+    <section className="bg-ink-50/40">
       <div className="mx-auto max-w-8xl px-4 py-16 sm:px-6 lg:px-8">
-        <SectionHeading eyebrow={t.types.eyebrow} title={t.types.title} />
+        <SectionHeading title="Browse Properties By Type" />
         <Reveal className="mt-8" stagger={0.04}>
-          <ul className="grid gap-px bg-ink-200 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {types.map((type) => (
-              <li key={type.slug} className="reveal">
+              <li key={type.query} className="reveal h-full">
                 <Link
-                  href={`/search?subtype=${type.slug}`}
-                  className="group flex h-full items-start gap-4 bg-white p-6 transition-colors hover:bg-royal-900"
+                  href={`/search?${type.query}`}
+                  className="group flex flex-col items-center justify-center gap-3 rounded-2xl bg-white p-6 shadow-sm border border-ink-100 transition-all hover:shadow-md hover:-translate-y-1 text-center h-full"
                 >
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-colors group-hover:border-royal-400 group-hover:text-emerald-300">
-                    <type.icon aria-hidden className="size-4.5" />
+                  <span className={`flex size-14 items-center justify-center rounded-full ${type.bg} ${type.text} transition-transform group-hover:scale-110`}>
+                    <type.icon aria-hidden className="size-6" />
                   </span>
-                  <span className="min-w-0">
-                    <span className="block text-base font-semibold tracking-[-0.02em] text-ink-900 transition-colors group-hover:text-white">
-                      {type.copy.label}
+                  <div>
+                    <span className="block text-base font-bold text-ink-900 transition-colors group-hover:text-crimson-700">
+                      {type.label}
                     </span>
-                    <span className="mt-1 block text-xs text-ink-500 transition-colors group-hover:text-royal-200">
-                      {type.copy.note}
+                    <span className="mt-1 block text-xs font-medium text-ink-500">
+                      {type.note}
                     </span>
-                  </span>
-                  <ArrowRight
-                    aria-hidden
-                    className="ml-auto size-4 shrink-0 text-ink-300 transition-all group-hover:translate-x-0.5 group-hover:text-white"
-                  />
+                  </div>
                 </Link>
               </li>
             ))}
@@ -206,14 +282,9 @@ function BrowseByType({ t }: { t: Dictionary }) {
 /* -------------------------------------------------------------------------- */
 /* Land units                                                                  */
 /* -------------------------------------------------------------------------- */
-/*
- * A working tool, not an explainer. Nepal runs two incompatible traditional
- * area systems and every listing is priced in one of them, so comparing a
- * valley plot against a terai plot is arithmetic nobody does in their head.
- */
 function LandUnits({ t }: { t: Dictionary }) {
   return (
-    <section className="mx-auto max-w-8xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-8xl px-4 py-16 sm:px-6 lg:px-8 border-t border-ink-100">
       <SectionHeading
         eyebrow={t.converter.eyebrow}
         title={t.converter.title}
@@ -250,15 +321,12 @@ const PROVINCES = [
 
 function BrowseByProvince({ t, locale }: { t: Dictionary; locale: Locale }) {
   return (
-    <section className="border-t border-ink-200 bg-ink-50/40">
+    <section className="border-t border-ink-100 bg-ink-50/40 pb-16">
       <div className="mx-auto max-w-8xl px-4 py-16 sm:px-6 lg:px-8">
         <SectionHeading eyebrow={t.provinces.eyebrow} title={t.provinces.title} />
         <Reveal className="mt-8" stagger={0.04}>
-          <ul className="grid gap-px bg-ink-200 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {PROVINCES.map((province) => {
-              // The reader's own script leads; the other sits beside it, because
-              // both names are in daily use and place names are how people
-              // recognise where they are looking.
               const primary = locale === 'ne' ? province.ne : province.en;
               const secondary = locale === 'ne' ? province.en : province.ne;
               const note = locale === 'ne' ? province.noteNe : province.note;
@@ -267,20 +335,20 @@ function BrowseByProvince({ t, locale }: { t: Dictionary; locale: Locale }) {
                 <li key={province.slug} className="reveal">
                   <Link
                     href={`/search?location_path=nepal.${province.slug}`}
-                    className="group flex h-full flex-col bg-white p-6 transition-colors hover:bg-royal-900"
+                    className="group flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm border border-ink-100 transition-all hover:shadow-md hover:border-royal-300"
                   >
                     <span className="flex items-baseline gap-2.5">
-                      <span className="text-lg font-semibold tracking-[-0.025em] text-ink-900 transition-colors group-hover:text-white">
+                      <span className="text-lg font-bold tracking-[-0.025em] text-ink-900 group-hover:text-royal-600 transition-colors">
                         {primary}
                       </span>
                       <span
                         aria-hidden
-                        className="text-sm font-light text-ink-400 transition-colors group-hover:text-royal-300"
+                        className="text-sm font-medium text-ink-400 group-hover:text-royal-400 transition-colors"
                       >
                         {secondary}
                       </span>
                     </span>
-                    <span className="mt-2 text-xs leading-relaxed text-ink-500 transition-colors group-hover:text-royal-200">
+                    <span className="mt-2 text-xs leading-relaxed font-medium text-ink-500 group-hover:text-ink-700 transition-colors">
                       {note}
                     </span>
                   </Link>
@@ -292,47 +360,4 @@ function BrowseByProvince({ t, locale }: { t: Dictionary; locale: Locale }) {
       </div>
     </section>
   );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Browse by price                                                             */
-/* -------------------------------------------------------------------------- */
-/* Prices are paisa: 1 crore NPR = 10,000,000 NPR = 1,000,000,000 paisa. */
-function BrowseByPrice({ t }: { t: Dictionary }) {
-  const bands = [
-    { label: t.price.under50, href: '/search?price_max=500000000' },
-    { label: t.price.between50and1cr, href: '/search?price_min=500000000&price_max=1000000000' },
-    { label: t.price.between1and2cr, href: '/search?price_min=1000000000&price_max=2000000000' },
-    { label: t.price.above2cr, href: '/search?price_min=2000000000' },
-  ];
-
-  return (
-    <section className="mx-auto max-w-8xl px-4 py-16 pb-24 sm:px-6 lg:px-8">
-      <SectionHeading eyebrow={t.price.eyebrow} title={t.price.title} />
-      <Reveal className="mt-8" stagger={0.04}>
-        <ul className="grid gap-px bg-ink-200 sm:grid-cols-2 lg:grid-cols-4">
-          {bands.map((band) => (
-            <li key={band.label} className="reveal">
-              <Link
-                href={band.href}
-                className="group flex h-full items-center justify-between gap-3 bg-white px-6 py-7 transition-colors hover:bg-royal-900"
-              >
-                <span className="text-base font-medium text-ink-900 transition-colors group-hover:text-white">
-                  {band.label}
-                </span>
-                <ArrowRight
-                  aria-hidden
-                  className="size-4 shrink-0 text-ink-300 transition-all group-hover:translate-x-0.5 group-hover:text-emerald-300"
-                />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </Reveal>
-    </section>
-  );
-}
-
-export function HomeSkeleton() {
-  return <Skeleton className="h-96 w-full" />;
 }

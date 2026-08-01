@@ -20,20 +20,28 @@ import { chooseAccountType } from '@/modules/identity/actions';
  * shows and "ask me later" leaves the account in the wrong shape indefinitely.
  * Both options are equally weighted: this is a question, not an upsell.
  */
+/*
+ * "I'm looking for a property" tested badly: people read it as a search box
+ * rather than as who they are. Buyer and seller are the words used at the
+ * counter, in both languages, so those are the words on the buttons — with the
+ * sentence underneath doing the explaining.
+ */
 const OPTIONS = [
   {
     value: 'customer' as const,
     icon: Search,
-    title: "I'm looking for a property",
-    body: 'Search, save and contact sellers.',
-    bullets: ['Save searches', 'Ask about listings', 'Request a viewing'],
+    title: 'Buyer',
+    ne: 'किन्ने',
+    body: 'I want to buy or rent a property.',
+    bullets: ['Save the ones you like', 'Ask the seller directly', 'Ask to visit'],
   },
   {
     value: 'property_owner' as const,
     icon: Home,
-    title: 'I want to sell or rent out',
-    body: 'Put a house, flat or plot on the market.',
-    bullets: ['Post your property', 'Get enquiries', 'Add eSewa / Khalti details'],
+    title: 'Seller',
+    ne: 'बेच्ने',
+    body: 'I have a house, flat or land to sell or rent out.',
+    bullets: ['Put your property up', 'Get calls from buyers', 'Add eSewa or Khalti'],
   },
 ];
 
@@ -64,7 +72,7 @@ export function AccountTypePrompt() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="account-type-title"
-        className="ticked w-full max-w-lg border border-ink-900 bg-white"
+        className="thread-top w-full max-w-lg overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-floating"
       >
         <div className="border-b border-ink-200 px-6 py-5">
           <p className="label">One quick question</p>
@@ -72,7 +80,7 @@ export function AccountTypePrompt() {
             id="account-type-title"
             className="mt-2 text-lg font-semibold tracking-[-0.02em] text-ink-900"
           >
-            What brings you here?
+Are you buying or selling?
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-600">
             You signed in with Google, so we did not get a chance to ask. You can change this
@@ -89,10 +97,10 @@ export function AccountTypePrompt() {
                 <label
                   key={option.value}
                   className={cn(
-                    'cursor-pointer rounded-sm border p-4 transition-colors',
+                    'cursor-pointer rounded-xl border-2 p-4 transition-colors',
                     selected
-                      ? 'border-royal-700 bg-royal-50/50'
-                      : 'border-ink-200 bg-white hover:border-ink-300',
+                      ? 'border-crimson-500 bg-crimson-50'
+                      : 'border-ink-200 bg-white hover:border-crimson-200',
                   )}
                 >
                   <input
@@ -105,16 +113,17 @@ export function AccountTypePrompt() {
                   />
                   <span
                     className={cn(
-                      'flex size-9 items-center justify-center rounded-sm border',
-                      selected
-                        ? 'border-royal-200 bg-white text-royal-700'
-                        : 'border-ink-200 bg-ink-50 text-ink-500',
+                      'flex size-10 items-center justify-center rounded-full',
+                      selected ? 'bg-crimson-100 text-crimson-700' : 'bg-ink-100 text-ink-500',
                     )}
                   >
                     <option.icon aria-hidden className="size-4.5" />
                   </span>
-                  <span className="mt-3 block text-sm font-medium text-ink-900">
-                    {option.title}
+                  <span className="mt-3 flex items-baseline gap-2">
+                    <span className="text-base font-semibold text-ink-900">{option.title}</span>
+                    <span aria-hidden className="text-sm text-ink-400">
+                      {option.ne}
+                    </span>
                   </span>
                   <span className="mt-0.5 block text-xs text-ink-500">{option.body}</span>
                   <ul className="mt-3 space-y-1 border-t border-ink-200 pt-3">
@@ -135,8 +144,7 @@ export function AccountTypePrompt() {
           </Button>
 
           <p className="text-2xs leading-relaxed text-ink-400">
-            Working as an agent or an agency? Pick either for now and ask us from Settings, since
-            those accounts are set up by our team.
+            Working as an agent or for an agency? Choose seller for now and tell us from Settings — we set those accounts up by hand.
           </p>
         </div>
       </div>

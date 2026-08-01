@@ -10,18 +10,18 @@
    ============================================================================= */
 
 @theme {
-  /* --- Royal: Deep, rich navy conveying trust and authority. ---------- */
-  --color-royal-50: #f4f6fa;
-  --color-royal-100: #e5e9f3;
-  --color-royal-200: #c6d1e5;
-  --color-royal-300: #9cb1d2;
-  --color-royal-400: #6d8ebd;
-  --color-royal-500: #4971a6;
-  --color-royal-600: #36578a;
-  --color-royal-700: #2c4672;
-  --color-royal-800: #253b5f;
-  --color-royal-900: #213351;
-  --color-royal-950: #0a1120; /* Deep dark base */
+  /* --- Royal: Vibrant Bright Blue for modern real estate feel. ---------- */
+  --color-royal-50: #eff6ff;
+  --color-royal-100: #dbeafe;
+  --color-royal-200: #bfdbfe;
+  --color-royal-300: #93c5fd;
+  --color-royal-400: #60a5fa;
+  --color-royal-500: #3b82f6;
+  --color-royal-600: #2563eb;
+  --color-royal-700: #1d4ed8;
+  --color-royal-800: #1e40af;
+  --color-royal-900: #1e3a8a;
+  --color-royal-950: #172554;
 
   /* --- Sand: Warm Champagne/Gold accents for luxury and premium feel. -------- */
   --color-sand-50: #fbfaf8;
@@ -45,6 +45,38 @@
   --color-emerald-800: #11593c;
   --color-emerald-900: #104933;
 
+  /* --- Crimson: the action colour. -----------------------------------------
+     Taken from the crimson of the flag and of tika — the most recognisably
+     Nepali red there is, pulled back from pure #DC143C so it sits calmly next
+     to navy instead of vibrating against it. Every primary call to action on
+     the site is this colour, which is what stops the product reading as two
+     shades of blue. */
+  --color-crimson-50: #fff1f3;
+  --color-crimson-100: #ffe0e5;
+  --color-crimson-200: #ffc6cf;
+  --color-crimson-300: #ff9dad;
+  --color-crimson-400: #fa6280;
+  --color-crimson-500: #ef3358;
+  --color-crimson-600: #d81b45;
+  --color-crimson-700: #b6113a;
+  --color-crimson-800: #991136;
+  --color-crimson-900: #831233;
+
+  /* --- Marigold: the highlight. --------------------------------------------
+     Sayapatri, the flower strung over every doorway at Tihar. Carries warmth
+     into surfaces and counts, and never carries meaning on its own — if a
+     colour has to say "this is confirmed", that is emerald's job. */
+  --color-marigold-50: #fffaeb;
+  --color-marigold-100: #fef0c7;
+  --color-marigold-200: #fde08a;
+  --color-marigold-300: #fbcb4d;
+  --color-marigold-400: #f9b424;
+  --color-marigold-500: #f3930b;
+  --color-marigold-600: #d76d06;
+  --color-marigold-700: #b24c09;
+  --color-marigold-800: #913b0e;
+  --color-marigold-900: #78320f;
+
   /* --- Ink: Sleek, high-contrast text and structure. ----------------------- */
   --color-ink-50: #f8fafc;
   --color-ink-100: #f1f5f9;
@@ -61,6 +93,9 @@
   --color-clay-50: #fff6f5;
   --color-clay-100: #ffedea;
   --color-clay-200: #ffd8d3;
+  --color-clay-300: #ffb5ac;
+  --color-clay-400: #f5806f;
+  --color-clay-500: #e05a48;
   --color-clay-600: #cc493d;
   --color-clay-700: #a9372d;
   --color-clay-800: #8b3028;
@@ -262,6 +297,107 @@
      runs before paint, so there is no flash — and a blocked or failed bundle
      leaves the content visible rather than invisible. Nothing here hides it. */
   .reveal { will-change: opacity, transform; }
+
+  /* ---------------------------------------------------------------------------
+     The thread.
+
+     One motif, crimson running into marigold, and the only place two accent
+     colours are allowed to touch. It marks the top edge of a surface that is
+     asking for a decision — the calculator, a step in the listing wizard, the
+     admin's own panels — so the warmth in the palette always means the same
+     thing rather than being sprinkled around for texture.
+     --------------------------------------------------------------------------- */
+  .thread {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-crimson-600) 0%,
+      var(--color-crimson-500) 38%,
+      var(--color-marigold-400) 100%
+    );
+  }
+
+  .thread-top {
+    position: relative;
+  }
+  .thread-top::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 3px;
+    border-start-start-radius: inherit;
+    border-start-end-radius: inherit;
+    background-image: linear-gradient(
+      90deg,
+      var(--color-crimson-600) 0%,
+      var(--color-crimson-500) 38%,
+      var(--color-marigold-400) 100%
+    );
+  }
+
+  /* ---------------------------------------------------------------------------
+     Range input.
+
+     Native range controls look like three different products across Chrome,
+     Safari and Firefox, and the calculator leans on them heavily, so the track
+     and thumb are drawn here. The thumb is crimson because dragging one is an
+     action, and the hit area stays 20px even though the track is 6px.
+     --------------------------------------------------------------------------- */
+  .range {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    height: 20px;
+  }
+
+  .range::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-ink-200);
+  }
+  .range::-moz-range-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-ink-200);
+  }
+
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -7px;
+    height: 20px;
+    width: 20px;
+    border-radius: 999px;
+    background: var(--color-crimson-600);
+    border: 3px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.25);
+    transition: transform 150ms var(--ease-out-expo);
+  }
+  .range::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 999px;
+    background: var(--color-crimson-600);
+    border: 3px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.25);
+    transition: transform 150ms var(--ease-out-expo);
+  }
+
+  .range:hover::-webkit-slider-thumb { transform: scale(1.12); }
+  .range:hover::-moz-range-thumb { transform: scale(1.12); }
+  .range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--color-crimson-200); }
+  .range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 4px var(--color-crimson-200); }
+  .range:focus-visible { outline: none; }
+
+  /* A number that carries weight: large, extra-light, and warm rather than
+     black. Used for the figures on the dashboard and in the calculator. */
+  .figure {
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+    font-weight: 200;
+    letter-spacing: -0.02em;
+  }
 }
 
 @keyframes skeleton-sweep {

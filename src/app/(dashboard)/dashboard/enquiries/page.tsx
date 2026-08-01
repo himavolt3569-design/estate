@@ -2,6 +2,7 @@ import { ArrowRight, MessageSquare } from 'lucide-react';
 import type { Metadata } from 'next';
 
 import { Badge, EmptyState } from '@/components/ui/primitives';
+import { PageHeader } from '../components/PageHeader';
 import { getTranslation } from '@/i18n';
 import { getSessionUser, isVendor } from '@/lib/auth/session';
 import { formatRelative } from '@/lib/format';
@@ -29,8 +30,8 @@ export default async function DashboardEnquiriesPage() {
     return (
       <EmptyState
         icon={<MessageSquare className="size-6" />}
-        title="Access Denied"
-        description="Only property owners and agents have an inbox."
+        title="Only sellers have an inbox"
+        description="Messages arrive here once you have a property listed."
       />
     );
   }
@@ -50,27 +51,28 @@ export default async function DashboardEnquiriesPage() {
   const rows = enquiries ?? [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
-          {admin ? 'All Enquiries (Master Admin)' : 'Messages'}
-        </h1>
-        <p className="mt-1 text-sm text-ink-600">
-          {admin ? 'View all enquiries on the platform' : 'Manage enquiries from potential buyers or tenants'}
-        </p>
-      </div>
+    <div className="space-y-7">
+      <PageHeader
+        eyebrow={admin ? 'Platform' : 'Your account'}
+        title={admin ? 'All messages' : 'Messages'}
+        subtitle={
+          admin
+            ? 'Every enquiry sent through Kitta, to any seller.'
+            : 'People who have asked about one of your properties.'
+        }
+      />
 
       {rows.length === 0 ? (
         <EmptyState
           icon={<MessageSquare className="size-6" />}
           title="No messages yet"
-          description="When someone enquires about a property, it will appear here."
+          description="When somebody asks about one of your properties, it lands here and you get an email."
         />
       ) : (
-        <div className="overflow-x-auto border border-ink-200">
-          <table className="w-full min-w-3xl border-collapse bg-white text-sm">
+        <div className="overflow-x-auto rounded-2xl border border-ink-100 bg-white shadow-soft">
+          <table className="w-full min-w-3xl border-collapse text-sm">
             <thead>
-              <tr className="border-b border-ink-200 text-left">
+              <tr className="border-b border-ink-100 bg-ink-50/70 text-left">
                 <Th>Sender</Th>
                 <Th>Property</Th>
                 <Th>Message</Th>

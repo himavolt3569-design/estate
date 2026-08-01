@@ -79,6 +79,8 @@ const badgeVariants = cva(
         rejected: 'border-clay-200 bg-clay-50 text-clay-700',
         royal: 'border-royal-200 bg-royal-50 text-royal-800',
         solid: 'border-royal-800 bg-royal-800 text-white',
+        crimson: 'border-crimson-200 bg-crimson-50 text-crimson-700',
+        marigold: 'border-marigold-200 bg-marigold-50 text-marigold-800',
       },
     },
     defaultVariants: { tone: 'neutral' },
@@ -217,7 +219,7 @@ export function SectionHeading({
   className?: string;
 }) {
   return (
-    <div className={cn('flex items-end justify-between gap-6 border-b border-ink-900 pb-4', className)}>
+    <div className={cn('relative flex items-end justify-between gap-6 pb-4', className)}>
       <div className="flex items-end gap-4">
         {index && (
           <span aria-hidden className="nums thin -mb-1 text-3xl leading-none text-ink-300">
@@ -225,11 +227,17 @@ export function SectionHeading({
           </span>
         )}
         <div>
-          {eyebrow && <p className="label mb-2">{eyebrow}</p>}
+          {eyebrow && <p className="label mb-2 text-crimson-600">{eyebrow}</p>}
           <h2 className="text-display-md text-ink-900">{title}</h2>
         </div>
       </div>
       {action && <div className="shrink-0 pb-1">{action}</div>}
+
+      {/* The rule under a heading was a full-width hairline in ink-900, which
+          made every section start with a hard black line. It is now the thread:
+          a short warm stroke that stops, with the hairline continuing past it. */}
+      <span aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-ink-200" />
+      <span aria-hidden className="thread absolute bottom-0 left-0 h-[2px] w-16 rounded-full" />
     </div>
   );
 }

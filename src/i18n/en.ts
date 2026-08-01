@@ -95,13 +95,53 @@ export const en = {
     title: 'Search by province',
   },
 
-  price: {
-    eyebrow: 'By your budget',
-    title: 'Search by price',
-    under50: 'Below 50 lakh',
-    between50and1cr: '50 lakh to 1 crore',
-    between1and2cr: '1 crore to 2 crore',
-    above2cr: 'Above 2 crore',
+  /*
+   * The old "search by price" bands are gone. Nobody shops by band; they shop
+   * by what the monthly payment does to their salary, and until now they had to
+   * work that out on a bank's website and come back.
+   */
+  emi: {
+    eyebrow: 'Before you visit a bank',
+    title: 'Work out the monthly payment',
+    intro:
+      'Put in the price of the property and what you can pay upfront. This shows the instalment, the interest you will pay over the whole loan, and what changes if you pay a little extra each month.',
+    price: 'Price of the property',
+    downPayment: 'You pay upfront',
+    loanAmount: 'You borrow',
+    rate: 'Interest rate',
+    tenure: 'Loan length',
+    years: 'years',
+    perYear: 'per year',
+    monthly: 'Monthly instalment',
+    totalInterest: 'Interest over the whole loan',
+    totalPaid: 'Total you repay',
+    paidOffIn: 'Paid off in',
+    principalShare: 'Amount borrowed',
+    interestShare: 'Interest',
+    payExtra: 'Pay a bit extra',
+    payExtraHint: 'Optional. See what paying more does to the loan.',
+    extraMonthly: 'Extra every month',
+    lumpSum: 'One-off payment',
+    lumpSumMonth: 'Paid in month',
+    saved: 'By paying extra you save',
+    savedInterest: 'in interest',
+    savedTime: 'and finish',
+    earlier: 'earlier',
+    income: 'Your monthly income',
+    incomeHint: 'Optional. Banks usually want the instalment under half of it.',
+    fits: 'This instalment fits the usual limit.',
+    tight: 'This is above the usual limit of half your income. A bank will likely ask for a longer term or a bigger deposit.',
+    ltvWarning:
+      'Most Nepali banks lend up to 80% of the value. With this deposit you are asking for {ltv}%, so expect to put in more.',
+    yearByYear: 'Year by year',
+    showSchedule: 'Show the year-by-year breakdown',
+    hideSchedule: 'Hide the breakdown',
+    year: 'Year',
+    balance: 'Still owed',
+    paidThisYear: 'Paid this year',
+    disclaimer:
+      'An estimate, to help you plan. Your bank sets the real rate and may add service charges.',
+    findWithin: 'See properties in this range',
   },
 
   card: {

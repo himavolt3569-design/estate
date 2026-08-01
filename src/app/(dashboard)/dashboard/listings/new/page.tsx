@@ -4,59 +4,77 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import { getTranslation } from '@/i18n';
 import { getSessionUser, isVendor } from '@/lib/auth/session';
-import { createClient } from '@/lib/supabase/server';
-import { NewListingForm } from './components/NewListingForm';
+import { ListingWizard } from '@/modules/listings/components/ListingWizard';
+import {
+  getFeatureOptions,
+  getLocationOptions,
+  getPostableOwners,
+} from '@/modules/listings/queries';
 
-export const metadata: Metadata = { title: 'Add Property', robots: { index: false } };
+export const metadata: Metadata = { title: 'Add a property', robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
 export default async function NewListingPage() {
-  const [user] = await Promise.all([getSessionUser(), getTranslation()]);
-  if (!user) redirect('/login');
+  const user = await getSessionUser();
+  if (!user) redirect('/login?next=/dashboard/listings/new');
 
-  const vendor = isVendor(user.role);
   const admin = user.role === 'platform_admin';
-  if (!vendor && !admin) redirect('/dashboard');
 
-  const supabase = await createClient();
-
-  // Master Admin can list on behalf of someone else, so we need users to choose from
-  let owners: any[] = [];
-  if (admin) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, email')
-      .in('role', ['property_owner', 'agent', 'agency_manager'])
-      .is('deleted_at', null);
-    owners = data ?? [];
+  /*
+   * A customer who reaches this page is not doing anything wrong — they simply
+   * have not said yet that they want to sell. Bouncing them to /dashboard with
+   * no explanation was the reason "the list property page does not work" came
+   * up so often. They now get the page, and a way to become a seller.
+   */
+  if (!isVendor(user.role) && !admin) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <div className="thread-top overflow-hidden rounded-2xl border border-ink-100 bg-white p-8 text-center shadow-soft">
+          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+            Your account is set up for buying
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-600">
+            To put a property on Kitta, switch your account to a seller account. It takes one tap
+            and you keep everything you have saved.
+          </p>
+          <Button asChild className="mt-6">
+            <Link href="/dashboard/settings?become=seller">Switch to a seller account</Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
-  // Fetch existing features to allow selection
-  const { data: featuresData } = await supabase
-    .from('features')
-    .select('id, key, label_en')
-    .eq('is_active', true)
-    .order('label_en');
-  const features = featuresData ?? [];
+  const [{ provinces, districts }, features, owners] = await Promise.all([
+    getLocationOptions(),
+    getFeatureOptions(),
+    admin ? getPostableOwners() : Promise.resolve([]),
+  ]);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <div className="flex items-center gap-4">
+    <div className="mx-auto max-w-3xl space-y-7 pb-16">
+      <div>
         <Button asChild variant="ghost" size="sm" className="-ml-3">
           <Link href="/dashboard/listings">
-            <ArrowLeft aria-hidden /> Back
+            <ArrowLeft aria-hidden /> My properties
           </Link>
         </Button>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
-          List a New Property
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink-900">
+          Put a property on Kitta
         </h1>
+        <p className="mt-2 text-sm text-ink-600">
+          Six short steps. Your answers are saved as you go, so you can stop and come back.
+        </p>
       </div>
 
-      <div className="bg-white p-6 border border-ink-200">
-        <NewListingForm admin={admin} owners={owners} features={features} />
-      </div>
+      <ListingWizard
+        provinces={provinces}
+        districts={districts}
+        features={features}
+        owners={owners}
+        isAdmin={admin}
+      />
     </div>
   );
 }

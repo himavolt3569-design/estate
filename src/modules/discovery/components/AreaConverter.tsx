@@ -5,6 +5,7 @@ import Link from 'next/link';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { SelectMenu } from '@/components/ui/select-menu';
 import type { Dictionary } from '@/i18n';
 
 /*
@@ -80,10 +81,10 @@ export function AreaConverter({ t }: { t: Dictionary['converter'] }) {
   )}`;
 
   return (
-    <div className="border border-ink-900 bg-white">
+    <div className="thread-top overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-raised">
       <div className="grid gap-px bg-ink-200 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         {/* ---------------- Input ---------------- */}
-        <div className="bg-white p-6">
+        <div className="bg-white p-6 sm:p-8">
           <label htmlFor="area-amount" className="label block">
             {t.plotSize}
           </label>
@@ -96,23 +97,16 @@ export function AreaConverter({ t }: { t: Dictionary['converter'] }) {
               step="any"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="nums h-12 w-24 rounded-sm border border-ink-200 bg-white px-3 text-lg font-medium text-ink-900 focus-visible:border-royal-700 focus-visible:outline-none"
+              className="nums h-12 w-24 rounded-lg border border-ink-200 bg-white px-3 text-lg font-medium text-ink-900 shadow-sm transition-colors hover:border-ink-300 focus-visible:border-royal-500 focus-visible:ring-2 focus-visible:ring-royal-500/20 focus-visible:outline-none"
             />
-            <label htmlFor="area-unit" className="sr-only">
-              {t.unit}
-            </label>
-            <select
+            <SelectMenu
               id="area-unit"
+              ariaLabel={t.unit}
               value={unit}
-              onChange={(e) => setUnit(e.target.value as Unit)}
-              className="h-12 flex-1 rounded-sm border border-ink-200 bg-white px-3 text-sm text-ink-900 focus-visible:border-royal-700 focus-visible:outline-none"
-            >
-              {INPUT_UNITS.map((u) => (
-                <option key={u} value={u}>
-                  {t.units[u]}
-                </option>
-              ))}
-            </select>
+              onValueChange={(value) => setUnit(value as Unit)}
+              className="flex-1"
+              options={INPUT_UNITS.map((u) => ({ value: u, label: t.units[u] }))}
+            />
           </div>
 
           <dl className="mt-6 space-y-3 border-t border-ink-100 pt-5">
@@ -122,7 +116,7 @@ export function AreaConverter({ t }: { t: Dictionary['converter'] }) {
         </div>
 
         {/* ---------------- Both traditional systems ---------------- */}
-        <div className="bg-white p-6">
+        <div className="bg-white p-6 sm:p-8">
           <p className="label">{t.inBoth}</p>
 
           <div className="mt-4 space-y-4">

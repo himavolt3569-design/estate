@@ -99,11 +99,21 @@ export async function searchProperties(
 ): Promise<SearchResult> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc('search_properties', {
-    p_filters: filters as never,
-    p_cursor: (decodeCursor(cursor) ?? null) as never,
-    p_limit: limit,
-  });
+  let data = null;
+  let error = null;
+
+  try {
+    const result = await supabase.rpc('search_properties', {
+      p_filters: filters as never,
+      p_cursor: (decodeCursor(cursor) ?? null) as never,
+      p_limit: limit,
+    });
+    data = result.data;
+    error = result.error;
+  } catch (err: any) {
+    console.error('[search_properties_fetch_error]', err.message || err);
+    return { items: [], nextCursor: null };
+  }
 
   if (error) {
     // Surfacing the raw Postgres message to a visitor tells them nothing useful
@@ -136,18 +146,26 @@ export async function searchProperties(
 
 /** Capped at 1000. See count_properties() in 0011 for why an exact count is not worth it. */
 export async function countProperties(filters: SearchFilters): Promise<number> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc('count_properties', { p_filters: filters as never });
-  if (error) return 0;
-  return (data as unknown as number) ?? 0;
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc('count_properties', { p_filters: filters as never });
+    if (error) return 0;
+    return (data as unknown as number) ?? 0;
+  } catch (e) {
+    return 0;
+  }
 }
 
 /** The safe public projection. /properties/* reads this, never the table. */
 export async function getPropertyBySlug(slug: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc('get_property_public', { p_slug: slug });
-  if (error || !data) return null;
-  return data as unknown as PropertyDetail;
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc('get_property_public', { p_slug: slug });
+    if (error || !data) return null;
+    return data as unknown as PropertyDetail;
+  } catch (e) {
+    return null;
+  }
 }
 
 export type PropertyDetail = {

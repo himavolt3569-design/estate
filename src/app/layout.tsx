@@ -3,6 +3,7 @@ import { Poppins } from 'next/font/google';
 import { Toaster } from 'sonner';
 
 import { getLocale } from '@/i18n';
+import { siteOrigin } from '@/lib/utils';
 
 import { Providers } from './providers';
 import { PageTransition } from '@/components/animations/PageTransition';
@@ -32,7 +33,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  metadataBase: new URL(siteOrigin()),
   title: {
     default: 'Kitta: property in Nepal, with its paperwork in the open',
     template: '%s · Kitta',

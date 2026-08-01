@@ -20,15 +20,30 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        /*
+         * Crimson, not navy. Navy is the colour of the structure — the header,
+         * the links, the panels — so when it was also the colour of every
+         * button, nothing on a page looked more clickable than anything else.
+         * Moving the primary action onto crimson gives the eye one place to
+         * land per screen, and is where most of the warmth in the product now
+         * comes from.
+         */
         primary:
-          'rounded-md border border-royal-700 bg-royal-700 text-white hover:border-royal-600 hover:bg-royal-600',
+          'rounded-lg border border-transparent bg-crimson-600 text-white shadow-sm hover:bg-crimson-500',
+        /** The institutional action: navigation and confirmations that are not the page's main ask. */
+        royal:
+          'rounded-lg border border-transparent bg-royal-700 text-white shadow-sm hover:bg-royal-600',
         secondary:
-          'rounded-md border border-ink-200 bg-white text-ink-800 hover:border-ink-300 hover:bg-ink-50',
-        ghost: 'rounded-md border border-transparent text-ink-600 hover:bg-ink-100 hover:text-ink-900',
+          'rounded-lg border border-ink-200 bg-white text-ink-800 hover:border-ink-300 hover:bg-ink-50',
+        ghost: 'rounded-lg border border-transparent text-ink-600 hover:bg-ink-100 hover:text-ink-900',
+        /** Emerald stays reserved: it appears only where something is confirmed or verified. */
         approve:
-          'rounded-md border border-emerald-500 bg-emerald-500 text-white hover:border-emerald-400 hover:bg-emerald-400',
+          'rounded-lg border border-transparent bg-emerald-600 text-white shadow-sm hover:bg-emerald-500',
+        /** Warm, lower-commitment call to action. Pairs with a crimson primary without competing. */
+        marigold:
+          'rounded-lg border border-transparent bg-marigold-400 text-marigold-900 shadow-sm hover:bg-marigold-300',
         destructive:
-          'rounded-md border border-clay-100 bg-white text-clay-700 hover:border-clay-600 hover:bg-clay-50',
+          'rounded-lg border border-clay-200 bg-white text-clay-700 hover:border-clay-300 hover:bg-clay-50',
         link: 'border border-transparent text-royal-600 underline underline-offset-4 hover:text-royal-800 hover:shadow-none hover:translate-y-0 active:scale-100',
         inverse:
           'rounded-md border border-white bg-white text-royal-800 hover:bg-ink-50',

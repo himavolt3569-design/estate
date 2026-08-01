@@ -1,11 +1,12 @@
 import { Monitor, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 
-import { Badge, SectionHeading, Surface } from '@/components/ui/primitives';
+import { Badge, Surface } from '@/components/ui/primitives';
 import { getSessionUser } from '@/lib/auth/session';
 import { formatRelative } from '@/lib/format';
 import { createClient } from '@/lib/supabase/server';
 
+import { PageHeader } from '../../components/PageHeader';
 import { ChangePasswordForm } from './ChangePasswordForm';
 import { RevokeSessionButton } from './RevokeSessionButton';
 import { TwoFactorPanel } from './TwoFactorPanel';
@@ -61,11 +62,15 @@ export default async function SecuritySettingsPage({
 
   return (
     <div className="max-w-3xl space-y-10 pb-10">
-      <SectionHeading eyebrow="Your account" title="Security" />
+      <PageHeader
+        eyebrow="Your account"
+        title="Sign-in and safety"
+        subtitle="Your password, two-step sign-in, and the devices currently signed in to this account."
+      />
 
       {reason === 'admin-requires-2fa' && (
-        <div className="rounded-sm border border-ochre-100 bg-ochre-50 px-4 py-3 text-sm text-ochre-700">
-          Admin tools need two-factor sign-in. Set it up below, then sign in again to continue.
+        <div className="rounded-xl border border-ochre-200 bg-ochre-50 px-4 py-3 text-sm text-ochre-700">
+          Two-step sign-in is strongly recommended on an account that can publish listings.
         </div>
       )}
 

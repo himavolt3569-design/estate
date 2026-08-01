@@ -1,12 +1,17 @@
 import {
   Building2,
   CreditCard,
+  Flag,
+  Gauge,
   Heart,
+  Image,
   LayoutDashboard,
   MessageSquare,
+  ScrollText,
   Search,
   Settings,
   ShieldCheck,
+  TrendingUp,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -60,18 +65,36 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const n = t.dashboard.nav;
 
+  /*
+   * A customer sees Saved and Saved searches; a seller sees their properties and
+   * their inbox. The master admin sees every one of those surfaces pointed at
+   * the whole platform rather than at their own row, which is why the admin
+   * entries are a separate group rather than the same links with a flag.
+   */
   const nav = [
     { href: '/dashboard', label: n.overview, icon: 'LayoutDashboard', show: true },
-    { href: '/dashboard/listings', label: n.myProperties, icon: 'Building2', show: vendor || admin },
-    { href: '/dashboard/enquiries', label: n.messages, icon: 'MessageSquare', show: vendor || admin },
+    { href: '/dashboard/listings', label: admin ? 'All properties' : n.myProperties, icon: 'Building2', show: vendor || admin },
+    { href: '/dashboard/enquiries', label: admin ? 'All messages' : n.messages, icon: 'MessageSquare', show: vendor || admin },
     { href: '/dashboard/saved', label: n.saved, icon: 'Heart', show: !vendor && !admin },
     { href: '/dashboard/searches', label: n.savedSearches, icon: 'Search', show: !vendor && !admin },
-    { href: '/dashboard/admin', label: n.admin, icon: 'Users', show: admin },
   ].filter((item) => item.show);
 
+  const adminNav = [
+    { href: '/dashboard/admin', label: 'Control centre', icon: 'Gauge', show: admin },
+    { href: '/dashboard/admin/users', label: 'People', icon: 'Users', show: admin },
+    { href: '/dashboard/admin/moderation', label: 'Waiting for review', icon: 'ShieldCheck', show: admin },
+    { href: '/dashboard/admin/sales', label: 'Sales', icon: 'TrendingUp', show: admin },
+    { href: '/dashboard/admin/payments', label: 'Payments', icon: 'CreditCard', show: admin },
+    { href: '/dashboard/admin/reports', label: 'Reports', icon: 'Flag', show: admin },
+    { href: '/dashboard/admin/site', label: 'Site settings', icon: 'Image', show: admin },
+    { href: '/dashboard/admin/audit', label: 'Record of changes', icon: 'ScrollText', show: admin },
+  ].filter((item) => item.show);
+
+  // The master admin has no personal profile to curate — the seat is the
+  // platform's, not a person's — so their settings group is the site's settings.
   const settingsNav = [
     { href: '/dashboard/settings', label: n.profile, icon: 'Settings', show: !admin },
-    { href: '/dashboard/settings/security', label: n.security, icon: 'ShieldCheck', show: !admin },
+    { href: '/dashboard/settings/security', label: n.security, icon: 'ShieldCheck', show: true },
     { href: '/dashboard/settings/payments', label: n.payments, icon: 'CreditCard', show: vendor },
   ].filter((item) => item.show);
 
@@ -109,13 +132,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </header>
 
       <div className="mx-auto flex max-w-8xl gap-8 px-4 py-8 sm:px-6 lg:px-8">
-        <aside className="hidden w-64 shrink-0 lg:block border-r border-ink-100 bg-white/50 pr-6">
+        <aside className="hidden w-64 shrink-0 border-r border-ink-100 pr-6 lg:block">
           <nav aria-label="Dashboard" className="sticky top-24">
             <SidebarNav items={nav} />
 
+            {adminNav.length > 0 && (
+              <>
+                <p className="label mt-8 mb-3 px-4 text-crimson-600">Platform</p>
+                <SidebarNav items={adminNav} />
+              </>
+            )}
+
             {settingsNav.length > 0 && (
               <>
-                <p className="label mt-8 mb-3 px-4 text-xs font-semibold uppercase tracking-wider text-ink-400">{n.settings}</p>
+                <p className="label mt-8 mb-3 px-4">{n.settings}</p>
                 <SidebarNav items={settingsNav} />
               </>
             )}
@@ -124,7 +154,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         <main id="main" className="min-w-0 flex-1">
           {user.status === 'pending_verification' && (
-            <div className="mb-6 rounded-sm border border-ochre-100 bg-ochre-50 px-4 py-3 text-sm text-ochre-700">
+            <div className="mb-6 rounded-xl border border-ochre-200 bg-ochre-50 px-4 py-3 text-sm text-ochre-700">
               {n.confirmEmailBody}
             </div>
           )}
@@ -139,17 +169,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
         className="fixed inset-x-0 bottom-0 z-50 border-t border-ink-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         <ul className="flex">
-          {[...nav, ...settingsNav.slice(0, 1)].slice(0, 5).map((item) => {
+          {[...nav, ...adminNav, ...settingsNav].slice(0, 5).map((item) => {
             // Re-map string icons back to components for the mobile nav since it's still server-rendered
             const ICON_MAP: Record<string, React.ElementType> = {
               Building2,
               CreditCard,
+              Flag,
+              Gauge,
               Heart,
+              Image,
               LayoutDashboard,
               MessageSquare,
+              ScrollText,
               Search,
               Settings,
               ShieldCheck,
+              TrendingUp,
               Users,
             };
             const Icon = ICON_MAP[item.icon as string] || LayoutDashboard;

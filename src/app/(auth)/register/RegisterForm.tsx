@@ -38,17 +38,17 @@ const INTENTS: Array<{
 }> = [
   {
     value: 'customer',
-    title: "I'm looking for a property",
-    body: 'Search, save and enquire.',
+    title: 'Buyer',
+    body: 'I want to buy or rent a property.',
     icon: <Search className="size-5" aria-hidden />,
-    bullets: ['Save searches and get alerts', 'Request viewings', 'Contact listers directly'],
+    bullets: ['Save the ones you like', 'Ask the seller directly', 'Ask to visit'],
   },
   {
     value: 'property_owner',
-    title: 'I want to list a property',
-    body: 'Put a house, flat or plot on the market.',
+    title: 'Seller',
+    body: 'I have a house, flat or land to sell or rent out.',
     icon: <Home className="size-5" aria-hidden />,
-    bullets: ['List and manage properties', 'Receive enquiries', 'Add eSewa / Khalti details'],
+    bullets: ['Put your property up', 'Get calls from buyers', 'Add eSewa or Khalti'],
   },
 ];
 
@@ -213,7 +213,7 @@ export function RegisterForm({ next, t }: { next?: string; t: Dictionary['auth']
         <Field
           label="Phone"
           htmlFor="phone"
-          hint={intent === 'property_owner' ? 'Buyers reach you on this' : 'Optional'}
+          hint={intent === 'property_owner' ? 'Buyers call you on this' : 'Optional'}
           error={errors.phone?.message}
         >
           <Input
