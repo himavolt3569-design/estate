@@ -10,11 +10,12 @@ import type { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Surface, Textarea } from '@/components/ui/primitives';
 import { deletePaymentMethod, savePaymentMethod } from '@/modules/identity/actions';
+import { QrUploader } from '@/modules/identity/components/QrUploader';
 import { paymentMethodSchema } from '@/modules/identity/schema';
 
 type Values = z.infer<typeof paymentMethodSchema>;
 
-export function PaymentMethodForm() {
+export function PaymentMethodForm({ userId }: { userId: string }) {
   const router = useRouter();
 
   const {
@@ -22,6 +23,7 @@ export function PaymentMethodForm() {
     handleSubmit,
     reset,
     watch,
+    setValue,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
@@ -40,6 +42,7 @@ export function PaymentMethodForm() {
 
   const provider = watch('provider');
   const isBank = provider === 'bank';
+  const qrImagePath = watch('qrImagePath') ?? '';
 
   async function onSubmit(values: Values) {
     const result = await savePaymentMethod(values);
@@ -110,6 +113,16 @@ export function PaymentMethodForm() {
             </Field>
           </div>
         )}
+
+        {/* Every provider, not only the wallets: a QR on a printed bank
+            invoice is standard, and scanning beats typing an account number
+            wherever it is offered. */}
+        <input type="hidden" {...register('qrImagePath')} />
+        <QrUploader
+          userId={userId}
+          value={qrImagePath}
+          onChange={(path) => setValue('qrImagePath', path, { shouldDirty: true })}
+        />
 
         <Field
           label="Notes for the buyer"

@@ -9,6 +9,7 @@ import {
   PropertyCardGrid,
   PropertyCardSkeleton,
 } from '@/modules/discovery/components/PropertyCard';
+import { getSavedPropertyIds } from '@/modules/discovery/favorites-queries';
 import { countProperties, searchProperties } from '@/modules/discovery/queries';
 import { FilterSelect } from './FilterSelect';
 import type { SearchFilters } from '@/modules/discovery/types';
@@ -136,6 +137,9 @@ async function Results({
     countProperties(filters),
   ]);
 
+  // One round trip for the whole grid, and empty for a signed-out visitor.
+  const savedIds = await getSavedPropertyIds(items.map((item) => item.id));
+
   if (items.length === 0) {
     return (
       <EmptyState
@@ -157,7 +161,7 @@ async function Results({
         {total === 1 ? 'property' : 'properties'}
       </p>
 
-      <PropertyCardGrid properties={items} />
+      <PropertyCardGrid properties={items} savedIds={savedIds} />
 
       {nextCursor && (
         <div className="mt-10 flex justify-center">

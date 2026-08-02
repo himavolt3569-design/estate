@@ -7,14 +7,16 @@ import { Seal } from '@/components/brand/Seal';
 import { TrustLedger } from '@/components/brand/TrustLedger';
 import { MapLoader } from '@/components/map/MapLoader';
 import { Avatar } from '@/components/media/Avatar';
-import { PropertyImage } from '@/components/media/PropertyImage';
 import { Badge, SectionHeading, Surface } from '@/components/ui/primitives';
 import { LISTED_BY_LABELS } from '@/lib/auth/permissions';
 import { formatArea, formatAreaSecondary, formatDate, formatPrice } from '@/lib/format';
 import { absoluteUrl } from '@/lib/utils';
 import { PresenceTracker } from '@/modules/analytics/components/PresenceTracker';
 import { ContactPanel } from '@/modules/discovery/components/ContactPanel';
+import { FavoriteButton } from '@/modules/discovery/components/FavoriteButton';
+import { PropertyGallery } from '@/modules/discovery/components/PropertyGallery';
 import { getPropertyBySlug } from '@/modules/discovery/queries';
+import { PaymentPanel } from '@/modules/settlement/components/PaymentPanel';
 
 // The SEO surface. ISR keeps it crawlable HTML and near-instant, while still
 // picking up a price change within a minute.
@@ -54,8 +56,6 @@ export default async function PropertyPage({ params }: { params: Params }) {
 
   if (!property) notFound();
 
-  const cover = property.images.find((i) => i.isCover) ?? property.images[0];
-  const rest = property.images.filter((i) => i.id !== cover?.id).slice(0, 4);
   const place = property.location?.nameEn ?? locality;
 
   // RealEstateListing structured data, so the listing can surface as a rich
@@ -110,36 +110,16 @@ export default async function PropertyPage({ params }: { params: Params }) {
           current={property.title}
         />
 
-        {/* Gallery: one large cover plus a strip. The lightbox is a client leaf
-            loaded on interaction, not part of this page's bundle. */}
-        <div className="mt-4 grid gap-2 overflow-hidden rounded-sm lg:grid-cols-[2fr_1fr]">
-          <PropertyImage
-            renditions={cover?.renditions}
-            storagePath={cover?.storagePath}
-            alt={cover?.alt ?? property.title}
-            width={1200}
-            height={900}
-            sizes="(max-width: 1024px) 100vw, 66vw"
-            priority
-            wrapperClassName="w-full border border-ink-200"
-          />
-          {rest.length > 0 && (
-            <div className="grid grid-cols-4 gap-2 lg:grid-cols-2">
-              {rest.map((image) => (
-                <PropertyImage
-                  key={image.id}
-                  renditions={image.renditions}
-                  storagePath={image.storagePath}
-                  alt={image.alt ?? property.title}
-                  width={600}
-                  height={450}
-                  sizes="(max-width: 1024px) 25vw, 16vw"
-                  wrapperClassName="w-full border border-ink-200"
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <PropertyGallery
+          images={property.images.map((image) => ({
+            id: image.id,
+            renditions: image.renditions,
+            storagePath: image.storagePath,
+            alt: image.alt,
+            isCover: image.isCover,
+          }))}
+          title={property.title}
+        />
 
         <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_360px] lg:items-start">
           {/* ---------------- Main column ---------------- */}
@@ -164,12 +144,17 @@ export default async function PropertyPage({ params }: { params: Params }) {
                 {place}
               </p>
 
-              <p className="nums mt-6 text-4xl font-semibold tracking-[-0.035em] text-ink-900">
-                {formatPrice(property.price, { period: property.pricePeriod })}
-              </p>
-              {property.priceNegotiable && (
-                <p className="mt-1 text-xs text-ink-500">Price negotiable</p>
-              )}
+              <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="nums text-4xl font-semibold tracking-[-0.035em] text-ink-900">
+                    {formatPrice(property.price, { period: property.pricePeriod })}
+                  </p>
+                  {property.priceNegotiable && (
+                    <p className="mt-1 text-xs text-ink-500">Price negotiable</p>
+                  )}
+                </div>
+                <FavoriteButton propertyId={property.id} variant="inline" />
+              </div>
             </header>
 
             <KeyFacts property={property} />
@@ -265,6 +250,12 @@ export default async function PropertyPage({ params }: { params: Params }) {
                   ownerId={property.vendor?.id ?? null}
                 />
               </div>
+
+              {property.showPaymentInfo && (
+                <div className="mt-4 border-t border-ink-200 pt-4">
+                  <PaymentPanel propertyId={property.id} />
+                </div>
+              )}
             </Surface>
 
             <Surface className="mt-4 p-5">

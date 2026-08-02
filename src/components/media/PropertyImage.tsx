@@ -40,13 +40,23 @@ export function PropertyImage({
   priority = false,
   className,
   wrapperClassName,
+  fill = false,
+  fit = 'cover',
 }: {
   renditions: Renditions | null | undefined;
   /** The uploaded object. Used wherever a rendition is missing. */
   storagePath?: string | null;
   alt: string;
-  width: number;
-  height: number;
+  /**
+   * Take the size of the parent instead of reserving a ratio box. For a grid
+   * cell whose height is set by its neighbours, a ratio box fights the layout.
+   */
+  fill?: boolean;
+  /** `contain` for a lightbox, where cropping the photo defeats the point. */
+  fit?: 'cover' | 'contain';
+  /** Ignored when `fill` is set. */
+  width?: number;
+  height?: number;
   /** Must reflect the real rendered width, or the browser picks the wrong file. */
   sizes: string;
   /** Only the above-the-fold cover image should set this. */
@@ -60,14 +70,20 @@ export function PropertyImage({
   const thumb = storageUrl(renditions?.thumb);
   const card = storageUrl(renditions?.card);
   const full = storageUrl(renditions?.full);
-  const source = card ?? full ?? thumb ?? original;
-  const ratio = { aspectRatio: `${width} / ${height}` };
+  // A lightbox wants the largest file there is; a card wants the smallest that
+  // will do. Picking `full` first under `contain` avoids blowing an 800px card
+  // rendition up to fill a 1400px viewport.
+  const source = fit === 'contain'
+    ? (full ?? original ?? card ?? thumb)
+    : (card ?? full ?? thumb ?? original);
+  const ratio = fill || !width || !height ? undefined : { aspectRatio: `${width} / ${height}` };
 
   if (!source) {
     return (
       <div
         className={cn(
           'flex items-center justify-center overflow-hidden bg-ink-100 text-ink-300',
+          fill && 'size-full',
           wrapperClassName,
         )}
         style={ratio}
@@ -89,7 +105,10 @@ export function PropertyImage({
     .join(', ');
 
   return (
-    <div className={cn('relative overflow-hidden bg-ink-100', wrapperClassName)} style={ratio}>
+    <div
+      className={cn('relative overflow-hidden bg-ink-100', fill && 'size-full', wrapperClassName)}
+      style={ratio}
+    >
       <img
         src={source}
         srcSet={srcSet || undefined}
@@ -102,7 +121,8 @@ export function PropertyImage({
         // it small and muted means a broken image reads as a caption on the
         // reserved grey box rather than as a block of stray body copy.
         className={cn(
-          'absolute inset-0 size-full object-cover text-2xs text-ink-400',
+          'absolute inset-0 size-full text-2xs text-ink-400',
+          fit === 'contain' ? 'object-contain' : 'object-cover',
           className,
         )}
       />

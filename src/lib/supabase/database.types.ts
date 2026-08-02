@@ -2255,6 +2255,9 @@ export type Database = {
       }
       get_property_public: { Args: { p_slug: string }; Returns: Json }
       get_public_profile: { Args: { p_user_id: string }; Returns: Json }
+      get_property_payment_options: { Args: { p_property_id: string }; Returns: Json }
+      my_property_payments: { Args: { p_property_id: string }; Returns: Json }
+      is_service_role: { Args: never; Returns: boolean }
       admin_live_analytics: { Args: never; Returns: Json }
       record_presence: {
         Args: { p_session_hash: string; p_path: string; p_property_id?: string }

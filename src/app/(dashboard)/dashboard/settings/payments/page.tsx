@@ -32,7 +32,7 @@ export default async function PaymentSettingsPage() {
   // requires the per-listing disclosure toggle.
   const { data: methods } = await supabase
     .from('payment_methods')
-    .select('id, provider, account_name, account_number, bank_name, is_default, is_active')
+    .select('id, provider, account_name, account_number, bank_name, qr_image_path, is_default, is_active')
     .is('deleted_at', null)
     .order('is_default', { ascending: false });
 
@@ -72,6 +72,9 @@ export default async function PaymentSettingsPage() {
                     {method.account_number.replace(/.(?=.{4})/g, '•')}
                     {method.bank_name ? ` · ${method.bank_name}` : ''}
                   </p>
+                  {method.qr_image_path && (
+                    <p className="mt-1 text-2xs text-emerald-700">QR code attached</p>
+                  )}
                 </div>
                 <DeletePaymentMethodButton id={method.id} />
               </div>
@@ -82,7 +85,7 @@ export default async function PaymentSettingsPage() {
 
       <section>
         <h2 className="mb-4 font-semibold text-xl text-ink-900">Add an account</h2>
-        <PaymentMethodForm />
+        <PaymentMethodForm userId={user.id} />
       </section>
     </div>
   );

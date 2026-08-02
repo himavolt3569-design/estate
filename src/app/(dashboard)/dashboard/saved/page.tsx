@@ -119,7 +119,7 @@ export default async function DashboardSavedPage() {
           }
         />
       ) : (
-        <PropertyCardGrid properties={properties} />
+        <PropertyCardGrid properties={properties} savedIds={properties.map((p) => p.id)} />
       )}
     </div>
   );

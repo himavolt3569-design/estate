@@ -1,4 +1,4 @@
-import { Bed, Bath, Square, MapPin, Heart } from 'lucide-react';
+import { Bed, Bath, Square, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
 import { PropertyImage } from '@/components/media/PropertyImage';
@@ -8,6 +8,7 @@ import { AREA_NOT_STATED } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 import type { PropertyCardDTO } from '../types';
+import { FavoriteButton } from './FavoriteButton';
 
 
 
@@ -24,10 +25,13 @@ export function PropertyCard({
   property,
   priority = false,
   className,
+  saved = false,
 }: {
   property: PropertyCardDTO;
   priority?: boolean;
   className?: string;
+  /** Known server-side where the caller could look it up; resolved lazily otherwise. */
+  saved?: boolean;
 }) {
   const transactionLabel: Record<PropertyCardDTO['transactionType'], string> = {
     sale: 'For Sale',
@@ -75,15 +79,18 @@ export function PropertyCard({
           className="h-full w-full object-cover transition-transform duration-[600ms] group-hover:scale-[1.04]"
         />
         
-        {/* Badges */}
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+        {/* Badges. The heart used to be a <button> with no handler at all —
+            it looked like a save control and did nothing when tapped. */}
+        <div className="absolute top-4 left-4 z-10">
           <span className="rounded bg-royal-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">
             {transactionLabel[property.transactionType]}
           </span>
-          <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition-colors hover:bg-white/40">
-            <Heart className="h-4 w-4 text-white" strokeWidth={2.5} />
-          </button>
         </div>
+        <FavoriteButton
+          propertyId={property.id}
+          initialSaved={saved}
+          className="top-4 right-4"
+        />
       </div>
 
       <div className="flex flex-1 flex-col p-5">
@@ -153,14 +160,24 @@ export function PropertyCardSkeleton() {
 export function PropertyCardGrid({
   properties,
   priorityCount = 4,
+  savedIds,
 }: {
   properties: PropertyCardDTO[];
   priorityCount?: number;
+  /** Pass when the caller already knows, so the hearts are right on first paint. */
+  savedIds?: Set<string> | string[];
 }) {
+  const saved = savedIds instanceof Set ? savedIds : new Set(savedIds ?? []);
+
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {properties.map((property, index) => (
-        <PropertyCard key={property.id} property={property} priority={index < priorityCount} />
+        <PropertyCard
+          key={property.id}
+          property={property}
+          priority={index < priorityCount}
+          saved={saved.has(property.id)}
+        />
       ))}
     </div>
   );
