@@ -10,23 +10,61 @@
 import dynamic from 'next/dynamic';
 
 import { Skeleton } from '@/components/ui/primitives';
+import { cn } from '@/lib/utils';
 
 import type { MapMarker } from './PropertyMap';
 
 const PropertyMap = dynamic(() => import('./PropertyMap').then((m) => m.PropertyMap), {
   ssr: false,
-  loading: () => <Skeleton className="h-full min-h-72 w-full" />,
+  loading: () => <Skeleton className="h-full min-h-64 w-full" />,
 });
 
-export function MapLoader(props: {
+/** 0,0 is in the Gulf of Guinea. It means "nothing was saved", not a location. */
+function hasCoordinates(center: { lat: number; lng: number } | null | undefined): center is {
+  lat: number;
+  lng: number;
+} {
+  if (!center) return false;
+  const { lat, lng } = center;
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    Math.abs(lat) <= 90 &&
+    Math.abs(lng) <= 180 &&
+    !(lat === 0 && lng === 0)
+  );
+}
+
+export function MapLoader({
+  center,
+  className,
+  fallbackLabel = 'No location was saved for this listing.',
+  ...props
+}: {
   markers: MapMarker[];
-  center: { lat: number; lng: number };
+  center: { lat: number; lng: number } | null | undefined;
   zoom?: number;
   className?: string;
   interactive?: boolean;
   approximate?: boolean;
+  /** Shown in place of the map when there is nothing to centre on. */
+  fallbackLabel?: string;
 }) {
-  return <PropertyMap {...props} />;
+  if (!hasCoordinates(center)) {
+    return (
+      <div
+        role="status"
+        className={cn(
+          'flex min-h-64 w-full items-center justify-center bg-ink-50 px-6 text-center text-sm text-ink-500',
+          className,
+        )}
+      >
+        {fallbackLabel}
+      </div>
+    );
+  }
+
+  return <PropertyMap {...props} center={center} className={className} />;
 }
 
 export type { MapMarker };

@@ -38,7 +38,11 @@ export default async function proxy(request: NextRequest) {
     // style attributes cannot be nonced or hashed. This permits style
     // injection, not script execution.
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' blob: data: https://*.supabase.co https://*.tile.openstreetmap.org http://127.0.0.1:54321`,
+    // A CSP host wildcard matches at least one subdomain label, so
+    // `*.tile.openstreetmap.org` does NOT cover `tile.openstreetmap.org` — the
+    // exact host Leaflet is pointed at. Listing the bare host is what makes the
+    // tiles load; the wildcard stays for the a/b/c mirrors.
+    `img-src 'self' blob: data: https://*.supabase.co https://tile.openstreetmap.org https://*.tile.openstreetmap.org http://127.0.0.1:54321`,
     `font-src 'self' data:`,
     `connect-src 'self' https://*.supabase.co wss://*.supabase.co http://127.0.0.1:54321 ws://127.0.0.1:54321`,
     // Virtual tours and video are the only embeds, and only from vetted hosts.
