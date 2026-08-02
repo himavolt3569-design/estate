@@ -132,7 +132,8 @@ export async function getListingForEdit(id: string) {
       show_phone, show_email, show_whatsapp, reference_code,
       location:locations!properties_location_id_fkey ( id, name_en, slug, parent_id ),
       images:property_images ( id, storage_path, is_cover, position ),
-      features:property_features ( feature_id )
+      features:property_features ( feature_id ),
+      contacts:property_contacts ( phone_e164, label, is_whatsapp, position )
     `,
     )
     .eq('id', id)
@@ -209,6 +210,12 @@ export type ListingDetail = {
   location: { id: string; name_en: string; slug: string; parent_id: string | null } | null;
   images: Array<{ id: string; storage_path: string; is_cover: boolean; position: number }>;
   features: Array<{ feature_id: string }>;
+  contacts: Array<{
+    phone_e164: string;
+    label: string | null;
+    is_whatsapp: boolean;
+    position: number;
+  }>;
   point: { lat: number; lng: number } | null;
 };
 

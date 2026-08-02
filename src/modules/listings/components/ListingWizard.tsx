@@ -46,6 +46,11 @@ import {
   type Subtype,
   type TransactionType,
 } from '../schema';
+import {
+  ContactNumbersField,
+  emptyContactNumber,
+  type ContactNumberDraft,
+} from './ContactNumbersField';
 import { PhotoUploader, type UploadedImage } from './PhotoUploader';
 
 const LocationPickerMap = dynamic(() => import('@/components/map/LocationPickerMap'), {
@@ -86,6 +91,7 @@ type Draft = {
   showPhone: boolean;
   showEmail: boolean;
   showWhatsapp: boolean;
+  contactNumbers: ContactNumberDraft[];
 
   ownerId: string;
 };
@@ -121,6 +127,7 @@ const EMPTY: Draft = {
   showPhone: true,
   showEmail: false,
   showWhatsapp: true,
+  contactNumbers: [emptyContactNumber()],
 
   ownerId: '',
 };
@@ -338,6 +345,7 @@ export function ListingWizard({
       showPhone: draft.showPhone,
       showEmail: draft.showEmail,
       showWhatsapp: draft.showWhatsapp,
+      contactNumbers: draft.contactNumbers.filter((row) => row.phone.trim().length > 0),
       ownerId: isAdmin && draft.ownerId ? draft.ownerId : null,
     };
   }
@@ -845,8 +853,15 @@ export function ListingWizard({
                 </div>
               )}
 
-              <div className="space-y-3 rounded-xl border border-ink-100 bg-ink-50/50 p-4">
+              <div className="space-y-4 rounded-xl border border-ink-100 bg-ink-50/50 p-4">
                 <p className="text-sm font-medium text-ink-800">How should buyers reach you?</p>
+
+                <ContactNumbersField
+                  value={draft.contactNumbers}
+                  onChange={(next) => set('contactNumbers', next)}
+                  error={errors.contactNumbers}
+                />
+
                 <Toggle
                   checked={draft.showPhone}
                   onChange={(value) => set('showPhone', value)}

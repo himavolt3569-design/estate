@@ -726,6 +726,7 @@ export type Database = {
       message_threads: {
         Row: {
           created_at: string
+          created_by: string | null
           enquiry_id: string | null
           id: string
           property_id: string | null
@@ -734,6 +735,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           enquiry_id?: string | null
           id?: string
           property_id?: string | null
@@ -742,6 +744,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           enquiry_id?: string | null
           id?: string
           property_id?: string | null
@@ -1402,6 +1405,47 @@ export type Database = {
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_contacts: {
+        Row: {
+          created_at: string
+          id: string
+          is_whatsapp: boolean
+          label: string | null
+          phone_e164: string
+          position: number
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_whatsapp?: boolean
+          label?: string | null
+          phone_e164: string
+          position?: number
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_whatsapp?: boolean
+          label?: string | null
+          phone_e164?: string
+          position?: number
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_contacts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
@@ -2210,6 +2254,18 @@ export type Database = {
         Returns: Json
       }
       get_property_public: { Args: { p_slug: string }; Returns: Json }
+      get_public_profile: { Args: { p_user_id: string }; Returns: Json }
+      property_contact_summary: { Args: { p_property_id: string }; Returns: Json }
+      reveal_property_contacts: { Args: { p_property_id: string }; Returns: Json }
+      start_property_conversation: { Args: { p_property_id: string }; Returns: string }
+      mark_thread_read: { Args: { p_thread_id: string }; Returns: undefined }
+      list_conversations: { Args: never; Returns: Json }
+      unread_message_count: { Args: never; Returns: number }
+      get_conversation: { Args: { p_thread_id: string }; Returns: Json }
+      admin_read_conversation: {
+        Args: { p_thread_id: string; p_reason: string }
+        Returns: Json
+      }
       has_permission: { Args: { p_key: string }; Returns: boolean }
       is_active_user: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }

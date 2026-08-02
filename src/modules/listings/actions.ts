@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { authedAction } from '@/lib/auth/action';
 import { getSessionUser } from '@/lib/auth/session';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { parseNepaliPhone } from '@/lib/phone/nepal';
 import { createClient } from '@/lib/supabase/server';
 import { slugify } from '@/lib/utils';
 
@@ -150,6 +151,41 @@ async function writeFeatures(client: WriteClient, propertyId: string, featureIds
   }
 }
 
+/**
+ * Replaces a listing's contact numbers.
+ *
+ * Delete-then-insert rather than a diff, because the set is at most three rows
+ * and the ordering is part of what the seller chose. The E.164 normalisation
+ * happens here so nothing downstream — the WhatsApp link, the duplicate check,
+ * the unique index — ever sees the shape the seller typed.
+ */
+async function writeContactNumbers(
+  client: WriteClient,
+  propertyId: string,
+  numbers: CreateListingValues['contactNumbers'],
+) {
+  await client.from('property_contacts').delete().eq('property_id', propertyId);
+
+  const rows = numbers
+    .map((row, index) => {
+      const parsed = parseNepaliPhone(row.phone);
+      if (!parsed.ok) return null;
+      return {
+        property_id: propertyId,
+        phone_e164: parsed.e164,
+        label: row.label?.trim() || null,
+        is_whatsapp: row.isWhatsapp && parsed.kind === 'mobile',
+        position: index,
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => row !== null);
+
+  if (rows.length === 0) return;
+
+  const { error } = await client.from('property_contacts').insert(rows);
+  if (error) throw error;
+}
+
 /* ========================================================================== */
 /* Create                                                                     */
 /* ========================================================================== */
@@ -206,6 +242,7 @@ export const createListing = authedAction({
 
     await writeAttributes(client, property.id, input);
     await writeFeatures(client, property.id, input.featureIds);
+    await writeContactNumbers(client, property.id, input.contactNumbers);
 
     if (listingForSomeoneElse) {
       await client.from('audit_logs').insert({
@@ -257,6 +294,7 @@ export const updateListing = authedAction({
 
     await writeAttributes(client, input.id, input);
     await writeFeatures(client, input.id, input.featureIds);
+    await writeContactNumbers(client, input.id, input.contactNumbers);
 
     revalidatePath('/dashboard/listings');
     revalidatePath(`/dashboard/listings/${input.id}/edit`);

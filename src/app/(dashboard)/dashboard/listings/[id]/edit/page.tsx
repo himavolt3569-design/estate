@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/primitives';
 import { getSessionUser, isVendor } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
+import { emptyContactNumber } from '@/modules/listings/components/ContactNumbersField';
 import { ListingWizard } from '@/modules/listings/components/ListingWizard';
 import {
   getFeatureOptions,
@@ -123,6 +124,17 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
             showPhone: listing.show_phone,
             showEmail: listing.show_email,
             showWhatsapp: listing.show_whatsapp,
+            // Shown back in the national form the seller typed, not as +977...
+            contactNumbers:
+              listing.contacts && listing.contacts.length > 0
+                ? [...listing.contacts]
+                    .sort((a, b) => a.position - b.position)
+                    .map((contact) => ({
+                      phone: contact.phone_e164.replace(/^\+977/, ''),
+                      label: contact.label ?? '',
+                      isWhatsapp: contact.is_whatsapp,
+                    }))
+                : [emptyContactNumber()],
 
             ownerId: listing.owner_id,
           },

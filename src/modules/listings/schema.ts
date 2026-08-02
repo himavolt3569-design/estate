@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { parseNepaliPhone } from '@/lib/phone/nepal';
+
 /**
  * The listing form's contract.
  *
@@ -185,6 +187,55 @@ export const detailsSchema = z.object({
   showPhone: z.boolean().default(true),
   showEmail: z.boolean().default(false),
   showWhatsapp: z.boolean().default(true),
+
+  /*
+   * Up to three numbers per listing, normalised to E.164 before they reach the
+   * database. Validated here rather than only in the component so a crafted
+   * request cannot store a number the WhatsApp link generator would choke on;
+   * property_contacts has the same regex as a check constraint behind this.
+   */
+  contactNumbers: z
+    .array(
+      z.object({
+        phone: z.string().trim().min(1, 'Enter a phone number'),
+        label: z.string().trim().max(40).optional().or(z.literal('')),
+        isWhatsapp: z.boolean().default(false),
+      }),
+    )
+    .max(3, 'A listing may carry at most three numbers')
+    .default([])
+    .transform((rows) => rows.filter((row) => row.phone.trim().length > 0))
+    .superRefine((rows, ctx) => {
+      const seen = new Set<string>();
+
+      rows.forEach((row, index) => {
+        const parsed = parseNepaliPhone(row.phone);
+        if (!parsed.ok) {
+          ctx.addIssue({ code: 'custom', message: parsed.error, path: [index, 'phone'] });
+          return;
+        }
+        if (seen.has(parsed.e164)) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'That number is already on this listing',
+            path: [index, 'phone'],
+          });
+        }
+        seen.add(parsed.e164);
+
+        if (row.isWhatsapp && parsed.kind !== 'mobile') {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Only a mobile number can be used for WhatsApp',
+            path: [index, 'isWhatsapp'],
+          });
+        }
+      });
+
+      if (rows.filter((row) => row.isWhatsapp).length > 1) {
+        ctx.addIssue({ code: 'custom', message: 'Choose one WhatsApp number', path: [] });
+      }
+    }),
 });
 
 /** Everything the create action accepts. */

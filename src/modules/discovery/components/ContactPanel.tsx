@@ -1,56 +1,87 @@
 'use client';
 
 // Client boundary: revealing a contact detail is an authenticated, rate-limited
-// round trip that must not happen during render. The number is never in the page
-// payload, not even hidden behind a class, which scrapers read straight out of
-// the DOM (threat 3 in docs/03-security-model.md).
+// round trip that must not happen during render. The numbers are never in the
+// page payload, not even hidden behind a class, which scrapers read straight out
+// of the DOM (threat 3 in docs/03-security-model.md).
 
-import { Mail, MessageCircle, Phone } from 'lucide-react';
-import { useState } from 'react';
+import { Loader2, Mail, MessageCircle, MessagesSquare, Phone } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { formatNepaliPhone, telLink, whatsappLink } from '@/lib/phone/nepal';
 import { createClient } from '@/lib/supabase/client';
 
-type Channel = 'phone' | 'email' | 'whatsapp';
-
-const CHANNEL_META: Record<Channel, { label: string; icon: React.ReactNode; href: (v: string) => string }> = {
-  phone: {
-    label: 'Show phone number',
-    icon: <Phone aria-hidden />,
-    href: (v) => `tel:${v}`,
-  },
-  whatsapp: {
-    label: 'Show WhatsApp',
-    icon: <MessageCircle aria-hidden />,
-    href: (v) => `https://wa.me/${v.replace(/[^0-9]/g, '')}`,
-  },
-  email: {
-    label: 'Show email',
-    icon: <Mail aria-hidden />,
-    href: (v) => `mailto:${v}`,
-  },
+type RevealedNumber = {
+  id: string;
+  phone: string;
+  label: string | null;
+  isWhatsapp: boolean;
 };
 
+type Revealed = {
+  numbers: RevealedNumber[];
+  email: string | null;
+};
+
+/**
+ * One reveal, then every way to make contact.
+ *
+ * This used to be three buttons — "Show phone number", "Show WhatsApp", "Show
+ * email" — each of which was its own round trip and its own charge against the
+ * 30-a-day budget, for what a buyer experiences as one decision. It is now a
+ * single call that returns the listing's whole contact set, after which the
+ * numbers are shown plainly with their own Call and WhatsApp actions.
+ *
+ * The reveal stays. It is the rate limit and the disclosure ledger that let the
+ * platform promise a seller their number will not be harvested, and dropping it
+ * to save one tap would quietly break that promise.
+ */
 export function ContactPanel({
   propertyId,
   available,
+  propertyTitle,
+  ownerId,
 }: {
   propertyId: string;
   available: { phone: boolean; email: boolean; whatsapp: boolean };
+  propertyTitle: string;
+  ownerId: string | null;
 }) {
-  const [revealed, setRevealed] = useState<Partial<Record<Channel, string>>>({});
-  const [pending, setPending] = useState<Channel | null>(null);
+  const [revealed, setRevealed] = useState<Revealed | null>(null);
+  const [pending, setPending] = useState(false);
+  const [viewerId, setViewerId] = useState<string | null>(null);
 
-  const channels = (Object.keys(CHANNEL_META) as Channel[]).filter((c) => available[c]);
+  /*
+   * Resolved here rather than on the server because this page is ISR-cached for
+   * search engines. The only thing it decides is whether the seller sees a
+   * "message yourself" button on their own listing; the messaging route enforces
+   * that rule again, so a stale value here cannot create a self-thread.
+   */
+  useEffect(() => {
+    let active = true;
+    void createClient()
+      .auth.getUser()
+      .then(({ data }) => {
+        if (active) setViewerId(data.user?.id ?? null);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  async function reveal(channel: Channel) {
-    setPending(channel);
+  const anyChannel = available.phone || available.email || available.whatsapp;
+  const canChat = Boolean(ownerId);
+  const isOwnListing = Boolean(viewerId && ownerId && viewerId === ownerId);
+
+  async function reveal() {
+    setPending(true);
     try {
       const supabase = createClient();
-      const { data, error } = await supabase.rpc('reveal_contact', {
+      const { data, error } = await supabase.rpc('reveal_property_contacts', {
         p_property_id: propertyId,
-        p_channel: channel,
       });
 
       if (error) {
@@ -60,62 +91,108 @@ export function ContactPanel({
         return;
       }
 
-      if (!data) {
-        toast.error('The lister has not added this yet.');
+      const payload = data as unknown as Revealed | null;
+      if (!payload || (payload.numbers.length === 0 && !payload.email)) {
+        toast.error('The lister has not added contact details yet.');
         return;
       }
 
-      setRevealed((prev) => ({ ...prev, [channel]: data as string }));
+      setRevealed(payload);
     } catch {
       toast.error('Could not reach the server. Try again.');
     } finally {
-      setPending(null);
+      setPending(false);
     }
   }
 
-  if (channels.length === 0) {
-    return (
-      <p className="text-sm text-ink-500">
-        The lister has not shared direct contact details. Send an enquiry instead.
-      </p>
-    );
-  }
-
   return (
-    <div className="space-y-2">
-      {channels.map((channel) => {
-        const meta = CHANNEL_META[channel];
-        const value = revealed[channel];
+    <div className="space-y-3">
+      {/* Messaging does not need a reveal: it never exposes a number, and the
+          thread is the channel the platform can actually stand behind. */}
+      {canChat && !isOwnListing && (
+        <Button asChild className="w-full justify-start">
+          <Link href={`/dashboard/messages/new?property=${propertyId}`}>
+            <MessagesSquare aria-hidden />
+            Message the owner
+          </Link>
+        </Button>
+      )}
 
-        if (value) {
-          return (
-            <Button key={channel} asChild variant="secondary" className="w-full justify-start">
-              <a href={meta.href(value)} className="nums">
-                {meta.icon}
-                {value}
-              </a>
-            </Button>
-          );
-        }
-
-        return (
+      {!anyChannel ? (
+        <p className="text-sm text-ink-500">
+          The lister has not shared direct contact details.
+          {canChat && !isOwnListing ? ' Send them a message instead.' : ''}
+        </p>
+      ) : !revealed ? (
+        <>
           <Button
-            key={channel}
             variant="secondary"
             className="w-full justify-start"
-            disabled={pending === channel}
-            onClick={() => void reveal(channel)}
+            disabled={pending}
+            onClick={() => void reveal()}
           >
-            {meta.icon}
-            {pending === channel ? 'Checking…' : meta.label}
+            {pending ? <Loader2 aria-hidden className="animate-spin" /> : <Phone aria-hidden />}
+            {pending ? 'Checking…' : 'Show contact details'}
           </Button>
-        );
-      })}
+          <p className="pt-1 text-2xs leading-relaxed text-ink-400">
+            The lister is shown that you viewed their details, and when. Reveals are limited to 30 a
+            day per account.
+          </p>
+        </>
+      ) : (
+        <div className="space-y-3">
+          {revealed.numbers.length > 0 && (
+            <ul className="space-y-2">
+              {revealed.numbers.map((number) => (
+                <li key={number.id} className="rounded-lg border border-ink-200 p-3">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="nums text-sm font-medium text-ink-900">
+                      {formatNepaliPhone(number.phone)}
+                    </p>
+                    {number.label && (
+                      <span className="text-2xs tracking-wide text-ink-400 uppercase">
+                        {number.label}
+                      </span>
+                    )}
+                  </div>
 
-      <p className="pt-1 text-2xs leading-relaxed text-ink-400">
-        The lister is shown that you viewed their details, and when. Reveals are limited to 30 a
-        day per account.
-      </p>
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    <Button asChild size="sm" variant="secondary">
+                      <a href={telLink(number.phone)}>
+                        <Phone aria-hidden className="size-3.5" /> Call
+                      </a>
+                    </Button>
+
+                    {number.isWhatsapp && (
+                      <Button asChild size="sm" variant="secondary">
+                        <a
+                          href={whatsappLink(
+                            number.phone,
+                            `Hello, I am interested in "${propertyTitle}" on Kitta.`,
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <MessageCircle aria-hidden className="size-3.5" /> WhatsApp
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {revealed.email && (
+            <Button asChild variant="secondary" className="w-full justify-start">
+              <a href={`mailto:${revealed.email}?subject=${encodeURIComponent(propertyTitle)}`}>
+                <Mail aria-hidden />
+                <span className="truncate">{revealed.email}</span>
+              </a>
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
