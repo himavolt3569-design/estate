@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { Wordmark } from '@/components/brand/Seal';
+import { Avatar } from '@/components/media/Avatar';
 import { Badge } from '@/components/ui/primitives';
 import { ROLE_LABELS } from '@/lib/auth/permissions';
 import { getTranslation } from '@/i18n';
@@ -26,6 +27,8 @@ import { createClient } from '@/lib/supabase/server';
 import { signOut } from '@/modules/identity/actions';
 import { AccountTypePrompt } from '@/modules/identity/components/AccountTypePrompt';
 import { SetPasswordPrompt } from '@/modules/identity/components/SetPasswordPrompt';
+import { getUnreadMessageCount } from '@/modules/messaging/queries';
+
 import { SidebarNav } from './components/SidebarNav';
 
 /**
@@ -64,6 +67,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const needsAccountType = profileChoice?.account_type_chosen_at == null;
 
   const n = t.dashboard.nav;
+  const unreadMessages = await getUnreadMessageCount();
 
   /*
    * A customer sees Saved and Saved searches; a seller sees their properties and
@@ -74,7 +78,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const nav = [
     { href: '/dashboard', label: n.overview, icon: 'LayoutDashboard', show: true },
     { href: '/dashboard/listings', label: admin ? 'All properties' : n.myProperties, icon: 'Building2', show: vendor || admin },
-    { href: '/dashboard/enquiries', label: admin ? 'All messages' : n.messages, icon: 'MessageSquare', show: vendor || admin },
+    { href: '/dashboard/messages', label: 'Messages', icon: 'MessagesSquare', show: true, badge: unreadMessages },
+    { href: '/dashboard/enquiries', label: admin ? 'All enquiries' : n.messages, icon: 'MessageSquare', show: vendor || admin },
     { href: '/dashboard/saved', label: n.saved, icon: 'Heart', show: !vendor && !admin },
     { href: '/dashboard/searches', label: n.savedSearches, icon: 'Search', show: !vendor && !admin },
   ].filter((item) => item.show);
@@ -83,6 +88,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     { href: '/dashboard/admin', label: 'Control centre', icon: 'Gauge', show: admin },
     { href: '/dashboard/admin/users', label: 'People', icon: 'Users', show: admin },
     { href: '/dashboard/admin/moderation', label: 'Waiting for review', icon: 'ShieldCheck', show: admin },
+    { href: '/dashboard/admin/listings', label: 'Listings', icon: 'Building2', show: admin },
     { href: '/dashboard/admin/sales', label: 'Sales', icon: 'TrendingUp', show: admin },
     { href: '/dashboard/admin/payments', label: 'Payments', icon: 'CreditCard', show: admin },
     { href: '/dashboard/admin/reports', label: 'Reports', icon: 'Flag', show: admin },
@@ -117,6 +123,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <p className="text-sm leading-tight text-ink-900">{user.fullName ?? 'Your account'}</p>
               <p className="label">{ROLE_LABELS[user.role as keyof typeof ROLE_LABELS]}</p>
             </div>
+
+            <Link href="/dashboard/settings" aria-label="Your account and picture">
+              <Avatar src={user.avatarUrl} name={user.fullName} size="sm" />
+            </Link>
 
             <form action={signOut}>
               <button

@@ -8,6 +8,7 @@ import { FadeIn } from '@/components/animations/FadeIn';
 import {
   Building2,
   CreditCard,
+  MessagesSquare,
   Flag,
   Gauge,
   Heart,
@@ -25,6 +26,7 @@ import {
 const ICON_MAP: Record<string, React.ElementType> = {
   Building2,
   CreditCard,
+  MessagesSquare,
   Flag,
   Gauge,
   Heart,
@@ -39,7 +41,15 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Users,
 };
 
-export function SidebarNav({ items }: { items: any[] }) {
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: string;
+  /** Rendered as an unread pill. Omitted or 0 draws nothing. */
+  badge?: number;
+};
+
+export function SidebarNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
 
   return (
@@ -69,6 +79,12 @@ export function SidebarNav({ items }: { items: any[] }) {
                   )} 
                 />
                 {item.label}
+                {item.badge != null && item.badge > 0 && (
+                  <span className="nums ml-auto flex min-w-5 items-center justify-center rounded-full bg-crimson-600 px-1.5 py-0.5 text-2xs font-semibold text-white">
+                    {item.badge > 99 ? '99+' : item.badge}
+                    <span className="sr-only">unread</span>
+                  </span>
+                )}
               </Link>
             </li>
           </FadeIn>
