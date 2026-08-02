@@ -48,6 +48,7 @@ export default async function ModerationPage() {
               <div className="grid gap-5 p-5 sm:grid-cols-[160px_1fr]">
                 <PropertyImage
                   renditions={cover?.rendition_paths ?? undefined}
+                  storagePath={cover?.storage_path}
                   alt={item.title}
                   width={400}
                   height={300}

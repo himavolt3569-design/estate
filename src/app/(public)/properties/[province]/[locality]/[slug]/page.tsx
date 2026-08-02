@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const price = formatPrice(property.price, { period: property.pricePeriod });
   const place = property.location?.nameEn ?? locality;
   const cover = property.images.find((i) => i.isCover) ?? property.images[0];
+  const coverPath = cover?.renditions?.full ?? cover?.storagePath ?? null;
 
   return {
     title: `${property.title} · ${price}`,
@@ -38,8 +39,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       title: `${property.title} in ${place}`,
       description: `${price} · ${place}, Nepal`,
       type: 'website',
-      images: cover?.renditions.full
-        ? [`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-media/${cover.renditions.full}`]
+      images: coverPath
+        ? [`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-media/${coverPath}`]
         : [],
     },
   };
@@ -109,6 +110,7 @@ export default async function PropertyPage({ params }: { params: Params }) {
         <div className="mt-4 grid gap-2 overflow-hidden rounded-sm lg:grid-cols-[2fr_1fr]">
           <PropertyImage
             renditions={cover?.renditions}
+            storagePath={cover?.storagePath}
             alt={cover?.alt ?? property.title}
             width={1200}
             height={900}
@@ -122,6 +124,7 @@ export default async function PropertyPage({ params }: { params: Params }) {
                 <PropertyImage
                   key={image.id}
                   renditions={image.renditions}
+                  storagePath={image.storagePath}
                   alt={image.alt ?? property.title}
                   width={600}
                   height={450}

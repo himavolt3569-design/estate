@@ -82,8 +82,13 @@ export default async function DashboardSavedPage() {
         lat: 0,
         lng: 0,
         distanceLabel: null,
-        cover: cover?.rendition_paths
-          ? { renditions: cover.rendition_paths, blurhash: null, alt: property.title as string }
+        cover: cover
+          ? {
+              renditions: cover.rendition_paths ?? {},
+              storagePath: cover.storage_path,
+              blurhash: null,
+              alt: property.title as string,
+            }
           : null,
         verified: property.verified_at != null,
         listedByLabel:

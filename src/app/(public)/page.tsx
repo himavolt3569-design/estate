@@ -152,8 +152,40 @@ function Hero({ backgroundUrl }: { backgroundUrl: string | null }) {
 /* -------------------------------------------------------------------------- */
 /* Featured Properties Rail                                                    */
 /* -------------------------------------------------------------------------- */
+/*
+ * This rail used to ask for `verified_only: true`, which is a filter, not a
+ * ranking. Nothing on the platform sets properties.verified_at — there was no
+ * control anywhere in the admin that could — so the filter matched zero rows and
+ * the home page was permanently empty while /search showed the same listings
+ * without complaint.
+ *
+ * `verified_first` is the ranking that was actually wanted: a checked listing
+ * earns the top of the page, an unchecked but published one is still on it, and
+ * the page fills the moment a listing is approved rather than waiting for a
+ * second manual step. Expired, draft, pending, rejected and deleted listings are
+ * excluded inside search_properties() for every caller.
+ */
+const HOME_RAIL_FILTERS = { sort: 'verified_first' } as const;
+
 async function FeaturedPropertiesRail({ t }: { t: Dictionary }) {
-  const { items, nextCursor } = await searchProperties({ verified_only: true, sort: 'newest' }, null, 6);
+  const { items, nextCursor, error } = await searchProperties(HOME_RAIL_FILTERS, null, 6);
+
+  if (error) {
+    return (
+      <div
+        role="alert"
+        className="rounded-2xl border border-clay-200 bg-clay-50 p-12 text-center"
+      >
+        <h3 className="text-lg font-semibold text-ink-900">Listings could not be loaded</h3>
+        <p className="mt-2 mb-6 text-ink-600">
+          This is a problem on our side, not with your connection. Try again in a moment.
+        </p>
+        <Button asChild variant="secondary">
+          <Link href="/search">{t.verified.browseAll}</Link>
+        </Button>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -167,7 +199,13 @@ async function FeaturedPropertiesRail({ t }: { t: Dictionary }) {
     );
   }
 
-  return <InfiniteScrollPropertyGrid initialItems={items} initialCursor={nextCursor} />;
+  return (
+    <InfiniteScrollPropertyGrid
+      initialItems={items}
+      initialCursor={nextCursor}
+      filters={HOME_RAIL_FILTERS}
+    />
+  );
 }
 
 function RailSkeleton() {

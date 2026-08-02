@@ -22,6 +22,41 @@ const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp'];
 /** storage.buckets caps property-media at 5 MB, so anything larger is compressed first. */
 const MAX_BYTES = 5 * 1024 * 1024;
 
+/*
+ * The three sizes a listing is displayed at: a strip thumbnail, a card, and the
+ * gallery. Generating them here rather than on a server keeps the whole pipeline
+ * to one upload round trip per size and no image processing bill, and it is the
+ * reason a card on a phone fetches ~40 KB instead of a 2 MB original.
+ *
+ * `full` is listed first because it is the one that matters most: if a slow
+ * connection drops halfway through a set, the size the gallery needs is already
+ * up, and storage_path points at it.
+ */
+const RENDITIONS = [
+  { key: 'full', maxPx: 1920, quality: 0.82 },
+  { key: 'card', maxPx: 800, quality: 0.8 },
+  { key: 'thumb', maxPx: 400, quality: 0.75 },
+] as const;
+
+type RenditionKey = (typeof RENDITIONS)[number]['key'];
+
+type Progress = { name: string; percent: number; stage: string };
+
+/** Natural dimensions, recorded so a card can reserve the right box before load. */
+async function measure(file: File): Promise<{ width: number; height: number } | null> {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    return { width: image.naturalWidth, height: image.naturalHeight };
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 /**
  * Photos go from the browser straight to Supabase Storage.
  *
@@ -49,6 +84,8 @@ export function PhotoUploader({
   onChange: (next: UploadedImage[]) => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const [failures, setFailures] = useState<string[]>([]);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -65,33 +102,79 @@ export function PhotoUploader({
       if (files.length === 0) return;
 
       setBusy(true);
+      setFailures([]);
       const supabase = createClient();
       const added: UploadedImage[] = [];
+      const failed: string[] = [];
+
+      // One unit of work per rendition per file, so the bar tracks bytes going
+      // out rather than files finished. With five photos, a bar that only moves
+      // five times reads as frozen.
+      const totalSteps = files.length * RENDITIONS.length;
+      let step = 0;
+      const advance = (name: string, stage: string) => {
+        setProgress({ name, percent: Math.round((step / totalSteps) * 100), stage });
+      };
 
       try {
         for (const [index, file] of files.entries()) {
-          // Phone cameras produce 6–12 MB files. Compressing in the browser is
-          // what stops the upload failing against the bucket's 5 MB limit on a
-          // connection where the failure would cost a minute of waiting first.
-          const prepared =
-            file.size > MAX_BYTES
-              ? await imageCompression(file, {
-                  maxSizeMB: 4,
-                  maxWidthOrHeight: 2560,
-                  useWebWorker: true,
-                  fileType: 'image/webp',
-                })
-              : file;
+          advance(file.name, 'Preparing');
 
-          const extension = prepared.type === 'image/webp' ? 'webp' : file.name.split('.').pop() || 'jpg';
-          const storagePath = `${propertyId}/${crypto.randomUUID()}.${extension}`;
+          const dimensions = await measure(file);
+          const imageId = crypto.randomUUID();
+          const uploaded: Partial<Record<RenditionKey, string>> = {};
 
-          const { error: uploadError } = await supabase.storage
-            .from('property-media')
-            .upload(storagePath, prepared, { contentType: prepared.type, upsert: false });
+          for (const rendition of RENDITIONS) {
+            advance(file.name, `Uploading ${rendition.key}`);
 
-          if (uploadError) {
-            toast.error(`Could not upload ${file.name}. ${uploadError.message}`);
+            let prepared: File;
+            try {
+              // Phone cameras produce 6-12 MB files. Resizing in the browser is
+              // what stops the upload failing against the bucket's 5 MB limit on
+              // a connection where the failure would cost a minute of waiting
+              // first.
+              prepared = await imageCompression(file, {
+                maxWidthOrHeight: rendition.maxPx,
+                maxSizeMB: 4,
+                initialQuality: rendition.quality,
+                useWebWorker: true,
+                fileType: 'image/webp',
+              });
+            } catch {
+              // Only the full size is worth falling back for. A browser that
+              // cannot resize can still upload the original.
+              if (rendition.key !== 'full' || file.size > MAX_BYTES) {
+                step += 1;
+                continue;
+              }
+              prepared = file;
+            }
+
+            const extension = prepared.type === 'image/webp' ? 'webp' : 'jpg';
+            const path = `${propertyId}/${imageId}/${rendition.key}.${extension}`;
+
+            const { error: uploadError } = await supabase.storage
+              .from('property-media')
+              .upload(path, prepared, { contentType: prepared.type, upsert: true });
+
+            if (uploadError) {
+              // Surfaced, never swallowed. If the full size is the one that
+              // failed there is nothing to record and the photo is abandoned.
+              if (rendition.key === 'full') {
+                failed.push(`${file.name}: ${uploadError.message}`);
+                break;
+              }
+            } else {
+              uploaded[rendition.key] = path;
+            }
+
+            step += 1;
+          }
+
+          if (!uploaded.full) {
+            if (!failed.some((f) => f.startsWith(file.name))) {
+              failed.push(`${file.name}: the upload did not complete.`);
+            }
             continue;
           }
 
@@ -99,22 +182,27 @@ export function PhotoUploader({
 
           const result = await registerListingImage({
             propertyId,
-            storagePath,
+            storagePath: uploaded.full,
+            renditions: uploaded,
+            width: dimensions?.width,
+            height: dimensions?.height,
             isCover,
             position: images.length + added.length,
           });
 
           if (!result.ok) {
-            await supabase.storage.from('property-media').remove([storagePath]);
-            toast.error(result.error);
+            await supabase.storage
+              .from('property-media')
+              .remove(Object.values(uploaded));
+            failed.push(`${file.name}: ${result.error}`);
             continue;
           }
 
           const {
             data: { publicUrl },
-          } = supabase.storage.from('property-media').getPublicUrl(storagePath);
+          } = supabase.storage.from('property-media').getPublicUrl(uploaded.card ?? uploaded.full);
 
-          added.push({ id: result.data.id, storagePath, url: publicUrl, isCover });
+          added.push({ id: result.data.id, storagePath: uploaded.full, url: publicUrl, isCover });
         }
 
         if (added.length > 0) {
@@ -127,8 +215,18 @@ export function PhotoUploader({
               : `${added.length} photos added and saved.`,
           );
         }
+
+        if (failed.length > 0) {
+          setFailures(failed);
+          toast.error(
+            failed.length === 1
+              ? 'One photo could not be saved.'
+              : `${failed.length} photos could not be saved.`,
+          );
+        }
       } finally {
         setBusy(false);
+        setProgress(null);
         if (inputRef.current) inputRef.current.value = '';
       }
     },
@@ -205,7 +303,50 @@ export function PhotoUploader({
         <p className="mt-1.5 text-xs text-ink-500">
           You can pick several at once. Big photos from your phone are made smaller automatically.
         </p>
+
+        {progress && (
+          <div className="mx-auto mt-5 max-w-sm">
+            <div
+              role="progressbar"
+              aria-valuenow={progress.percent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Upload progress"
+              className="h-1.5 w-full overflow-hidden rounded-full bg-ink-200"
+            >
+              <div
+                className="h-full bg-crimson-500 transition-[width] duration-200"
+                style={{ width: `${progress.percent}%` }}
+              />
+            </div>
+            <p className="mt-2 truncate text-xs text-ink-500">
+              {progress.stage} · {progress.name}
+            </p>
+          </div>
+        )}
       </div>
+
+      {failures.length > 0 && (
+        <div
+          role="alert"
+          className="rounded-xl border border-clay-200 bg-clay-50 px-4 py-3 text-sm text-clay-900"
+        >
+          <p className="flex items-start gap-2.5 font-medium">
+            <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0 text-clay-600" />
+            These photos were not saved
+          </p>
+          <ul className="mt-2 space-y-1 pl-6.5 text-xs">
+            {failures.map((failure) => (
+              <li key={failure} className="break-words">
+                {failure}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 pl-6.5 text-xs text-clay-700">
+            Nothing else was lost. Try them again, or choose different files.
+          </p>
+        </div>
+      )}
 
       {/* Each photo is saved the moment it finishes uploading, so the count is
           a running total and not a target to hit in one sitting. That is worth

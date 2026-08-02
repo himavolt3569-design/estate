@@ -32,6 +32,7 @@ type SearchRow = {
   distance_m: number | null;
   cover: {
     renditions?: { thumb?: string; card?: string; full?: string };
+    storagePath?: string | null;
     blurhash?: string | null;
     alt?: string | null;
   } | null;
@@ -40,6 +41,10 @@ type SearchRow = {
   published_at: string;
   favorite_count: number;
 };
+
+function hasRendition(renditions?: { thumb?: string; card?: string; full?: string }): boolean {
+  return Boolean(renditions?.thumb || renditions?.card || renditions?.full);
+}
 
 function toCardDTO(row: SearchRow): PropertyCardDTO {
   const province = row.province_slug ?? 'nepal';
@@ -71,13 +76,19 @@ function toCardDTO(row: SearchRow): PropertyCardDTO {
     lng: row.lng,
     distanceLabel: formatDistance(row.distance_m),
 
-    cover: row.cover?.renditions
-      ? {
-          renditions: row.cover.renditions,
-          blurhash: row.cover.blurhash ?? null,
-          alt: row.cover.alt ?? null,
-        }
-      : null,
+    // A cover exists if there is anything to render at all. Testing
+    // `renditions` alone dropped every photo on the platform, because an image
+    // registered without a generated rendition set carries `{}` here — truthy,
+    // but with no URL inside it.
+    cover:
+      row.cover && (row.cover.storagePath || hasRendition(row.cover.renditions))
+        ? {
+            renditions: row.cover.renditions ?? {},
+            storagePath: row.cover.storagePath ?? null,
+            blurhash: row.cover.blurhash ?? null,
+            alt: row.cover.alt ?? null,
+          }
+        : null,
 
     verified: row.verified,
     listedByLabel: LISTED_BY_LABELS[row.listed_by_role] ?? 'Listed by owner',
@@ -110,16 +121,18 @@ export async function searchProperties(
     });
     data = result.data;
     error = result.error;
-  } catch (err: any) {
-    console.error('[search_properties_fetch_error]', err.message || err);
-    return { items: [], nextCursor: null };
+  } catch (cause) {
+    console.error('[search_properties]', cause instanceof Error ? cause.message : cause);
+    return { items: [], nextCursor: null, error: true };
   }
 
   if (error) {
     // Surfacing the raw Postgres message to a visitor tells them nothing useful
-    // and tells an attacker about our schema.
+    // and tells an attacker about our schema. The caller gets a flag so it can
+    // tell "nothing matched" apart from "the query failed" — rendering an empty
+    // state for a failure is how a broken page looks like an empty catalogue.
     console.error('[search_properties]', error.message);
-    return { items: [], nextCursor: null };
+    return { items: [], nextCursor: null, error: true };
   }
 
   const rows = (data ?? []) as unknown as SearchRow[];
@@ -137,11 +150,13 @@ export async function searchProperties(
         ? { price: last.price }
         : sort === 'distance' && last.distance_m != null
           ? { distance: last.distance_m }
-          : { published_at: last.published_at }),
+          : sort === 'verified_first'
+            ? { verified: last.verified, published_at: last.published_at }
+            : { published_at: last.published_at }),
     });
   }
 
-  return { items, nextCursor };
+  return { items, nextCursor, error: false };
 }
 
 /** Capped at 1000. See count_properties() in 0011 for why an exact count is not worth it. */
@@ -222,6 +237,7 @@ export type PropertyDetail = {
   images: Array<{
     id: string;
     renditions: { thumb?: string; card?: string; full?: string };
+    storagePath: string | null;
     blurhash: string | null;
     width: number | null;
     height: number | null;

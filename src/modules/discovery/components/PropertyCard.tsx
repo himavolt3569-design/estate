@@ -65,6 +65,7 @@ export function PropertyCard({
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         <PropertyImage
           renditions={property.cover?.renditions}
+          storagePath={property.cover?.storagePath}
           alt={property.cover?.alt ?? property.title}
           width={800}
           height={600}

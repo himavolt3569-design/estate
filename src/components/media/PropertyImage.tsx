@@ -1,10 +1,17 @@
 import { cn } from '@/lib/utils';
 
 /**
- * Storage images are already compressed and sized into three renditions by the
+ * Storage images are compressed and sized into three renditions by the
  * client-side upload pipeline (docs/01-architecture.md §6), so next/image would
  * proxy and re-encode work that is already done. A plain <img> with an explicit
  * srcset is both faster and cheaper.
+ *
+ * `storagePath` is the object that was actually uploaded, and it is the fallback
+ * for every rendition. Photos uploaded before the pipeline generated renditions
+ * have an empty rendition map and would otherwise render as "No photo" despite
+ * the file sitting in the bucket — which is exactly what happened to every photo
+ * on the platform. Rendering the original is slightly heavier than rendering a
+ * card rendition and infinitely lighter than rendering nothing.
  *
  * The wrapper owns the aspect ratio and clips its contents, so the box is
  * reserved whether the image is present, still loading, or 404s. That last case
@@ -25,6 +32,7 @@ export function storageUrl(path: string | undefined | null, bucket = BUCKET): st
 
 export function PropertyImage({
   renditions,
+  storagePath,
   alt,
   width,
   height,
@@ -34,6 +42,8 @@ export function PropertyImage({
   wrapperClassName,
 }: {
   renditions: Renditions | null | undefined;
+  /** The uploaded object. Used wherever a rendition is missing. */
+  storagePath?: string | null;
   alt: string;
   width: number;
   height: number;
@@ -46,10 +56,11 @@ export function PropertyImage({
   /** Applied to the ratio box: sizing, rounding, borders. */
   wrapperClassName?: string;
 }) {
+  const original = storageUrl(storagePath);
   const thumb = storageUrl(renditions?.thumb);
   const card = storageUrl(renditions?.card);
   const full = storageUrl(renditions?.full);
-  const source = card ?? full ?? thumb;
+  const source = card ?? full ?? thumb ?? original;
   const ratio = { aspectRatio: `${width} / ${height}` };
 
   if (!source) {
@@ -66,6 +77,9 @@ export function PropertyImage({
     );
   }
 
+  // Only a genuine set of differently-sized files is worth a srcset. Listing the
+  // same original three times would make the browser pick a "smaller" file that
+  // is not smaller and cost a pointless extra decode.
   const srcSet = [
     thumb ? `${thumb} 400w` : null,
     card ? `${card} 800w` : null,

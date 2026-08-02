@@ -33,6 +33,8 @@ export type PropertyCardDTO = {
 
   cover: {
     renditions: { thumb?: string; card?: string; full?: string };
+    /** The uploaded object, used wherever a rendition is missing. */
+    storagePath: string | null;
     blurhash: string | null;
     alt: string | null;
   } | null;
@@ -61,10 +63,12 @@ export type SearchFilters = {
   radius_m?: number;
   verified_only?: boolean;
   listed_after?: string;
-  sort?: 'newest' | 'price_asc' | 'price_desc' | 'distance';
+  sort?: 'newest' | 'price_asc' | 'price_desc' | 'distance' | 'verified_first';
 };
 
 export type SearchResult = {
   items: PropertyCardDTO[];
   nextCursor: string | null;
+  /** True when the query itself failed, as opposed to matching nothing. */
+  error?: boolean;
 };

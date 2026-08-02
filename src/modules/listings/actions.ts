@@ -360,6 +360,21 @@ export const registerListingImage = authedAction({
   schema: z.object({
     propertyId: z.string().uuid(),
     storagePath: z.string().min(1).max(500),
+    /*
+     * The three sizes the browser produced. Optional, because storage_path is
+     * the source of truth and every reader falls back to it: a photo whose
+     * renditions failed to upload is still a photo, and refusing to record it
+     * would lose the file the seller already waited for.
+     */
+    renditions: z
+      .object({
+        thumb: z.string().max(500).optional(),
+        card: z.string().max(500).optional(),
+        full: z.string().max(500).optional(),
+      })
+      .optional(),
+    width: z.number().int().positive().max(20000).optional(),
+    height: z.number().int().positive().max(20000).optional(),
     isCover: z.boolean().default(false),
     position: z.number().int().min(0).max(60).default(0),
     altText: z.string().max(200).optional(),
@@ -381,6 +396,9 @@ export const registerListingImage = authedAction({
       .insert({
         property_id: input.propertyId,
         storage_path: input.storagePath,
+        rendition_paths: input.renditions ?? {},
+        width: input.width ?? null,
+        height: input.height ?? null,
         is_cover: input.isCover,
         position: input.position,
         alt_text: input.altText ?? null,
