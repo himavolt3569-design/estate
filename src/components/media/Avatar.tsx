@@ -60,12 +60,20 @@ export function Avatar({
   name,
   size = 'md',
   className,
+  /*
+   * Eager by default. An avatar is a 512px webp of about 30 KB shown at 24-64
+   * CSS pixels, and it is nearly always in the first viewport — a header, a
+   * sidebar, the top of a thread. Deferring it buys nothing and costs a visible
+   * pop-in. Surfaces that show many at once, like the inbox, pass 'lazy'.
+   */
+  loading = 'eager',
 }: {
   /** A full URL or a storage path. Either works. */
   src: string | null | undefined;
   name: string | null | undefined;
   size?: keyof typeof SIZES;
   className?: string;
+  loading?: 'eager' | 'lazy';
 }) {
   const resolved = avatarUrl(src);
   const [failed, setFailed] = useState(false);
@@ -101,7 +109,7 @@ export function Avatar({
       <img
         src={resolved}
         alt={name ? `${name}'s picture` : ''}
-        loading="lazy"
+        loading={loading}
         decoding="async"
         onError={() => setFailed(true)}
         className="size-full object-cover"

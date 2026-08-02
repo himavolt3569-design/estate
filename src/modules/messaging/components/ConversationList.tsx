@@ -96,6 +96,7 @@ export function ConversationList({
                 src={conversation.other?.avatarUrl}
                 name={conversation.other?.name}
                 size="md"
+                loading="lazy"
               />
 
               <div className="min-w-0 flex-1">
