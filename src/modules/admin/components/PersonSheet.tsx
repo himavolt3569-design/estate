@@ -4,6 +4,7 @@ import { KeyRound, Loader2, Mail, ShieldAlert, UserCog } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { Avatar } from '@/components/media/Avatar';
 import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/primitives';
 import { SelectMenu } from '@/components/ui/select-menu';
@@ -20,6 +21,7 @@ import {
 export type Person = {
   id: string;
   full_name: string | null;
+  avatar_url: string | null;
   phone: string | null;
   email: string | null;
   role: string;
@@ -82,10 +84,15 @@ export function PersonSheet({ person, onDone }: { person: Person; onDone: () => 
   return (
     <div className="thread-top overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-raised">
       <div className="border-b border-ink-100 px-6 pt-6 pb-0">
-        <p className="text-lg font-semibold text-ink-900">
-          {person.full_name || 'Unnamed account'}
-        </p>
-        <p className="mt-0.5 text-sm text-ink-500">{person.email ?? 'No email on file'}</p>
+        <div className="flex items-center gap-3">
+          <Avatar src={person.avatar_url} name={person.full_name} size="lg" />
+          <div className="min-w-0">
+            <p className="text-lg font-semibold text-ink-900">
+              {person.full_name || 'Unnamed account'}
+            </p>
+            <p className="mt-0.5 text-sm text-ink-500">{person.email ?? 'No email on file'}</p>
+          </div>
+        </div>
 
         <div className="mt-5 flex gap-1 overflow-x-auto">
           {TABS.map((item) => (

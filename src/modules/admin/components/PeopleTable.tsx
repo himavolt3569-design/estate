@@ -3,6 +3,7 @@
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { Avatar } from '@/components/media/Avatar';
 import { Badge } from '@/components/ui/primitives';
 import { SelectMenu } from '@/components/ui/select-menu';
 import { formatDate } from '@/lib/format';
@@ -119,13 +120,18 @@ export function PeopleTable({ people }: { people: Person[] }) {
               {filtered.map((person) => (
                 <tr key={person.id} className="transition-colors hover:bg-ink-50/60">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-ink-900">
-                      {person.full_name || 'Unnamed account'}
-                    </p>
-                    <p className="mt-0.5 text-xs text-ink-500">
-                      {person.email ?? '—'}
-                      {person.phone ? ` · ${person.phone}` : ''}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <Avatar src={person.avatar_url} name={person.full_name} size="sm" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-ink-900">
+                          {person.full_name || 'Unnamed account'}
+                        </p>
+                        <p className="mt-0.5 text-xs text-ink-500">
+                          {person.email ?? '—'}
+                          {person.phone ? ` · ${person.phone}` : ''}
+                        </p>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-ink-600">
                     {ROLE_LABEL[person.role] ?? person.role}

@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { Seal } from '@/components/brand/Seal';
 import { TrustLedger } from '@/components/brand/TrustLedger';
 import { MapLoader } from '@/components/map/MapLoader';
+import { Avatar } from '@/components/media/Avatar';
 import { PropertyImage } from '@/components/media/PropertyImage';
 import { Badge, SectionHeading, Surface } from '@/components/ui/primitives';
 import { LISTED_BY_LABELS } from '@/lib/auth/permissions';
@@ -235,9 +236,7 @@ export default async function PropertyPage({ params }: { params: Params }) {
               <p className="label">{LISTED_BY_LABELS[property.vendor?.role ?? 'property_owner']}</p>
 
               <div className="mt-3 flex items-center gap-3">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-ink-200 bg-ink-50 font-semibold text-lg text-ink-600">
-                  {(property.vendor?.name ?? '?').charAt(0).toUpperCase()}
-                </div>
+                <Avatar src={property.vendor?.avatarUrl} name={property.vendor?.name} size="md" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-ink-900">
                     {property.vendor?.name ?? 'Lister'}
@@ -251,7 +250,16 @@ export default async function PropertyPage({ params }: { params: Params }) {
               </div>
 
               <div className="mt-5 border-t border-ink-200 pt-5">
-                <ContactPanel propertyId={property.id} available={property.contact} />
+                {/* The viewer is resolved inside the panel, on the client. This
+                    route is ISR-cached for SEO, and reading the session here
+                    would make every request dynamic to decide the visibility of
+                    one button. */}
+                <ContactPanel
+                  propertyId={property.id}
+                  available={property.contact}
+                  propertyTitle={property.title}
+                  ownerId={property.vendor?.id ?? null}
+                />
               </div>
             </Surface>
 

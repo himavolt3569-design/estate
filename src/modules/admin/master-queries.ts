@@ -39,7 +39,7 @@ export async function getAllPeople(): Promise<Person[]> {
   const [{ data: profiles }, { data: authUsers }] = await Promise.all([
     client
       .from('profiles')
-      .select('id, full_name, phone, role, status, created_at')
+      .select('id, full_name, avatar_url, phone, role, status, created_at')
       .is('deleted_at', null)
       .order('created_at', { ascending: false }),
     client.auth.admin.listUsers({ page: 1, perPage: 1000 }),
@@ -158,4 +158,56 @@ export async function getPlatformTotals(): Promise<PlatformTotals | null> {
     views: rows.reduce((sum, row) => sum + (row.view_count ?? 0), 0),
     enquiries: enquiries ?? 0,
   };
+}
+
+export type AdminListing = {
+  id: string;
+  title: string;
+  reference_code: string;
+  slug: string;
+  status: string;
+  price: number;
+  category: string;
+  subtype: string;
+  transaction_type: string;
+  verified_at: string | null;
+  published_at: string | null;
+  expires_at: string | null;
+  created_at: string;
+  owner: { id: string; full_name: string | null; role: string } | null;
+  location: { name_en: string; slug: string; path: string } | null;
+  images: Array<{ storage_path: string; rendition_paths: Record<string, string> | null; is_cover: boolean }>;
+};
+
+/**
+ * Every listing on the platform, whatever its state.
+ *
+ * The moderation queue only ever shows `pending_review`, which left the admin
+ * with no screen on which a published listing could be given the verified seal —
+ * the reason properties.verified_at was null across the whole table and the
+ * home page's verified rail had nothing to rank.
+ */
+export async function getAllListings(limit = 200): Promise<AdminListing[]> {
+  if (!(await isMasterAdmin())) return [];
+
+  const client = createAdminClient('master admin listing overview');
+  const { data, error } = await client
+    .from('properties')
+    .select(
+      `id, title, reference_code, slug, status, price, category, subtype, transaction_type,
+       verified_at, published_at, expires_at, created_at,
+       owner:profiles!properties_owner_id_fkey ( id, full_name, role ),
+       location:locations ( name_en, slug, path ),
+       images:property_images ( storage_path, rendition_paths, is_cover )`,
+    )
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('[getAllListings]', error.message);
+    return [];
+  }
+
+  return (data ?? []) as unknown as AdminListing[];
 }

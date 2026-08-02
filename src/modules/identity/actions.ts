@@ -313,7 +313,13 @@ export const updateProfile = authedAction({
 
     if (error) throw error;
 
-    revalidatePath('/dashboard/settings');
+    /*
+     * The whole dashboard layout, not just this page: the header carries the
+     * user's picture and name, and revalidating only the settings route left a
+     * seller looking at their old picture in the corner of every screen until
+     * they signed out and back in.
+     */
+    revalidatePath('/dashboard', 'layout');
     return { saved: true };
   },
 });
