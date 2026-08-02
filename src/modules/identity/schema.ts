@@ -101,20 +101,6 @@ export const setInitialPasswordSchema = z
     path: ['confirmPassword'],
   });
 
-export const mfaVerifySchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .regex(/^[0-9]{6}$/, 'Enter the 6-digit code from your authenticator app'),
-  factorId: z.string().min(1),
-  next: z.string().optional(),
-});
-
-export const mfaEnrollVerifySchema = z.object({
-  factorId: z.string().min(1),
-  code: z.string().trim().regex(/^[0-9]{6}$/, 'Enter the 6-digit code'),
-});
-
 export const recoveryCodeSchema = z.object({
   code: z.string().trim().min(8, 'Enter a recovery code'),
 });

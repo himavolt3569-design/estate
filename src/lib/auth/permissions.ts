@@ -68,20 +68,6 @@ export function roleHasPermission(role: Role | null | undefined, permission: Per
   return ROLE_PERMISSIONS[role].includes(permission);
 }
 
-/** Admin surfaces additionally require a satisfied second factor. */
-export function requiresSecondFactor(permission: Permission): boolean {
-  return (
-    permission === 'user.manage' ||
-    permission === 'user.suspend' ||
-    permission === 'audit.view' ||
-    permission === 'system.manage' ||
-    permission === 'property.publish' ||
-    permission === 'property.verify' ||
-    permission === 'report.resolve' ||
-    permission === 'review.moderate'
-  );
-}
-
 export const ROLE_LABELS: Record<Role, string> = {
   platform_admin: 'Platform admin',
   agency_manager: 'Agency manager',

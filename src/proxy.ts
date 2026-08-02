@@ -13,8 +13,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  *      happen here, sessions silently expire mid-visit.
  *   2. Issue a per-request CSP nonce. Next picks the nonce out of the header we
  *      set and stamps it onto its own inline bootstrap scripts.
- *   3. Gate the authenticated route groups before a page renders, including the
- *      aal2 requirement for admin surfaces.
+ *   3. Gate the authenticated route groups before a page renders.
  *
  * This is a convenience boundary, not the security boundary. Every one of these
  * checks is repeated in RLS and in authedAction(); middleware only saves a
@@ -108,21 +107,7 @@ export default async function proxy(request: NextRequest) {
     return redirectTo(url);
   }
 
-  if (user && isDashboard) {
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-
-    // The user has a verified factor but has not satisfied it this session.
-    if (aal?.nextLevel === 'aal2' && aal.currentLevel === 'aal1') {
-      const url = request.nextUrl.clone();
-      url.pathname = '/login/verify';
-      url.searchParams.set('next', pathname);
-      return redirectTo(url);
-    }
-
-    // Removed AAL2 check for admin surfaces as per Master Admin override requirements.
-  }
-
-  if (user && isAuthPage && pathname !== '/login/verify') {
+  if (user && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     url.search = '';

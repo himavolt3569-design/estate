@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { createClient } from '@/lib/supabase/server';
 
-import { requiresSecondFactor, roleHasPermission, type Permission } from './permissions';
+import { roleHasPermission, type Permission } from './permissions';
 import { getSessionUser, type SessionUser } from './session';
 
 /**
@@ -37,8 +37,6 @@ type ActionConfig<TSchema extends z.ZodType, TOutput> = {
   schema: TSchema;
   /** Permission required to run this action. Omit only for self-scoped actions. */
   permission?: Permission;
-  /** Force a second factor even when the permission would not normally need one. */
-  requireSecondFactor?: boolean;
   /** Allow unverified accounts. Default false: `active` status is required. */
   allowInactive?: boolean;
   handler: (ctx: HandlerContext<z.infer<TSchema>>) => Promise<TOutput>;
@@ -65,15 +63,8 @@ export function authedAction<TSchema extends z.ZodType, TOutput>(
     }
 
     // 2. Authorization
-    if (config.permission) {
-      if (!roleHasPermission(user.role, config.permission)) {
-        return { ok: false, error: 'You do not have access to this action.' };
-      }
-
-      const needsAal2 = config.requireSecondFactor ?? requiresSecondFactor(config.permission);
-      if (needsAal2 && user.aal !== 'aal2') {
-        return { ok: false, error: 'Verify your second factor to continue.' };
-      }
+    if (config.permission && !roleHasPermission(user.role, config.permission)) {
+      return { ok: false, error: 'You do not have access to this action.' };
     }
 
     // 3. Validation

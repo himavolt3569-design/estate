@@ -50,12 +50,5 @@ export async function GET(request: NextRequest) {
     detail: { method: data.user?.app_metadata?.['provider'] ?? 'email' },
   });
 
-  // A user with a verified factor lands at aal1 and must clear the challenge
-  // before any admin or vendor surface will return data.
-  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aal?.nextLevel === 'aal2' && aal.currentLevel === 'aal1') {
-    return NextResponse.redirect(`${origin}/login/verify?next=${encodeURIComponent(next)}`);
-  }
-
   return NextResponse.redirect(`${origin}${next}`);
 }

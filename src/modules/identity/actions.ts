@@ -13,8 +13,6 @@ import {
   changePasswordSchema,
   forgotPasswordSchema,
   loginSchema,
-  mfaEnrollVerifySchema,
-  mfaVerifySchema,
   paymentMethodSchema,
   profileSchema,
   registerSchema,
@@ -69,18 +67,6 @@ export async function signIn(raw: unknown): Promise<ActionResult<{ redirectTo: s
   }
 
   await recordAuthEvent('login_success', { userId: data.user?.id, email });
-
-  // If the account has a verified TOTP factor, the session is only aal1 until
-  // the code is entered. The database enforces this too, since is_admin() and
-  // the moderation triggers both require aal2, so this redirect is convenience,
-  // not the control.
-  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aal?.nextLevel === 'aal2' && aal.currentLevel === 'aal1') {
-    return {
-      ok: true,
-      data: { redirectTo: `/login/verify${next ? `?next=${encodeURIComponent(next)}` : ''}` },
-    };
-  }
 
   return { ok: true, data: { redirectTo: next && next.startsWith('/') ? next : '/dashboard' } };
 }
@@ -266,104 +252,6 @@ export const chooseAccountType = authedAction({
 
     revalidatePath('/dashboard', 'layout');
     return null;
-  },
-});
-
-/* ========================================================================== */
-/* Two-factor                                                                 */
-/* ========================================================================== */
-
-export async function verifyMfa(raw: unknown): Promise<ActionResult<{ redirectTo: string }>> {
-  const parsed = mfaVerifySchema.safeParse(raw);
-  if (!parsed.success) {
-    return { ok: false, error: 'Enter the 6-digit code.', fieldErrors: fieldErrors(parsed.error) };
-  }
-
-  const { factorId, code, next } = parsed.data;
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: 'Sign in again to continue.' };
-
-  const allowed = await consumeRateLimit('mfa_verify', user.id, 5, '10 minutes');
-  if (!allowed) {
-    await recordAuthEvent('mfa_failed', { userId: user.id, detail: { reason: 'rate_limited' } });
-    return { ok: false, error: 'Too many attempts. Wait 10 minutes and try again.' };
-  }
-
-  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
-  if (challengeError || !challenge) {
-    return { ok: false, error: 'Could not start the check. Try again.' };
-  }
-
-  const { error } = await supabase.auth.mfa.verify({
-    factorId,
-    challengeId: challenge.id,
-    code,
-  });
-
-  if (error) {
-    await recordAuthEvent('mfa_failed', { userId: user.id });
-    return { ok: false, error: 'That code is not right. Codes expire after 30 seconds.' };
-  }
-
-  await recordAuthEvent('mfa_verified', { userId: user.id });
-  return { ok: true, data: { redirectTo: next && next.startsWith('/') ? next : '/dashboard' } };
-}
-
-/** Starts enrolment and returns the QR payload for the authenticator app. */
-export const startMfaEnrollment = authedAction({
-  schema: z.object({}),
-  handler: async ({ supabase }) => {
-    const { data, error } = await supabase.auth.mfa.enroll({
-      factorType: 'totp',
-      friendlyName: `Kitta ${new Date().toISOString().slice(0, 10)}`,
-    });
-
-    if (error || !data) throw error ?? new Error('Could not start enrolment');
-
-    return {
-      factorId: data.id,
-      qrCode: data.totp.qr_code,
-      secret: data.totp.secret,
-      uri: data.totp.uri,
-    };
-  },
-});
-
-export const confirmMfaEnrollment = authedAction({
-  schema: mfaEnrollVerifySchema,
-  handler: async ({ input, supabase, user }) => {
-    const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
-      factorId: input.factorId,
-    });
-    if (challengeError || !challenge) throw challengeError ?? new Error('Challenge failed');
-
-    const { error } = await supabase.auth.mfa.verify({
-      factorId: input.factorId,
-      challengeId: challenge.id,
-      code: input.code,
-    });
-    if (error) throw error;
-
-    await recordAuthEvent('mfa_enrolled', { userId: user.id });
-    revalidatePath('/dashboard/settings/security');
-    return { enrolled: true };
-  },
-});
-
-export const disableMfa = authedAction({
-  schema: z.object({ factorId: z.string().min(1) }),
-  // Turning off a second factor is exactly when you want to be sure it is the
-  // account holder, so this itself requires a satisfied second factor.
-  requireSecondFactor: true,
-  handler: async ({ input, supabase }) => {
-    const { error } = await supabase.auth.mfa.unenroll({ factorId: input.factorId });
-    if (error) throw error;
-    revalidatePath('/dashboard/settings/security');
-    return { disabled: true };
   },
 });
 

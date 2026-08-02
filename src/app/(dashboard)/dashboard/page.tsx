@@ -107,24 +107,6 @@ export default async function DashboardPage({
         </div>
       </header>
 
-      {/* Shown until a second factor exists, because an account that can publish
-          listings is worth stealing. */}
-      {!user.hasMfa && (
-        <div className="flex flex-wrap items-center justify-between gap-4 border-l-2 border-royal-700 bg-royal-50/50 py-4 pr-4 pl-5">
-          <div className="flex items-start gap-3">
-            <ShieldCheck aria-hidden className="mt-0.5 size-5 shrink-0 text-royal-700" />
-            <div>
-              <p className="text-sm font-medium text-ink-900">{d.secureTitle}</p>
-              <p className="mt-0.5 max-w-xl text-sm text-ink-600">{d.secureBody}</p>
-            </div>
-          </div>
-          <Button asChild size="sm">
-            <Link href="/dashboard/settings/security">
-              {d.secureCta} <ArrowRight aria-hidden />
-            </Link>
-          </Button>
-        </div>
-      )}
 
       {admin ? (
         <AdminDashboard days={days} vsBefore={vsBefore} t={t} />

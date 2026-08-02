@@ -1,7 +1,7 @@
 import { Monitor, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 
-import { Badge, Surface } from '@/components/ui/primitives';
+import { Surface } from '@/components/ui/primitives';
 import { getSessionUser } from '@/lib/auth/session';
 import { formatRelative } from '@/lib/format';
 import { createClient } from '@/lib/supabase/server';
@@ -9,7 +9,6 @@ import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '../../components/PageHeader';
 import { ChangePasswordForm } from './ChangePasswordForm';
 import { RevokeSessionButton } from './RevokeSessionButton';
-import { TwoFactorPanel } from './TwoFactorPanel';
 
 export const metadata: Metadata = { title: 'Security', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -28,23 +27,15 @@ const EVENT_LABEL: Record<string, string> = {
   session_revoked: 'Session revoked',
 };
 
-export default async function SecuritySettingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const params = await searchParams;
-  const reason = Array.isArray(params['reason']) ? params['reason'][0] : params['reason'];
-
+export default async function SecuritySettingsPage() {
   const user = await getSessionUser();
   if (!user) return null;
 
   const supabase = await createClient();
 
-  // All three reads are RLS-scoped to the caller. There is no user_id filter in
-  // this file, and there does not need to be.
-  const [{ data: factors }, { data: sessions }, { data: events }] = await Promise.all([
-    supabase.auth.mfa.listFactors(),
+  // Both reads are RLS-scoped to the caller. There is no user_id filter in this
+  // file, and there does not need to be.
+  const [{ data: sessions }, { data: events }] = await Promise.all([
     supabase
       .from('user_sessions')
       .select('id, device_label, user_agent, ip, city, country_code, created_at, last_seen_at, revoked_at')
@@ -58,40 +49,13 @@ export default async function SecuritySettingsPage({
       .limit(15),
   ]);
 
-  const totp = factors?.totp?.find((f) => f.status === 'verified');
-
   return (
     <div className="max-w-3xl space-y-10 pb-10">
       <PageHeader
         eyebrow="Your account"
         title="Sign-in and safety"
-        subtitle="Your password, two-step sign-in, and the devices currently signed in to this account."
+        subtitle="Your password and the devices currently signed in to this account."
       />
-
-      {reason === 'admin-requires-2fa' && (
-        <div className="rounded-xl border border-ochre-200 bg-ochre-50 px-4 py-3 text-sm text-ochre-700">
-          Two-step sign-in is strongly recommended on an account that can publish listings.
-        </div>
-      )}
-
-      {/* ---------------- Two-factor ---------------- */}
-      <section>
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <h2 className="font-semibold text-xl text-ink-900">Two-factor sign-in</h2>
-            <p className="mt-1 text-sm leading-relaxed text-ink-600">
-              Asks for a 6-digit code from your phone as well as your password. Needed for the admin
-              account.
-            </p>
-          </div>
-          {totp ? <Badge tone="verified">On</Badge> : <Badge tone="pending">Off</Badge>}
-        </div>
-
-        <TwoFactorPanel
-          enrolled={totp ? { id: totp.id, friendlyName: totp.friendly_name ?? 'Authenticator' } : null}
-          canDisable={user.aal === 'aal2'}
-        />
-      </section>
 
       {/* ---------------- Password ---------------- */}
       <section>

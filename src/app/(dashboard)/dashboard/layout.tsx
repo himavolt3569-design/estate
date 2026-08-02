@@ -112,7 +112,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 {user.status === 'pending_verification' ? n.emailNotConfirmed : n.suspended}
               </Badge>
             )}
-            {user.aal === 'aal2' && <Badge tone="verified">{n.twoFactorOn}</Badge>}
 
             <div className="hidden text-right sm:block">
               <p className="text-sm leading-tight text-ink-900">{user.fullName ?? 'Your account'}</p>
