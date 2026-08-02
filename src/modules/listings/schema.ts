@@ -40,14 +40,71 @@ export const PRICE_PERIODS = ['month', 'year', 'night'] as const;
 
 export const AREA_UNITS = ['ropani', 'aana', 'bigha', 'kattha', 'dhur', 'sqft', 'sqm'] as const;
 
-/** Rooms only make sense on something with rooms. */
-export function hasRooms(category: Category): boolean {
-  return category !== 'land';
-}
+/** How land is bought and sold here. Nobody quotes a plot in square feet. */
+export const LAND_UNITS = ['ropani', 'aana', 'bigha', 'kattha', 'dhur'] as const;
+
+/** How built space is quoted. Nobody quotes a flat in ropani. */
+export const FLOOR_UNITS = ['sqft', 'sqm'] as const;
 
 /** Land is the only thing where road access is the headline attribute. */
 export function isLand(category: Category): boolean {
   return category === 'land';
+}
+
+/* -------------------------------------------------------------------------- */
+/* What to ask, and what not to                                                */
+/* -------------------------------------------------------------------------- */
+/*
+ * The form used to ask everything of everybody. Somebody renting out a flat was
+ * asked how much land it sat on, in ropani, which is a question they cannot
+ * answer and would not care about if they could — the flat is on the fourth
+ * floor. Every question that cannot change a decision is a reason to abandon
+ * the form, so each of these says who a question is actually for.
+ */
+
+/**
+ * A plot is sold or leased; nobody takes land for a night. A shop is not a
+ * homestay either. Offering the choice and then rejecting it later is worse
+ * than not offering it.
+ */
+export function transactionsFor(category: Category): readonly TransactionType[] {
+  if (category === 'land') return ['sale', 'lease', 'rent'];
+  if (category === 'commercial') return ['sale', 'rent', 'lease'];
+  return TRANSACTION_TYPES;
+}
+
+/**
+ * Which size question to ask.
+ *
+ *   land  — the plot itself, in ropani or bigha. The thing being sold.
+ *   floor — the built area in square feet. What a tenant is renting.
+ *
+ * Buying a house means buying the ground under it, so a sale asks for the plot.
+ * Renting one does not, so it asks for the space inside.
+ */
+export function areaAsk(category: Category, transactionType: TransactionType): 'land' | 'floor' {
+  if (category === 'land') return 'land';
+  return transactionType === 'sale' ? 'land' : 'floor';
+}
+
+/** Bedrooms in a warehouse, and other questions worth not asking. */
+export function roomFields(category: Category): {
+  bedrooms: boolean;
+  bathrooms: boolean;
+  floors: boolean;
+  parking: boolean;
+} {
+  return {
+    bedrooms: category === 'residential',
+    bathrooms: category !== 'land',
+    floors: category !== 'land',
+    parking: category !== 'land',
+  };
+}
+
+/** The unit a seller is most likely to be holding in their head. */
+export function defaultAreaUnit(ask: 'land' | 'floor'): (typeof AREA_UNITS)[number] {
+  return ask === 'land' ? 'ropani' : 'sqft';
 }
 
 /* -------------------------------------------------------------------------- */
@@ -203,5 +260,16 @@ export const AREA_UNIT_LABELS: Record<(typeof AREA_UNITS)[number], string> = {
   sqm: 'Square metres',
 };
 
-/** The five images the database insists on before a listing may go for review. */
-export const MIN_IMAGES = 5;
+/**
+ * The photos the database insists on before a listing may go for review.
+ *
+ * It was five. Five is a lot to produce in one sitting on a phone, and because
+ * nothing could be sent until all five existed, sellers who had two good photos
+ * were stuck with a draft and no way forward — the step people gave up on.
+ * Three is enough to show a buyer the outside, the inside and the road, and
+ * more can be added to a listing at any point afterwards.
+ *
+ * Kept in step with tg_properties_require_media (migration 0020). The database
+ * is what enforces it; this constant only lets the form say so in a sentence.
+ */
+export const MIN_IMAGES = 3;

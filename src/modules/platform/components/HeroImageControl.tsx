@@ -1,5 +1,6 @@
 'use client';
 
+import imageCompression from 'browser-image-compression';
 import { ImageUp, Loader2, RotateCcw } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -22,26 +23,60 @@ export function HeroImageControl({
   const [preview, setPreview] = useState<string | null>(current);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  async function upload(file: File) {
+  /**
+   * The picture is resized here, in the browser, before it is sent anywhere.
+   *
+   * Two reasons, and the second is the important one.
+   *
+   * A Server Action body is capped at 1 MB by default, so the 4 MB photo this
+   * panel invited people to drop in came back as "Body exceeded 1 MB limit" —
+   * a Next.js error message, on the master admin's own screen, for doing
+   * exactly what the label said.
+   *
+   * The limit was the symptom. A hero image is the first thing every visitor
+   * downloads, so shipping a 4 MB original was already wrong: on Nepali mobile
+   * data that is the difference between a home page that appears and one that
+   * arrives in pieces. 2560px of WebP is indistinguishable behind the headline
+   * text and roughly a tenth of the bytes — for the visitor as well as for the
+   * upload.
+   */
+  async function upload(original: File) {
     setBusy(true);
-    const objectUrl = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(original);
     setPreview(objectUrl);
 
-    const formData = new FormData();
-    formData.append('image', file);
+    try {
+      let file = original;
+      try {
+        file = await imageCompression(original, {
+          maxSizeMB: 0.9,
+          maxWidthOrHeight: 2560,
+          useWebWorker: true,
+          fileType: 'image/webp',
+        });
+      } catch {
+        // A browser without the worker, or an image the encoder chokes on:
+        // send the original and let the server's own size check answer.
+        file = original;
+      }
 
-    const result = await setHeroImage(formData);
-    setBusy(false);
-    URL.revokeObjectURL(objectUrl);
+      const formData = new FormData();
+      formData.append('image', file);
 
-    if (!result.ok) {
-      setPreview(current);
-      toast.error(result.error);
-      return;
+      const result = await setHeroImage(formData);
+
+      if (!result.ok) {
+        setPreview(current);
+        toast.error(result.error);
+        return;
+      }
+
+      setPreview(result.data.url);
+      toast.success('Home page background changed.');
+    } finally {
+      setBusy(false);
+      URL.revokeObjectURL(objectUrl);
     }
-
-    setPreview(result.data.url);
-    toast.success('Home page background changed.');
   }
 
   async function restore(name: string) {
@@ -104,7 +139,8 @@ export function HeroImageControl({
             {busy ? 'Uploading…' : 'Drag an image here, or click to choose one'}
           </p>
           <p className="max-w-sm text-xs text-white/75">
-            Wide photos work best — around 2000 pixels across. JPG, PNG or WEBP, under 5 MB.
+            Wide photos work best. JPG, PNG or WEBP — big ones are shrunk to a web-sized
+            picture before they go up, so the home page stays quick to open.
           </p>
         </div>
       </div>

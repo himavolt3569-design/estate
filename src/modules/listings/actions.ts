@@ -9,7 +9,12 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { slugify } from '@/lib/utils';
 
-import { createListingSchema, updateListingSchema, type CreateListingValues } from './schema';
+import {
+  MIN_IMAGES,
+  createListingSchema,
+  updateListingSchema,
+  type CreateListingValues,
+} from './schema';
 
 /**
  * Listing writes.
@@ -266,9 +271,10 @@ export const updateListing = authedAction({
 /**
  * Sends a draft to the moderation queue.
  *
- * The five-image rule and the cover-image rule live in a trigger, so they are
+ * The photo minimum and the cover-image rule live in a trigger, so they are
  * checked here first only to produce a sentence a seller can act on rather than
- * a raised exception. The trigger remains the thing that actually enforces it.
+ * a raised exception. The trigger remains the thing that actually enforces it,
+ * and MIN_IMAGES is the one number both sides read.
  */
 export const submitListingForReview = authedAction({
   schema: z.object({ id: z.string().uuid() }),
@@ -279,9 +285,11 @@ export const submitListingForReview = authedAction({
       .select('id', { count: 'exact', head: true })
       .eq('property_id', input.id);
 
-    if ((count ?? 0) < 5) {
+    if ((count ?? 0) < MIN_IMAGES) {
       throw Object.assign(
-        new Error(`Add at least 5 photos before sending this for checking. You have ${count ?? 0}.`),
+        new Error(
+          `Add at least ${MIN_IMAGES} photos before sending this for checking. You have ${count ?? 0}.`,
+        ),
         { code: '23514' },
       );
     }

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { AddressAutocomplete } from '@/components/map/AddressAutocomplete';
@@ -29,15 +29,19 @@ import {
   AREA_UNIT_LABELS,
   CATEGORIES,
   CATEGORY_LABELS,
+  FLOOR_UNITS,
+  LAND_UNITS,
   MIN_IMAGES,
   PERIOD_LABELS,
   PRICE_PERIODS,
   SUBTYPES_BY_CATEGORY,
   SUBTYPE_LABELS,
   TRANSACTION_LABELS,
-  TRANSACTION_TYPES,
-  hasRooms,
+  areaAsk,
+  defaultAreaUnit,
   isLand,
+  roomFields,
+  transactionsFor,
   type Category,
   type Subtype,
   type TransactionType,
@@ -130,6 +134,24 @@ const STEPS = [
   { key: 'send', en: 'Check and send', ne: 'जाँचेर पठाउनुहोस्' },
 ] as const;
 
+const BUYER_QUESTIONS = [
+  'How wide is the road outside?',
+  'Which way does the house face?',
+  'Is there water all year?',
+  'How old is the building?',
+  'Is the lalpurja clear of loans?',
+  'How far is the bus or school?',
+];
+
+const RENTER_QUESTIONS = [
+  'Is it furnished, or empty?',
+  'Is there water all year?',
+  'How much is the deposit?',
+  'Are electricity and water included?',
+  'Is there parking for a bike or car?',
+  'Who else lives in the building?',
+];
+
 const num = (value: string): number | null => {
   const digits = value.replace(/[^\d.]/g, '');
   if (digits === '') return null;
@@ -176,9 +198,17 @@ export function ListingWizard({
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(existing?.draft ?? EMPTY);
   const [propertyId, setPropertyId] = useState<string | null>(existing?.id ?? null);
-  const [imageCount, setImageCount] = useState(existing?.images.length ?? 0);
+  /*
+   * The photo list lives here rather than inside PhotoUploader, because only
+   * the step you are on is mounted: held one level down, everything uploaded
+   * disappeared from view the moment the seller stepped back to check the
+   * price, and they had no way to tell it was still saved.
+   */
+  const [images, setImages] = useState<UploadedImage[]>(existing?.images ?? []);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const imageCount = images.length;
 
   const set = useCallback(<K extends keyof Draft>(key: K, value: Draft[K]) => {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -211,6 +241,37 @@ export function ListingWizard({
     () => districts.filter((district) => district.parent_id === draft.provinceId),
     [districts, draft.provinceId],
   );
+
+  /* What this listing is actually asked for, decided once and read everywhere. */
+  const allowedTransactions = transactionsFor(draft.category);
+  const ask = areaAsk(draft.category, draft.transactionType);
+  const rooms = roomFields(draft.category);
+  const renting = draft.transactionType !== 'sale';
+
+  /*
+   * A plot measured in ropani and a flat measured in square feet are different
+   * questions, so changing the deal changes the unit — and clears the number
+   * with it. Carrying "4" across from ropani to square feet would turn a
+   * 4-ropani plot into a 4-square-foot flat without anybody touching the field.
+   *
+   * Skipped on the first run: an existing listing keeps whatever unit it was
+   * saved with, even one from the other family, until the seller changes
+   * something themselves.
+   */
+  const settled = useRef(false);
+  useEffect(() => {
+    if (!settled.current) {
+      settled.current = true;
+      return;
+    }
+
+    setDraft((current) => {
+      const ask = areaAsk(current.category, current.transactionType);
+      const family: readonly string[] = ask === 'land' ? LAND_UNITS : FLOOR_UNITS;
+      if (family.includes(current.areaUnit)) return current;
+      return { ...current, areaUnit: defaultAreaUnit(ask), areaValue: '' };
+    });
+  }, [draft.category, draft.transactionType]);
 
   /* ---------------------------------------------------------------------- */
   /* Validation, per step                                                    */
@@ -357,7 +418,19 @@ export function ListingWizard({
 
   return (
     <div className="space-y-8">
-      <Stepper current={step} onJump={(index) => index < step && setStep(index)} />
+      <Stepper
+        current={step}
+        onJump={(index) => index < step && setStep(index)}
+        // "Size and rooms" is wrong for a plot of land and wrong for a flat
+        // being let, so the one step whose content changes says what it is.
+        overrides={{
+          size: isLand(draft.category)
+            ? { en: 'Plot size', ne: 'क्षेत्रफल' }
+            : renting
+              ? { en: 'The space', ne: 'ठाउँको विवरण' }
+              : undefined,
+        }}
+      />
 
       <div className="thread-top overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-soft">
         <div className="space-y-7 p-6 sm:p-8">
@@ -397,6 +470,11 @@ export function ListingWizard({
                     onSelect={() => {
                       set('category', category);
                       set('subtype', SUBTYPES_BY_CATEGORY[category][0] as Subtype);
+                      // Land cannot be a homestay. Rather than let the seller
+                      // pick something the next screen would have to argue
+                      // with, the choice moves to the nearest sensible one.
+                      const allowed = transactionsFor(category);
+                      if (!allowed.includes(draft.transactionType)) set('transactionType', allowed[0]!);
                     }}
                     icon={
                       category === 'residential' ? Home : category === 'land' ? LandPlot : Store
@@ -422,7 +500,7 @@ export function ListingWizard({
               </ChoiceGroup>
 
               <ChoiceGroup label="You are">
-                {TRANSACTION_TYPES.map((transaction) => (
+                {allowedTransactions.map((transaction) => (
                   <Choice
                     key={transaction}
                     compact
@@ -606,17 +684,17 @@ export function ListingWizard({
                 />
               </Field>
 
+              {/* The prompts follow the deal. Somebody looking for a flat to
+                  rent does not care whether the lalpurja is clear of loans;
+                  they care whether the water runs in Chaitra. */}
               <div className="rounded-xl border border-royal-100 bg-royal-50/60 p-4">
                 <p className="text-xs font-semibold tracking-wide text-royal-900 uppercase">
-                  Things buyers always ask
+                  {renting ? 'Things renters always ask' : 'Things buyers always ask'}
                 </p>
                 <ul className="mt-2.5 grid gap-1.5 text-sm text-royal-900/80 sm:grid-cols-2">
-                  <li>• How wide is the road outside?</li>
-                  <li>• Which way does the house face?</li>
-                  <li>• Is there water all year?</li>
-                  <li>• How old is the building?</li>
-                  <li>• Is the lalpurja clear of loans?</li>
-                  <li>• How far is the bus or school?</li>
+                  {(renting ? RENTER_QUESTIONS : BUYER_QUESTIONS).map((question) => (
+                    <li key={question}>• {question}</li>
+                  ))}
                 </ul>
               </div>
             </StepShell>
@@ -625,17 +703,38 @@ export function ListingWizard({
           {/* ---------------------------------------------------------- */}
           {step === 3 && (
             <StepShell
-              title="Size and rooms"
-              subtitle="Leave anything blank if you are not sure."
+              title={
+                isLand(draft.category)
+                  ? 'How big is the plot?'
+                  : renting
+                    ? 'What is inside'
+                    : 'Size and rooms'
+              }
+              subtitle={
+                renting && !isLand(draft.category)
+                  ? 'Only what a tenant would ask. Leave anything blank if you are not sure.'
+                  : 'Leave anything blank if you are not sure.'
+              }
             >
+              {/*
+                A flat being rented out is not sold with the ground under it, so
+                asking for the plot size in ropani is a question the landlord
+                cannot answer and the tenant would not read. A sale asks for the
+                land; a rental asks for the space inside; land asks for the plot
+                either way.
+              */}
               <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_11rem]">
-                <Field label="Land size" htmlFor="areaValue">
+                <Field
+                  label={ask === 'land' ? 'Land size' : 'Floor area'}
+                  htmlFor="areaValue"
+                  hint="Optional"
+                >
                   <Input
                     id="areaValue"
                     inputMode="decimal"
                     value={draft.areaValue}
                     onChange={(event) => set('areaValue', event.target.value)}
-                    placeholder="4"
+                    placeholder={ask === 'land' ? '4' : '850'}
                   />
                 </Field>
                 <Field label="Measured in" htmlFor="areaUnit">
@@ -645,36 +744,41 @@ export function ListingWizard({
                     onValueChange={(value) =>
                       set('areaUnit', value as (typeof AREA_UNITS)[number])
                     }
-                    options={AREA_UNITS.map((unit) => ({
-                      value: unit,
-                      label: AREA_UNIT_LABELS[unit],
-                    }))}
+                    options={unitOptions(ask, draft.areaUnit)}
                   />
                 </Field>
               </div>
 
-              {hasRooms(draft.category) && (
+              {(rooms.bedrooms || rooms.bathrooms || rooms.floors || rooms.parking) && (
                 <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                  <Counter
-                    label="Bedrooms"
-                    value={draft.bedrooms}
-                    onChange={(value) => set('bedrooms', value)}
-                  />
-                  <Counter
-                    label="Bathrooms"
-                    value={draft.bathrooms}
-                    onChange={(value) => set('bathrooms', value)}
-                  />
-                  <Counter
-                    label="Floors"
-                    value={draft.floors}
-                    onChange={(value) => set('floors', value)}
-                  />
-                  <Counter
-                    label="Parking spaces"
-                    value={draft.parking}
-                    onChange={(value) => set('parking', value)}
-                  />
+                  {rooms.bedrooms && (
+                    <Counter
+                      label="Bedrooms"
+                      value={draft.bedrooms}
+                      onChange={(value) => set('bedrooms', value)}
+                    />
+                  )}
+                  {rooms.bathrooms && (
+                    <Counter
+                      label="Bathrooms"
+                      value={draft.bathrooms}
+                      onChange={(value) => set('bathrooms', value)}
+                    />
+                  )}
+                  {rooms.floors && (
+                    <Counter
+                      label={draft.category === 'commercial' ? 'Floors' : 'Floors in the building'}
+                      value={draft.floors}
+                      onChange={(value) => set('floors', value)}
+                    />
+                  )}
+                  {rooms.parking && (
+                    <Counter
+                      label="Parking spaces"
+                      value={draft.parking}
+                      onChange={(value) => set('parking', value)}
+                    />
+                  )}
                 </div>
               )}
 
@@ -769,11 +873,7 @@ export function ListingWizard({
               subtitle={`At least ${MIN_IMAGES}. Listings with clear photos get far more calls.`}
             >
               {propertyId ? (
-                <PhotoUploader
-                  propertyId={propertyId}
-                  initial={existing?.images ?? []}
-                  onCountChange={setImageCount}
-                />
+                <PhotoUploader propertyId={propertyId} images={images} onChange={setImages} />
               ) : (
                 <p className="rounded-xl border border-clay-200 bg-clay-50 px-4 py-3 text-sm text-clay-800">
                   Go back and finish the earlier steps first — photos are attached to the saved
@@ -812,7 +912,7 @@ export function ListingWizard({
                   }
                 />
                 <Summary
-                  label="Size"
+                  label={ask === 'land' ? 'Land size' : 'Floor area'}
                   value={
                     draft.areaValue
                       ? `${draft.areaValue} ${AREA_UNIT_LABELS[draft.areaUnit].toLowerCase()}`
@@ -898,10 +998,19 @@ export function ListingWizard({
 /* Pieces                                                                      */
 /* -------------------------------------------------------------------------- */
 
-function Stepper({ current, onJump }: { current: number; onJump: (index: number) => void }) {
+function Stepper({
+  current,
+  onJump,
+  overrides = {},
+}: {
+  current: number;
+  onJump: (index: number) => void;
+  overrides?: Partial<Record<(typeof STEPS)[number]['key'], { en: string; ne: string } | undefined>>;
+}) {
   return (
     <ol className="flex flex-wrap gap-x-1 gap-y-2">
-      {STEPS.map((step, index) => {
+      {STEPS.map((entry, index) => {
+        const step = { ...entry, ...(overrides[entry.key] ?? {}) };
         const done = index < current;
         const active = index === current;
 
@@ -1099,6 +1208,21 @@ function Counter({
       </div>
     </div>
   );
+}
+
+/**
+ * Only the units that belong to the question being asked. A listing edited
+ * before this rule existed may already hold a unit from the other family, so
+ * that one is kept in the list rather than silently swapped underneath the
+ * seller.
+ */
+function unitOptions(ask: 'land' | 'floor', current: (typeof AREA_UNITS)[number]) {
+  const family: readonly string[] = ask === 'land' ? LAND_UNITS : FLOOR_UNITS;
+  const units = family.includes(current) ? family : [...family, current];
+  return units.map((unit) => ({
+    value: unit,
+    label: AREA_UNIT_LABELS[unit as (typeof AREA_UNITS)[number]],
+  }));
 }
 
 function Summary({ label, value }: { label: string; value: string }) {

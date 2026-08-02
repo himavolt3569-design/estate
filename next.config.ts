@@ -48,6 +48,21 @@ const nextConfig: NextConfig = {
   experimental: {
     // Import only what is used from these packages rather than the barrel.
     optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion'],
+
+    /*
+     * Default is 1 MB, and the hero image upload used to sail past it — the
+     * admin saw a raw Next.js "Body exceeded 1 MB limit" error.
+     *
+     * That upload now resizes in the browser first and lands well under a
+     * megabyte, so this is headroom rather than the fix: an unusually detailed
+     * photo that compresses badly should not fail, and the number is kept low
+     * because every action body is buffered in server memory before it is
+     * read. Anything genuinely large belongs in Storage, uploaded straight
+     * from the browser the way property photos are.
+     */
+    serverActions: {
+      bodySizeLimit: '3mb',
+    },
   },
 
   images: {

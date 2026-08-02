@@ -1,0 +1,38 @@
+// =============================================================================
+// Prisma is the migration runner here. It is not the schema owner.
+// =============================================================================
+//
+// This file has no models in it, and that is on purpose.
+//
+// Kitta's schema is mostly things a Prisma model cannot express: row level
+// security policies, plpgsql triggers and functions, PostGIS geography and
+// ltree columns, partial unique indexes, CHECK constraints written in SQL. If
+// Prisma owned the schema, `prisma migrate dev` would diff its model of the
+// database against the real one, decide the parts it cannot see are drift, and
+// write a migration that drops them. That is not a hypothetical: RLS policies
+// and triggers are exactly what a naive diff removes.
+//
+// So the arrangement is:
+//
+//   supabase/migrations/*.sql   the source of truth, written by hand
+//   prisma/migrations/          generated copies, in the layout Prisma wants
+//   prisma migrate deploy       applies whatever has not been applied yet
+//
+// Prisma contributes the two things that were actually missing: a record of
+// which migrations a given database has already had (`_prisma_migrations`), and
+// a command that applies the rest without anyone pasting SQL into a web editor.
+//
+// `npm run db:pull:remote` will fill this file in with models introspected from
+// the live database if you want them for reference. Treat anything it writes as
+// documentation, never as the definition — and note that the app itself does
+// not query through Prisma. Every read and write goes through Supabase with the
+// user's own session so that RLS applies; a Prisma client would hold the
+// service role and quietly bypass all of it.
+// =============================================================================
+
+// The connection URL is deliberately absent: Prisma 7 removed `url` from schema
+// files, and it now lives in prisma.config.ts, which reads DATABASE_URL out of
+// whichever env file the npm script loaded.
+datasource db {
+  provider = "postgresql"
+}

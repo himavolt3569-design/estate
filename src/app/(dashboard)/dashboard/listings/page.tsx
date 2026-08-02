@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge, EmptyState } from '@/components/ui/primitives';
 import { getSessionUser, isVendor } from '@/lib/auth/session';
 import { formatPrice, formatRelative } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import { getListings } from '@/modules/listings/queries';
 import { MIN_IMAGES } from '@/modules/listings/schema';
 
@@ -36,8 +37,25 @@ const STATUS_LABEL: Record<string, string> = {
   archived: 'Removed',
 };
 
-export default async function DashboardListingsPage() {
-  const user = await getSessionUser();
+/**
+ * The filters the dashboard's status bar links into. "closed" covers both sold
+ * and rented, because from the seller's side they are the same event.
+ */
+const FILTERS: Array<{ key: string; label: string; matches: (status: string) => boolean }> = [
+  { key: 'all', label: 'All', matches: () => true },
+  { key: 'published', label: 'Live', matches: (status) => status === 'published' },
+  { key: 'pending_review', label: 'Being checked', matches: (status) => status === 'pending_review' },
+  { key: 'draft', label: 'Not finished', matches: (status) => status === 'draft' },
+  { key: 'closed', label: 'Sold or rented', matches: (status) => status === 'sold' || status === 'rented' },
+  { key: 'rejected', label: 'Sent back', matches: (status) => status === 'rejected' },
+];
+
+export default async function DashboardListingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const [user, params] = await Promise.all([getSessionUser(), searchParams]);
   if (!user) redirect('/login?next=/dashboard/listings');
 
   const admin = user.role === 'platform_admin';
@@ -60,7 +78,9 @@ export default async function DashboardListingsPage() {
     );
   }
 
-  const rows = await getListings();
+  const all = await getListings();
+  const filter = FILTERS.find((entry) => entry.key === params.status) ?? FILTERS[0]!;
+  const rows = all.filter((row) => filter.matches(row.status));
 
   return (
     <div className="space-y-7">
@@ -81,18 +101,56 @@ export default async function DashboardListingsPage() {
         }
       />
 
+      {all.length > 0 && (
+        <nav aria-label="Filter by status" className="flex flex-wrap gap-2">
+          {FILTERS.map((entry) => {
+            const count = all.filter((row) => entry.matches(row.status)).length;
+            const selected = entry.key === filter.key;
+
+            return (
+              <Link
+                key={entry.key}
+                href={entry.key === 'all' ? '/dashboard/listings' : `/dashboard/listings?status=${entry.key}`}
+                aria-current={selected ? 'true' : undefined}
+                className={cn(
+                  'rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors',
+                  selected
+                    ? 'border-royal-800 bg-royal-800 text-white'
+                    : 'border-ink-200 bg-white text-ink-600 hover:border-ink-300 hover:text-ink-900',
+                )}
+              >
+                {entry.label}
+                <span className={cn('nums ml-1.5', selected ? 'text-royal-200' : 'text-ink-400')}>
+                  {count}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
+
       {rows.length === 0 ? (
         <EmptyState
           icon={<Building2 className="size-6" />}
-          title={admin ? 'Nothing has been listed yet' : 'You have not listed anything yet'}
+          title={
+            all.length > 0
+              ? `Nothing is ${filter.label.toLowerCase()} right now`
+              : admin
+                ? 'Nothing has been listed yet'
+                : 'You have not listed anything yet'
+          }
           description={
-            admin
-              ? 'When somebody puts a property up it appears here straight away, draft or not.'
-              : 'It takes six short steps, and you can stop halfway and come back to it.'
+            all.length > 0
+              ? 'Try another status above, or add a property.'
+              : admin
+                ? 'When somebody puts a property up it appears here straight away, draft or not.'
+                : 'It takes six short steps, and you can stop halfway and come back to it.'
           }
           action={
             <Button asChild>
-              <Link href="/dashboard/listings/new">Put your first property up</Link>
+              <Link href="/dashboard/listings/new">
+                {all.length > 0 ? 'Add a property' : 'Put your first property up'}
+              </Link>
             </Button>
           }
         />

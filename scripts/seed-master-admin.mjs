@@ -94,6 +94,10 @@ console.log('Master admin created.');
 console.log('  email:', email);
 console.log('  id:   ', userId);
 console.log('');
-console.log('Next: sign in, then enrol two-factor under Settings -> Security.');
-console.log('The control centre stays closed until you do: every admin function');
-console.log('requires aal2, and that is enforced in the database.');
+// Migration 0019_remove_admin_mfa dropped the aal2 requirement from is_admin(),
+// so the control centre opens on the first sign-in. This used to say the
+// opposite, which sent operators looking for a lock that is no longer there.
+console.log('Sign in at /login and the control centre is open — two-factor is');
+console.log('no longer required for admin functions (migration 0019).');
+console.log('Enrol it anyway under Settings -> Security: this account can read');
+console.log('and change every listing and every profile on the platform.');
