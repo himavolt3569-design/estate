@@ -3,6 +3,8 @@ import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { MIN_IMAGES } from '@/modules/listings/schema';
 
+import type { LiveAnalytics } from './components/LiveVisitorsPanel';
+
 /**
  * The numbers behind the dashboard.
  *
@@ -366,4 +368,28 @@ export async function getBuyerActivity(): Promise<BuyerActivity> {
       savedAt: row.created_at,
     })),
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Live presence (master admin)                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The first paint of the live panel.
+ *
+ * Rendered on the server so the control centre opens with real figures rather
+ * than a spinner that resolves a beat later. The component then keeps itself
+ * current over Realtime, and admin_live_analytics() re-checks is_admin() on
+ * every call, here and there.
+ */
+export async function getLiveAnalytics(): Promise<LiveAnalytics | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('admin_live_analytics');
+
+  if (error) {
+    console.error('[admin_live_analytics]', error.message);
+    return null;
+  }
+
+  return data as unknown as LiveAnalytics;
 }

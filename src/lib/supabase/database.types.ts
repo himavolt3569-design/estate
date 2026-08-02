@@ -2255,6 +2255,11 @@ export type Database = {
       }
       get_property_public: { Args: { p_slug: string }; Returns: Json }
       get_public_profile: { Args: { p_user_id: string }; Returns: Json }
+      admin_live_analytics: { Args: never; Returns: Json }
+      record_presence: {
+        Args: { p_session_hash: string; p_path: string; p_property_id?: string }
+        Returns: undefined
+      }
       property_contact_summary: { Args: { p_property_id: string }; Returns: Json }
       reveal_property_contacts: { Args: { p_property_id: string }; Returns: Json }
       start_property_conversation: { Args: { p_property_id: string }; Returns: string }

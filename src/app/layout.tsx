@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 
 import { getLocale } from '@/i18n';
 import { siteOrigin } from '@/lib/utils';
+import { PresenceTracker } from '@/modules/analytics/components/PresenceTracker';
 
 import { Providers } from './providers';
 import { PageTransition } from '@/components/animations/PageTransition';
@@ -79,6 +80,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {children}
           </PageTransition>
         </Providers>
+        {/* Renders nothing. Reports which route this tab is on so the control
+            centre can show real visitors rather than a generated number. */}
+        <PresenceTracker />
         <Toaster
           position="bottom-right"
           toastOptions={{

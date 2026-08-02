@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils';
 import { ActivityFeed } from '@/modules/admin/components/ActivityFeed';
 import { getPlatformTotals } from '@/modules/admin/master-queries';
 import { getAdminStats } from '@/modules/admin/queries';
+import { LiveVisitorsPanel } from '@/modules/analytics/components/LiveVisitorsPanel';
+import { getLiveAnalytics } from '@/modules/analytics/queries';
 
 import { PageHeader, Panel } from '../components/PageHeader';
 
@@ -29,7 +31,11 @@ export const dynamic = 'force-dynamic';
  * only one of the two succeeds.
  */
 export default async function AdminOverviewPage() {
-  const [totals, stats] = await Promise.all([getPlatformTotals(), getAdminStats()]);
+  const [totals, stats, live] = await Promise.all([
+    getPlatformTotals(),
+    getAdminStats(),
+    getLiveAnalytics(),
+  ]);
 
   if (!totals) {
     return (
@@ -81,6 +87,10 @@ export default async function AdminOverviewPage() {
           </Button>
         }
       />
+
+      {/* Live figures first: this is the only part of the screen that changes
+          while the owner is looking at it. */}
+      <LiveVisitorsPanel initial={live} />
 
       <section>
         <h2 className="label mb-4">The platform</h2>

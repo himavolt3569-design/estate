@@ -12,6 +12,7 @@ import { Badge, SectionHeading, Surface } from '@/components/ui/primitives';
 import { LISTED_BY_LABELS } from '@/lib/auth/permissions';
 import { formatArea, formatAreaSecondary, formatDate, formatPrice } from '@/lib/format';
 import { absoluteUrl } from '@/lib/utils';
+import { PresenceTracker } from '@/modules/analytics/components/PresenceTracker';
 import { ContactPanel } from '@/modules/discovery/components/ContactPanel';
 import { getPropertyBySlug } from '@/modules/discovery/queries';
 
@@ -98,6 +99,9 @@ export default async function PropertyPage({ params }: { params: Params }) {
         // Serialised from our own typed object, never from user input.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
+
+      {/* Registers one view, deduped per visitor per day in the database. */}
+      <PresenceTracker propertyId={property.id} />
 
       <div className="mx-auto max-w-8xl px-4 py-6 sm:px-6 lg:px-8">
         <Breadcrumb
