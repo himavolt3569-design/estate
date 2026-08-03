@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { getSessionUser } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 import { MIN_IMAGES } from '@/modules/listings/schema';
 
@@ -8,14 +9,16 @@ import type { LiveAnalytics } from './components/LiveVisitorsPanel';
 /**
  * The numbers behind the dashboard.
  *
- * Two things are deliberate here.
+ * This file used to say there was no `owner_id = me` anywhere on purpose,
+ * because RLS answers "whose rows are these". That holds for `property_views`,
+ * whose only read policy is `owns_property(property_id) or is_admin()`. It does
+ * NOT hold for `properties`, which additionally carries "public reads
+ * published" so that search works — and RLS policies are permissive, so they
+ * are OR'd. An unfiltered read of `properties` therefore returned every
+ * published listing on the platform to every seller, and their portfolio counts
+ * were the whole platform's.
  *
- * There is no `owner_id = me` anywhere. Row level security already answers
- * "whose rows are these" — `property_views: vendor reads own analytics` is
- * `owns_property(property_id) or is_admin()` — so a second copy of that rule in
- * this file would be a weaker duplicate that eventually drifts. A seller runs
- * these queries and sees their own portfolio; the master admin runs the same
- * queries and sees the platform.
+ * The rule is: scope explicitly on any table that is also publicly readable.
  *
  * Every window is fetched at twice its length and split in half, so "up 34 on
  * the fortnight before" costs the same one round trip as the bare figure.
@@ -99,6 +102,7 @@ function bucket(keys: string[], dates: string[]): DayPoint[] {
 /* -------------------------------------------------------------------------- */
 
 export async function getPortfolioAnalytics(days: number): Promise<PortfolioAnalytics> {
+  const user = await getSessionUser();
   const supabase = await createClient();
 
   const now = new Date();
@@ -107,11 +111,18 @@ export async function getPortfolioAnalytics(days: number): Promise<PortfolioAnal
   const previousStartIso = `${previousStart}T00:00:00.000Z`;
 
   const [properties, views, enquiries, images] = await Promise.all([
-    supabase
-      .from('properties')
-      .select('id, title, reference_code, status, view_count, enquiry_count, favorite_count, created_at')
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false }),
+    // Explicitly the caller's own portfolio. The admin dashboard uses
+    // getPlatformTotals()/getPlatformGrowth() for the platform-wide view.
+    (() => {
+      const query = supabase
+        .from('properties')
+        .select('id, title, reference_code, status, view_count, enquiry_count, favorite_count, created_at')
+        .is('deleted_at', null);
+
+      return (
+        user && user.role !== 'platform_admin' ? query.eq('owner_id', user.id) : query
+      ).order('created_at', { ascending: false });
+    })(),
     supabase
       .from('property_views')
       .select('view_date')

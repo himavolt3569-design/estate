@@ -1,6 +1,41 @@
 import 'server-only';
 
+import { getSessionUser } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
+
+/**
+ * Restricts a query on `properties` to what the caller may manage.
+ *
+ * This must be applied by hand. It is tempting to leave the scoping to RLS —
+ * "vendor reads own" and "admin reads all" look like they cover it — but
+ * Postgres RLS policies are PERMISSIVE, which means they are OR'd together, and
+ * `properties` also carries:
+ *
+ *   properties: public reads published  ->  status = 'published' AND deleted_at IS NULL
+ *
+ * That policy exists so search works, and it applies to every role including
+ * `authenticated`. So an unfiltered SELECT returns "my rows OR every published
+ * row on the platform" — which is how a seller with no listings came to see
+ * two other people's listings on their own "My properties" page.
+ *
+ * RLS is still the boundary for writes and for reads of private tables. What it
+ * cannot do is express "only mine" on a table that is also publicly readable.
+ * That intent has to be in the query.
+ */
+function scopeToOwner<T extends { eq: (column: string, value: string) => T; or: (filter: string) => T }>(
+  query: T,
+  user: { id: string; role: string; agencyId: string | null },
+): T {
+  if (user.role === 'platform_admin') return query;
+
+  // An agency manager is responsible for their agents' listings as well as
+  // their own, which is the same pair owns_property_row() tests.
+  if (user.role === 'agency_manager' && user.agencyId) {
+    return query.or(`owner_id.eq.${user.id},agency_id.eq.${user.agencyId}`);
+  }
+
+  return query.eq('owner_id', user.id);
+}
 
 export type LocationOption = {
   id: string;
@@ -84,17 +119,19 @@ export type ListingRow = {
 };
 
 /**
- * The listings table.
+ * The listings a caller may manage: their own, their agency's, or all of them
+ * for the platform admin.
  *
- * There is no owner filter in the query, and that is on purpose: "vendor reads
- * own" and "admin reads all" already decide which rows come back. Adding a
- * WHERE owner_id = me here would be a second, weaker copy of a rule that is
- * already enforced, and the two would eventually disagree.
+ * The owner predicate is explicit. See scopeToOwner() above for why leaving it
+ * to RLS returned every published listing on the platform to every seller.
  */
 export async function getListings(): Promise<ListingRow[]> {
+  const user = await getSessionUser();
+  if (!user) return [];
+
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const query = supabase
     .from('properties')
     .select(
       `
@@ -106,8 +143,11 @@ export async function getListings(): Promise<ListingRow[]> {
       owner:profiles!properties_owner_id_fkey ( full_name, phone )
     `,
     )
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
+    .is('deleted_at', null);
+
+  const { data, error } = await scopeToOwner(query, user).order('created_at', {
+    ascending: false,
+  });
 
   if (error) {
     console.error('[getListings]', error.message);
@@ -117,8 +157,20 @@ export async function getListings(): Promise<ListingRow[]> {
   return (data ?? []) as unknown as ListingRow[];
 }
 
-/** One listing, with everything the edit form needs to repopulate itself. */
+/**
+ * One listing, with everything the edit form needs to repopulate itself.
+ *
+ * Returns null unless the caller may actually manage it. Without that test the
+ * "public reads published" policy handed back any live listing on the platform,
+ * so the edit form opened on other people's properties. It could not save them
+ * — every write policy tests owns_property() — but a form that loads somebody
+ * else's address, price and photos has already leaked them, and a form that
+ * cannot save is a broken page on top of that.
+ */
 export async function getListingForEdit(id: string) {
+  const user = await getSessionUser();
+  if (!user) return null;
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -129,7 +181,7 @@ export async function getListingForEdit(id: string) {
       price_period, price_negotiable, status, owner_id, location_id,
       address_line, geom, geom_precision, area_raw, area_unit_entered,
       bedrooms, bathrooms, floors, parking, road_access_ft,
-      show_phone, show_email, show_whatsapp, reference_code,
+      show_phone, show_email, show_whatsapp, reference_code, agency_id,
       location:locations!properties_location_id_fkey ( id, name_en, slug, parent_id ),
       images:property_images ( id, storage_path, is_cover, position ),
       features:property_features ( feature_id ),
@@ -143,6 +195,19 @@ export async function getListingForEdit(id: string) {
   if (error || !data) return null;
 
   const row = data as Record<string, unknown>;
+
+  // Checked here as well as in the query, because this is the answer to
+  // "may I edit this", and it should not depend on the shape of the filter
+  // above staying correct.
+  const ownerId = row.owner_id as string;
+  const agencyId = (row.agency_id as string | null) ?? null;
+  const mayManage =
+    user.role === 'platform_admin' ||
+    ownerId === user.id ||
+    (user.role === 'agency_manager' && user.agencyId != null && agencyId === user.agencyId);
+
+  if (!mayManage) return null;
+
   return { ...row, point: decodePoint(row.geom) } as ListingDetail;
 }
 

@@ -5,20 +5,22 @@ import { useId } from 'react';
 
 import { Input } from '@/components/ui/primitives';
 import { NEPAL_DIAL_CODE, parseNepaliPhone } from '@/lib/phone/nepal';
+
+import {
+  emptyContactNumber,
+  MAX_CONTACT_NUMBERS,
+  type ContactNumberDraft,
+} from '../contact-numbers';
 import { cn } from '@/lib/utils';
 
-export type ContactNumberDraft = {
-  /** What the seller typed. Normalised to E.164 on save, never before. */
-  phone: string;
-  label: string;
-  isWhatsapp: boolean;
-};
-
-export const MAX_CONTACT_NUMBERS = 3;
-
-export function emptyContactNumber(): ContactNumberDraft {
-  return { phone: '', label: '', isWhatsapp: false };
-}
+// Re-exported for the components that already import them from here. The
+// definitions live in a plain module because a Server Component calls
+// emptyContactNumber(), and calling a client-module export on the server throws.
+export {
+  emptyContactNumber,
+  MAX_CONTACT_NUMBERS,
+  type ContactNumberDraft,
+} from '../contact-numbers';
 
 /**
  * Up to three numbers per listing, with one of them optionally on WhatsApp.

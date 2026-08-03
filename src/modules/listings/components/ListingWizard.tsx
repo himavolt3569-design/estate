@@ -46,11 +46,8 @@ import {
   type Subtype,
   type TransactionType,
 } from '../schema';
-import {
-  ContactNumbersField,
-  emptyContactNumber,
-  type ContactNumberDraft,
-} from './ContactNumbersField';
+import { emptyContactNumber, type ContactNumberDraft } from '../contact-numbers';
+import { ContactNumbersField } from './ContactNumbersField';
 import { PhotoUploader, type UploadedImage } from './PhotoUploader';
 
 const LocationPickerMap = dynamic(() => import('@/components/map/LocationPickerMap'), {

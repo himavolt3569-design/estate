@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/primitives';
 import { getSessionUser, isVendor } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
-import { emptyContactNumber } from '@/modules/listings/components/ContactNumbersField';
+import { emptyContactNumber } from '@/modules/listings/contact-numbers';
 import { ListingWizard } from '@/modules/listings/components/ListingWizard';
 import {
   getFeatureOptions,
