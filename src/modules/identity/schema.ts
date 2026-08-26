@@ -1,10 +1,5 @@
 import { z } from 'zod';
 
-/**
- * One schema per operation, shared by the client form and the server action.
- * Client validation is a UX affordance; the server parse is the one that counts.
- * Sharing the schema is what stops the two drifting apart.
- */
 
 const email = z
   .string()
@@ -14,11 +9,7 @@ const email = z
   .email('That does not look like an email address')
   .toLowerCase();
 
-/**
- * Length over composition. Composition rules ("one capital, one symbol") push
- * people toward Password1! and measurably reduce entropy. Supabase additionally
- * rejects passwords found in the HaveIBeenPwned corpus.
- */
+
 const password = z
   .string()
   .min(10, 'Use at least 10 characters')
@@ -30,7 +21,7 @@ const fullName = z
   .min(2, 'Enter your name')
   .max(120, 'That name is too long');
 
-/** E.164. Nepali mobiles are +977 followed by 10 digits. */
+
 const phone = z
   .string()
   .trim()
@@ -42,15 +33,7 @@ export const loginSchema = z.object({
   next: z.string().optional(),
 });
 
-/**
- * The account type a person picks at signup.
- *
- * Only these two are offered. `agent` and `agency_manager` require an agency and
- * are assigned by an admin; `platform_admin` is never self-assignable. The
- * database enforces this independently in tg_handle_new_user(), which ignores
- * any privileged role in signup metadata. Signup metadata is attacker
- * controlled, so the UI restricting the choice is not a control.
- */
+
 export const accountIntentSchema = z.enum(['customer', 'property_owner']);
 export type AccountIntent = z.infer<typeof accountIntentSchema>;
 
@@ -83,14 +66,7 @@ export const resetPasswordSchema = z
     path: ['confirmPassword'],
   });
 
-/**
- * Adding a password to an account that was created through Google.
- *
- * Deliberately has no `currentPassword` field, because there is no current
- * password to confirm. The authorisation here is the live Google-issued
- * session, and setInitialPassword() refuses to run if the account already has
- * an email credential, so this can never be used to overwrite one.
- */
+
 export const setInitialPasswordSchema = z
   .object({
     password,
@@ -105,9 +81,7 @@ export const recoveryCodeSchema = z.object({
   code: z.string().trim().min(8, 'Enter a recovery code'),
 });
 
-/* -------------------------------------------------------------------------- */
-/* Settings                                                                    */
-/* -------------------------------------------------------------------------- */
+
 
 export const profileSchema = z.object({
   fullName,
@@ -137,9 +111,7 @@ export const paymentMethodSchema = z.object({
   branch: z.string().trim().max(120).optional().or(z.literal('')),
   qrImagePath: z.string().trim().max(500).optional().or(z.literal('')),
   instructions: z.string().trim().max(500).optional().or(z.literal('')),
-  // Not .default(false): a Zod default makes the input type optional while the
-  // output type stays required, which react-hook-form's resolver rejects. The
-  // form always supplies a boolean, so requiring one here is honest.
+
   isDefault: z.boolean(),
 });
 

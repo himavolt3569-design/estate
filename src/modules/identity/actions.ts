@@ -21,14 +21,6 @@ import {
   setInitialPasswordSchema,
 } from './schema';
 
-/* ========================================================================== */
-/* Pre-session actions                                                        */
-/* ========================================================================== */
-/*
- * These cannot use authedAction(), because there is no session yet, so each does
- * the same three things by hand: rate limit, validate with Zod, then act. They
- * are public HTTP endpoints regardless of where they are imported from.
- */
 
 function fieldErrors(error: z.ZodError): Record<string, string[]> {
   const out: Record<string, string[]> = {};
@@ -48,8 +40,6 @@ export async function signIn(raw: unknown): Promise<ActionResult<{ redirectTo: s
   const { email, password, next } = parsed.data;
   const ip = await getClientIp();
 
-  // Keyed on IP + email so one attacker cannot lock out a victim's account by
-  // hammering it from elsewhere, and one IP cannot spray many accounts.
   const allowed = await consumeRateLimit('login', `${ip}:${email}`, 5, '15 minutes');
   if (!allowed) {
     await recordAuthEvent('login_failed', { email, detail: { reason: 'rate_limited' } });
@@ -61,8 +51,6 @@ export async function signIn(raw: unknown): Promise<ActionResult<{ redirectTo: s
 
   if (error) {
     await recordAuthEvent('login_failed', { email });
-    // Deliberately identical whether the address exists or the password is
-    // wrong. Distinguishing them turns the login form into an account oracle.
     return { ok: false, error: 'That email and password do not match.' };
   }
 
@@ -91,16 +79,12 @@ export async function signUp(raw: unknown): Promise<ActionResult<{ email: string
     password,
     options: {
       emailRedirectTo: absoluteUrl('/auth/callback?next=/dashboard'),
-      // Read by tg_handle_new_user(), which accepts ONLY the non-privileged
-      // subset. A forged "platform_admin" here silently becomes "customer".
       data: { full_name: fullName, role: intent, phone: phone || null },
     },
   });
 
   if (error) {
     if (error.message.toLowerCase().includes('already')) {
-      // Same response as success. Telling a stranger which addresses are
-      // registered is an enumeration gift.
       return { ok: true, data: { email } };
     }
     if (error.message.toLowerCase().includes('password')) {
@@ -116,10 +100,6 @@ export async function signUp(raw: unknown): Promise<ActionResult<{ email: string
   return { ok: true, data: { email } };
 }
 
-/**
- * Google OAuth. Supabase performs the exchange; we only hand the browser to the
- * consent screen and then handle the code at /auth/callback.
- */
 export async function signInWithGoogle(next?: string): Promise<never | ActionResult<never>> {
   const supabase = await createClient();
 
@@ -155,8 +135,6 @@ export async function requestPasswordReset(raw: unknown): Promise<ActionResult<n
     await recordAuthEvent('password_reset_requested', { email });
   }
 
-  // Always the same answer, whether or not the address exists and whether or
-  // not it was rate limited.
   return { ok: true, data: null };
 }
 
@@ -171,7 +149,6 @@ export async function completePasswordReset(raw: unknown): Promise<ActionResult<
     data: { user },
   } = await supabase.auth.getUser();
 
-  // The recovery link established a session; without one there is nothing to reset.
   if (!user) {
     return { ok: false, error: 'That reset link has expired. Request a new one.' };
   }
@@ -185,21 +162,6 @@ export async function completePasswordReset(raw: unknown): Promise<ActionResult<
   return { ok: true, data: null };
 }
 
-/**
- * Adds an email/password credential to an account created through Google.
- *
- * Google accounts arrive with no password, which means the only way back in is
- * Google. If the user later loses that Google account, or simply wants to sign
- * in with an email and password, they are stuck. This offers a password once,
- * after the first Google sign-in.
- *
- * Setting one is additive: Supabase keeps the Google identity linked, so both
- * routes work afterwards.
- *
- * SECURITY: this refuses to run if an email credential already exists. Without
- * that check, anyone holding a session could silently overwrite the password of
- * an account that had one, turning a stolen session into a permanent takeover.
- */
 export async function setInitialPassword(raw: unknown): Promise<ActionResult<null>> {
   const parsed = setInitialPasswordSchema.safeParse(raw);
   if (!parsed.success) {
@@ -236,13 +198,6 @@ export async function setInitialPassword(raw: unknown): Promise<ActionResult<nul
   return { ok: true, data: null };
 }
 
-/**
- * Lets a user pick between customer and property_owner for themselves.
- *
- * Safe to self-serve because neither role carries elevated access and the
- * signup form already offers both. The database refuses anything above that
- * pair, so this cannot become an escalation path even if called directly.
- */
 export const chooseAccountType = authedAction({
   allowInactive: true,
   schema: z.object({ role: z.enum(['customer', 'property_owner']) }),
@@ -255,9 +210,7 @@ export const chooseAccountType = authedAction({
   },
 });
 
-/* ========================================================================== */
-/* Session                                                                    */
-/* ========================================================================== */
+
 
 export async function signOut(): Promise<never> {
   const supabase = await createClient();
@@ -273,8 +226,6 @@ export async function signOut(): Promise<never> {
 export const revokeSession = authedAction({
   schema: revokeSessionSchema,
   handler: async ({ input, supabase, user }) => {
-    // RLS restricts this to the caller's own sessions, and the policy only
-    // permits setting revoked_at, so it cannot be un-revoked.
     const { error } = await supabase
       .from('user_sessions')
       .update({ revoked_at: new Date().toISOString(), revoked_by: user.id })
@@ -288,17 +239,11 @@ export const revokeSession = authedAction({
   },
 });
 
-/* ========================================================================== */
-/* Settings                                                                   */
-/* ========================================================================== */
+
 
 export const updateProfile = authedAction({
   schema: profileSchema,
   handler: async ({ input, supabase, user }) => {
-    // Note what is absent: role and status. `authenticated` holds no UPDATE
-    // grant on those columns, a trigger blocks the change, and the RLS WITH
-    // CHECK blocks it again. Three layers, because self-promotion to admin is
-    // the single worst bug this system could have.
     const { error } = await supabase
       .from('profiles')
       .update({
@@ -313,12 +258,6 @@ export const updateProfile = authedAction({
 
     if (error) throw error;
 
-    /*
-     * The whole dashboard layout, not just this page: the header carries the
-     * user's picture and name, and revalidating only the settings route left a
-     * seller looking at their old picture in the corner of every screen until
-     * they signed out and back in.
-     */
     revalidatePath('/dashboard', 'layout');
     return { saved: true };
   },
@@ -329,8 +268,6 @@ export const changePassword = authedAction({
   handler: async ({ input, supabase, user }) => {
     if (!user.email) throw new Error('This account has no email address');
 
-    // Re-authenticate first. Without this, anyone who finds an unlocked laptop
-    // can change the password and lock the owner out.
     const { error: reauthError } = await supabase.auth.signInWithPassword({
       email: user.email,
       password: input.currentPassword,
@@ -346,9 +283,7 @@ export const changePassword = authedAction({
   },
 });
 
-/* ========================================================================== */
-/* Vendor payment instructions                                                */
-/* ========================================================================== */
+
 
 export const savePaymentMethod = authedAction({
   schema: paymentMethodSchema,

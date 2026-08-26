@@ -224,6 +224,23 @@ export function ListingWizard({
     });
   }, []);
 
+  // Auto-save drafts to localStorage so the user never loses progress on dropped connections.
+  useEffect(() => {
+    if (existing) return;
+    const saved = localStorage.getItem('kitta-listing-draft');
+    if (saved) {
+      try {
+        setDraft(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, [existing]);
+
+  useEffect(() => {
+    if (!existing && !propertyId) {
+      localStorage.setItem('kitta-listing-draft', JSON.stringify(draft));
+    }
+  }, [draft, existing, propertyId]);
+
   // A rental must carry a period and a sale must not; keeping them in step here
   // means the seller never sees the database's version of that complaint.
   useEffect(() => {
@@ -400,6 +417,10 @@ export function ListingWizard({
   }
 
   async function submit() {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([50, 50, 50]);
+    }
+    
     if (!propertyId) return;
 
     const saved = await save({ silent: true });
@@ -414,6 +435,7 @@ export function ListingWizard({
       return;
     }
 
+    localStorage.removeItem('kitta-listing-draft');
     toast.success('Sent for checking. We will tell you as soon as it is live.');
     router.push('/dashboard/listings');
     router.refresh();

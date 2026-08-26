@@ -279,6 +279,77 @@ export const en = {
     notStated: 'Not stated',
     loading: 'Loading…',
     saving: 'Saving…',
+    share: 'Share',
+    shareOnWhatsApp: 'Share on WhatsApp',
+  },
+
+  headerNav: {
+    property: 'Property',
+    buy: 'Buy',
+    buyNe: 'किन्ने',
+    rent: 'Rent',
+    rentNe: 'भाडामा',
+    land: 'Land',
+    landNe: 'जग्गा',
+    commercial: 'Shops and offices',
+    commercialNe: 'पसल र अफिस',
+    emi: 'EMI',
+    emiNe: 'किस्ता',
+    landSize: 'Land size',
+    landSizeNe: 'नाप'
+  },
+
+  heroSearch: {
+    buy: 'Buy',
+    rent: 'Rent',
+    location: 'Location',
+    enterLocation: 'Enter location',
+    propertyType: 'Property Type',
+    selectType: 'Select type',
+    minPrice: 'Min Price',
+    noMin: 'No minimum',
+    maxPrice: 'Max Price',
+    noMax: 'No maximum',
+    search: 'Search',
+    types: {
+      any: 'Any type',
+      house: 'House',
+      apartment: 'Apartment',
+      land: 'Land',
+      shop: 'Shop or office'
+    },
+    prices: {
+      lakh25: '25 lakh',
+      lakh50: '50 lakh',
+      crore1: '1 crore',
+      crore2: '2 crore',
+      crore5: '5 crore',
+      crore10: '10 crore'
+    }
+  },
+
+  home: {
+    featuredEyebrow: 'Featured',
+    featuredTitle: 'Featured Properties',
+    viewAll: 'View All Properties',
+    browseByTypeTitle: 'Browse Properties By Type',
+    types: {
+      house: { label: 'Houses', note: 'Family homes' },
+      apartment: { label: 'Apartments', note: 'Flats and studios' },
+      land: { label: 'Land', note: 'Ghaderi and fields' },
+      commercial: { label: 'Shops and offices', note: 'For business' },
+      homeStay: { label: 'Home stay', note: 'By the night' },
+      villa: { label: 'Villas', note: 'Larger houses' },
+    },
+    badges: {
+      verifiedTitle: 'Verified Properties',
+      verifiedNote: 'All properties are verified for your peace of mind.',
+      priceTitle: 'Best Price Guarantee',
+      priceNote: 'Get the best value for your money.',
+      agentsTitle: 'Expert Agents',
+      agentsNote: 'Our agents are here to help you find your dream home.',
+      learnMore: 'Learn More About Us'
+    }
   },
 };
 

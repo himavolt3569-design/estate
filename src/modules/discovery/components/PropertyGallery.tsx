@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Expand, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { PropertyImage } from '@/components/media/PropertyImage';
+import { PanoramaViewer } from '@/components/media/PanoramaViewer';
 import { cn } from '@/lib/utils';
 
 export type GalleryImage = {
@@ -12,6 +13,7 @@ export type GalleryImage = {
   storagePath: string | null;
   alt: string | null;
   isCover: boolean;
+  is360?: boolean;
 };
 
 /**
@@ -127,6 +129,11 @@ export function PropertyGallery({
                       sizes="25vw"
                       className="transition-transform duration-300 group-hover:scale-[1.03]"
                     />
+                    {image.is360 && (
+                      <span className="absolute top-2 right-2 rounded-full bg-ink-900/75 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur-sm">
+                        360°
+                      </span>
+                    )}
                     {showMore && (
                       <span className="absolute inset-0 flex items-center justify-center bg-ink-900/55 text-base font-semibold text-white">
                         +{hidden}
@@ -278,16 +285,23 @@ function Lightbox({
         className="flex min-h-0 flex-1 items-center justify-center px-2 pb-4 sm:px-14"
         onClick={(event) => event.stopPropagation()}
       >
-        <PropertyImage
-          renditions={current.renditions}
-          storagePath={current.storagePath}
-          alt={current.alt ?? title}
-          fill
-          fit="contain"
-          sizes="100vw"
-          priority
-          wrapperClassName="bg-transparent"
-        />
+        {current.is360 && (current.renditions.full || current.storagePath) ? (
+          <PanoramaViewer 
+            src={current.renditions.full || `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-media/${current.storagePath}`}
+            className="h-full w-full max-w-7xl"
+          />
+        ) : (
+          <PropertyImage
+            renditions={current.renditions}
+            storagePath={current.storagePath}
+            alt={current.alt ?? title}
+            fill
+            fit="contain"
+            sizes="100vw"
+            priority
+            wrapperClassName="bg-transparent"
+          />
+        )}
       </div>
 
       {images.length > 1 && (

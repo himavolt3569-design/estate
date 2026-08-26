@@ -168,7 +168,7 @@ function spoken(value: number): string {
 export function EmiCalculator({ t }: { t: Copy }) {
   const [price, setPrice] = useState(10_000_000);
   const [downPayment, setDownPayment] = useState(3_000_000);
-  const [rate, setRate] = useState(10.5);
+  const [rate, setRate] = useState(9.5);
   const [years, setYears] = useState(20);
 
   const [extraOpen, setExtraOpen] = useState(false);

@@ -7,33 +7,28 @@ import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 
-/**
- * Three things, not seven.
- *
- * Buy, Rent, Land and Shops are all the same question — what kind of property —
- * so they collapse into one menu. The two tools sit beside it as their own
- * stops, because someone works out a monthly payment or converts ropani to
- * bigha as a task in itself, not as a step inside browsing.
- *
- * Every label is one or two short words with the Nepali underneath, because
- * "EMI calculator" and "Land size calculator" are the kind of phrases that make
- * a person decide a site is not meant for them.
- */
+import type { Dictionary } from '@/i18n';
 
-const PROPERTY_LINKS = [
-  { href: '/search?transaction_type=sale', label: 'Buy', ne: 'किन्ने', icon: Home },
-  { href: '/search?transaction_type=rent', label: 'Rent', ne: 'भाडामा', icon: Building2 },
-  { href: '/search?category=land', label: 'Land', ne: 'जग्गा', icon: LandPlot },
-  { href: '/search?category=commercial', label: 'Shops and offices', ne: 'पसल र अफिस', icon: Store },
-];
+function getPropertyLinks(t: Dictionary['headerNav']) {
+  return [
+    { href: '/search?transaction_type=sale', label: t.buy, ne: t.buyNe, icon: Home },
+    { href: '/search?transaction_type=rent', label: t.rent, ne: t.rentNe, icon: Building2 },
+    { href: '/search?category=land', label: t.land, ne: t.landNe, icon: LandPlot },
+    { href: '/search?category=commercial', label: t.commercial, ne: t.commercialNe, icon: Store },
+  ];
+}
 
-const TOOLS = [
-  { href: '/emi', label: 'EMI', ne: 'किस्ता', icon: Wallet },
-  { href: '/land-size', label: 'Land size', ne: 'नाप', icon: Ruler },
-];
+function getTools(t: Dictionary['headerNav']) {
+  return [
+    { href: '/emi', label: t.emi, ne: t.emiNe, icon: Wallet },
+    { href: '/land-size', label: t.landSize, ne: t.landSizeNe, icon: Ruler },
+  ];
+}
 
-export function HeaderNav() {
+export function HeaderNav({ t }: { t: Dictionary['headerNav'] }) {
   const pathname = usePathname();
+  const propertyLinks = getPropertyLinks(t);
+  const tools = getTools(t);
 
   return (
     <nav aria-label="Main" className="hidden flex-1 items-center gap-1 lg:flex">
@@ -44,7 +39,7 @@ export function HeaderNav() {
             'hover:bg-crimson-50 hover:text-crimson-700 data-[state=open]:bg-crimson-50 data-[state=open]:text-crimson-700',
           )}
         >
-          Property
+          {t.property}
           <ChevronDown
             aria-hidden
             className="size-3.5 text-ink-400 transition-transform duration-200 group-data-[state=open]:rotate-180"
@@ -57,7 +52,7 @@ export function HeaderNav() {
             sideOffset={8}
             className="z-100 w-64 overflow-hidden rounded-xl border border-ink-100 bg-white p-1.5 shadow-floating"
           >
-            {PROPERTY_LINKS.map((item) => (
+            {propertyLinks.map((item) => (
               <DropdownMenu.Item key={item.href} asChild>
                 <Link
                   href={item.href}
@@ -77,7 +72,7 @@ export function HeaderNav() {
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
 
-      {TOOLS.map((tool) => (
+      {tools.map((tool) => (
         <Link
           key={tool.href}
           href={tool.href}
@@ -97,16 +92,8 @@ export function HeaderNav() {
   );
 }
 
-/**
- * The phone version.
- *
- * A scrolling row of icon tiles rather than a burger menu: on a 360px screen
- * these are the six places anyone actually goes, and hiding them behind a tap
- * costs more than the space it saves. The Nepali sits under each one, which is
- * what makes the row readable to someone who skims past the English.
- */
-export function MobileNav() {
-  const items = [...PROPERTY_LINKS, ...TOOLS];
+export function MobileNav({ t }: { t: Dictionary['headerNav'] }) {
+  const items = [...getPropertyLinks(t), ...getTools(t)];
 
   return (
     <nav

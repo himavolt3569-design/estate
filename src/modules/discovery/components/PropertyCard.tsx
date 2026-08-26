@@ -1,5 +1,11 @@
+'use client';
+
 import { Bed, Bath, Square, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 
 import { PropertyImage } from '@/components/media/PropertyImage';
 import { Skeleton } from '@/components/ui/primitives';
@@ -10,7 +16,9 @@ import { cn } from '@/lib/utils';
 import type { PropertyCardDTO } from '../types';
 import { FavoriteButton } from './FavoriteButton';
 
-
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(useGSAP, ScrollTrigger);
+}
 
 /**
  * The card is a specimen sheet, not a SaaS tile.
@@ -106,8 +114,13 @@ export function PropertyCard({
         </div>
 
         <p className="nums mt-3 text-xl font-bold text-royal-600">
-          {property.priceFormatted}
-          {property.transactionType === 'rent' && <span className="text-sm font-normal text-ink-500"> / month</span>}
+          {property.priceFormatted.split(' / ')[0]}
+          {property.priceFormatted.split(' / ')[1] && (
+            <span className="text-sm font-normal text-ink-500">
+              {' '}
+              / {property.priceFormatted.split(' / ')[1]}
+            </span>
+          )}
         </p>
 
         {facts.length > 0 && (
@@ -140,17 +153,19 @@ export function PropertyCard({
 /** Matches the card's real dimensions so nothing shifts when content arrives. */
 export function PropertyCardSkeleton() {
   return (
-    <div className="border border-ink-200 bg-white">
-      <Skeleton className="aspect-4/3 w-full rounded-none" />
-      <div className="space-y-2.5 p-4">
-        <Skeleton className="h-2.5 w-24" />
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-        <div className="flex gap-4 pt-2">
-          <Skeleton className="h-3 w-12" />
-          <Skeleton className="h-3 w-12" />
-          <Skeleton className="h-3 w-16" />
+    <div className="flex flex-col rounded-2xl border border-ink-100 bg-white shadow-sm overflow-hidden">
+      <Skeleton className="aspect-[4/3] w-full rounded-none" />
+      <div className="flex flex-1 flex-col p-5">
+        <Skeleton className="h-6 w-3/4 rounded-md" />
+        <div className="mt-2 flex items-center gap-1.5">
+          <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+          <Skeleton className="h-4 w-1/2 rounded-md" />
+        </div>
+        <Skeleton className="mt-4 h-7 w-1/3 rounded-md" />
+        <div className="mt-auto pt-4 flex items-center gap-4 border-t border-ink-100">
+          <Skeleton className="h-4 w-16 rounded-md" />
+          <Skeleton className="h-4 w-16 rounded-md" />
+          <Skeleton className="h-4 w-20 rounded-md" />
         </div>
       </div>
     </div>
@@ -168,12 +183,28 @@ export function PropertyCardGrid({
   savedIds?: Set<string> | string[];
 }) {
   const saved = savedIds instanceof Set ? savedIds : new Set(savedIds ?? []);
+  const container = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    gsap.from('.property-card-anim', {
+      scrollTrigger: {
+        trigger: container.current,
+        start: 'top 85%',
+      },
+      y: 40,
+      opacity: 0,
+      duration: 0.6,
+      stagger: 0.1,
+      ease: 'power3.out',
+    });
+  }, { scope: container });
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div ref={container} className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {properties.map((property, index) => (
         <PropertyCard
           key={property.id}
+          className="property-card-anim"
           property={property}
           priority={index < priorityCount}
           saved={saved.has(property.id)}

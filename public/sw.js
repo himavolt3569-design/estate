@@ -14,6 +14,7 @@ const VERSION = 'v1';
 const SHELL_CACHE = `kitta-shell-${VERSION}`;
 const IMAGE_CACHE = `kitta-images-${VERSION}`;
 const DATA_CACHE = `kitta-data-${VERSION}`;
+const MAP_CACHE = `kitta-maps-${VERSION}`;
 
 const SHELL_ASSETS = ['/', '/search', '/offline', '/manifest.webmanifest'];
 
@@ -65,10 +66,10 @@ self.addEventListener('fetch', (event) => {
 
   if (NEVER_CACHE.some((path) => url.pathname.includes(path))) return;
 
-  // Cross-origin: only map tiles are worth caching, and only briefly.
+  // Cross-origin: map tiles are aggressively cached for offline map viewing.
   if (url.origin !== self.location.origin) {
     if (url.hostname.endsWith('tile.openstreetmap.org')) {
-      event.respondWith(cacheFirst(request, IMAGE_CACHE));
+      event.respondWith(cacheFirst(request, MAP_CACHE));
     }
     return;
   }

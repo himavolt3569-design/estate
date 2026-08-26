@@ -7,16 +7,6 @@ import { setLocale } from '@/i18n/actions';
 import { LOCALES, LOCALE_LABELS, type Locale } from '@/i18n/config';
 import { cn } from '@/lib/utils';
 
-/**
- * A two-option segmented control, not a dropdown.
- *
- * With exactly two languages a dropdown hides half the choice behind a click,
- * and "नेपाली" written in its own script is its own affordance: a Nepali
- * speaker recognises it without reading a label. Both options stay visible.
- *
- * Each button is a form submit, so this works before the JavaScript loads and
- * keeps working if it never does.
- */
 export function LanguageSwitcher({
   current,
   className,

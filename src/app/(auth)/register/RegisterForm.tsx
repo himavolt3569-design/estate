@@ -18,17 +18,6 @@ import { registerSchema, type AccountIntent } from '@/modules/identity/schema';
 
 type RegisterValues = z.infer<typeof registerSchema>;
 
-/*
- * The account-type choice is the first real decision a new user makes, so it is
- * the first thing on the form rather than a dropdown buried at the bottom. It
- * decides which dashboard they land on and which permissions their role carries.
- *
- * Only these two are offered. Agent and agency-manager accounts need an agency
- * and are assigned by an admin. Note that restricting the UI is NOT the control:
- * tg_handle_new_user() in the database accepts only this same non-privileged
- * subset and silently downgrades anything else, because signup metadata travels
- * through the client and can be forged.
- */
 const INTENTS: Array<{
   value: AccountIntent;
   title: string;
@@ -132,9 +121,6 @@ export function RegisterForm({ next, t }: { next?: string; t: Dictionary['auth']
         </p>
       </header>
 
-      {/* Above the form, matching the sign-in page. It is the fastest route
-          through this screen, so burying it under a nine-field form only means
-          people fill the form out before discovering they did not have to. */}
       <GoogleButton next={next} label={t.googleSignUp} />
       <AuthDivider label={t.orUseEmail} />
 
@@ -304,10 +290,6 @@ export function RegisterForm({ next, t }: { next?: string; t: Dictionary['auth']
   );
 }
 
-/**
- * Length-based, not composition-based. Composition meters reward "Password1!"
- * and punish a long passphrase, which is backwards.
- */
 function PasswordMeter({ value }: { value: string }) {
   if (!value) return null;
 

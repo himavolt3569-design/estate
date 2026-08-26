@@ -65,9 +65,12 @@ export function FavoriteButton({
   }, []);
 
   function onClick(event: React.MouseEvent) {
-    // The button is often inside a link to the listing.
     event.preventDefault();
     event.stopPropagation();
+
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(50);
+    }
 
     if (signedIn === false) {
       router.push(`/login?next=${encodeURIComponent(pathname)}`);

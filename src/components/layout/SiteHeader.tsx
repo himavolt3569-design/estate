@@ -8,27 +8,17 @@ import { Button } from '@/components/ui/button';
 import { getTranslation } from '@/i18n';
 import { getSessionUser } from '@/lib/auth/session';
 
-/**
- * Server component. The header renders per-request with the real session, so
- * there is no flash of the signed-out state and no client-side auth check.
- */
 export async function SiteHeader() {
-  const [user, { t }] = await Promise.all([getSessionUser(), getTranslation()]);
+  const [user, { t, locale }] = await Promise.all([getSessionUser(), getTranslation()]);
 
   return (
-    /*
-     * Three stops. Buy, Rent, Land and Shops are one question, so they live in
-     * one menu; the two calculators are their own destinations. Everything about
-     * the account sits on the right, and the phone number only appears once
-     * there is room for it without crowding the actions.
-     */
-    <header className="sticky top-0 z-50 border-b border-ink-100 bg-white/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 border-b border-ink-100 bg-white/70 backdrop-blur-xl">
       <div className="mx-auto flex h-[68px] max-w-8xl items-center gap-6 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="shrink-0" aria-label={t.nav.home}>
           <Wordmark />
         </Link>
 
-        <HeaderNav />
+        <HeaderNav t={t.headerNav} />
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <a
@@ -38,6 +28,8 @@ export async function SiteHeader() {
             <Phone aria-hidden className="size-4 text-crimson-600" />
             <span className="nums">+977 9801234567</span>
           </a>
+
+          <LanguageSwitcher current={locale} />
 
           {user ? (
             <>
@@ -61,7 +53,7 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <MobileNav />
+      <MobileNav t={t.headerNav} />
     </header>
   );
 }
@@ -111,7 +103,6 @@ export async function SiteFooter() {
 
         <div className="mt-14 flex flex-col gap-2 border-t border-royal-800 pt-6 text-2xs text-royal-400 sm:flex-row sm:items-center sm:justify-between">
           <p className="nums">© {new Date().getFullYear()} Kitta</p>
-          {/* ODbL requires attribution wherever OSM data is shown. */}
           <p>
             {t.footer.mapCredit}{' '}
             <a

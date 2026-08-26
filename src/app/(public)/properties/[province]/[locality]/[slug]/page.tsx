@@ -12,9 +12,11 @@ import { LISTED_BY_LABELS } from '@/lib/auth/permissions';
 import { formatArea, formatAreaSecondary, formatDate, formatPrice } from '@/lib/format';
 import { absoluteUrl } from '@/lib/utils';
 import { PresenceTracker } from '@/modules/analytics/components/PresenceTracker';
+import { getDictionary } from '@/i18n';
 import { ContactPanel } from '@/modules/discovery/components/ContactPanel';
 import { FavoriteButton } from '@/modules/discovery/components/FavoriteButton';
 import { PropertyGallery } from '@/modules/discovery/components/PropertyGallery';
+import { ShareButton } from '@/modules/discovery/components/ShareButton';
 import { getPropertyBySlug } from '@/modules/discovery/queries';
 import { PaymentPanel } from '@/modules/settlement/components/PaymentPanel';
 
@@ -52,7 +54,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export default async function PropertyPage({ params }: { params: Params }) {
   const { slug, province, locality } = await params;
-  const property = await getPropertyBySlug(slug);
+  const [property, t] = await Promise.all([
+    getPropertyBySlug(slug),
+    getDictionary(),
+  ]);
 
   if (!property) notFound();
 
@@ -153,7 +158,15 @@ export default async function PropertyPage({ params }: { params: Params }) {
                     <p className="mt-1 text-xs text-ink-500">Price negotiable</p>
                   )}
                 </div>
-                <FavoriteButton propertyId={property.id} variant="inline" />
+                <div className="flex items-center gap-3">
+                  <ShareButton 
+                    title={property.title} 
+                    text={formatPrice(property.price, { period: property.pricePeriod })}
+                    url={absoluteUrl(`/properties/${province}/${locality}/${slug}`)} 
+                    label={t.common.share}
+                  />
+                  <FavoriteButton propertyId={property.id} variant="inline" />
+                </div>
               </div>
             </header>
 

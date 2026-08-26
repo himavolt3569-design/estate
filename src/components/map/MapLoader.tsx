@@ -1,11 +1,5 @@
 'use client';
 
-// Client boundary whose only job is to hold the `ssr: false` dynamic import.
-//
-// Leaflet reads `window` at module scope, so it cannot be server-rendered, and
-// Next does not allow `ssr: false` inside a Server Component. This wrapper is
-// the seam: server pages import MapLoader, and Leaflet stays out of the server
-// bundle and out of the route's initial JavaScript.
 
 import dynamic from 'next/dynamic';
 
@@ -19,7 +13,7 @@ const PropertyMap = dynamic(() => import('./PropertyMap').then((m) => m.Property
   loading: () => <Skeleton className="h-full min-h-64 w-full" />,
 });
 
-/** 0,0 is in the Gulf of Guinea. It means "nothing was saved", not a location. */
+
 function hasCoordinates(center: { lat: number; lng: number } | null | undefined): center is {
   lat: number;
   lng: number;
@@ -39,6 +33,7 @@ export function MapLoader({
   center,
   className,
   fallbackLabel = 'No location was saved for this listing.',
+  onBoundsChange,
   ...props
 }: {
   markers: MapMarker[];
@@ -47,7 +42,8 @@ export function MapLoader({
   className?: string;
   interactive?: boolean;
   approximate?: boolean;
-  /** Shown in place of the map when there is nothing to centre on. */
+  onBoundsChange?: (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => void;
+
   fallbackLabel?: string;
 }) {
   if (!hasCoordinates(center)) {
@@ -64,7 +60,7 @@ export function MapLoader({
     );
   }
 
-  return <PropertyMap {...props} center={center} className={className} />;
+  return <PropertyMap {...props} center={center} className={className} onBoundsChange={onBoundsChange} />;
 }
 
 export type { MapMarker };

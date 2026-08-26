@@ -23,10 +23,22 @@ export type Renditions = { thumb?: string; card?: string; full?: string };
 
 const BUCKET = 'property-media';
 
-export function storageUrl(path: string | undefined | null, bucket = BUCKET): string | null {
+export function storageUrl(
+  path: string | undefined | null,
+  bucket = BUCKET,
+  options?: { width?: number; quality?: number }
+): string | null {
   if (!path) return null;
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!base) return null;
+
+  if (options?.width || options?.quality) {
+    const params = new URLSearchParams();
+    if (options.width) params.set('width', options.width.toString());
+    if (options.quality) params.set('quality', options.quality.toString());
+    return `${base}/storage/v1/render/image/public/${bucket}/${path}?${params.toString()}`;
+  }
+
   return `${base}/storage/v1/object/public/${bucket}/${path}`;
 }
 
@@ -67,9 +79,12 @@ export function PropertyImage({
   wrapperClassName?: string;
 }) {
   const original = storageUrl(storagePath);
-  const thumb = storageUrl(renditions?.thumb);
-  const card = storageUrl(renditions?.card);
-  const full = storageUrl(renditions?.full);
+  
+  // Use dynamic transformations if storagePath is available, otherwise fallback to static renditions
+  const thumb = storagePath ? storageUrl(storagePath, BUCKET, { width: 400, quality: 80 }) : storageUrl(renditions?.thumb);
+  const card = storagePath ? storageUrl(storagePath, BUCKET, { width: 800, quality: 80 }) : storageUrl(renditions?.card);
+  const full = storagePath ? storageUrl(storagePath, BUCKET, { width: 1920, quality: 80 }) : storageUrl(renditions?.full);
+
   // A lightbox wants the largest file there is; a card wants the smallest that
   // will do. Picking `full` first under `contain` avoids blowing an 800px card
   // rendition up to fill a 1400px viewport.

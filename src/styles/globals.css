@@ -290,7 +290,7 @@
       var(--color-ink-50) 63%
     );
     background-size: 400% 100%;
-    animation: skeleton-sweep 1.4s ease-in-out infinite;
+    animation: skeleton-sweep 1.4s var(--ease-out-expo) infinite;
   }
 
   /* A marker only. The hidden state is set by GSAP in useLayoutEffect, which

@@ -32,16 +32,16 @@ export default async function HomePage() {
 
   return (
     <>
-      <Hero backgroundUrl={heroUrl} />
+      <Hero backgroundUrl={heroUrl} t={t} />
 
       <section className="mx-auto max-w-8xl px-4 py-12 sm:mt-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
           <SectionHeading
-            eyebrow="Featured"
-            title="Featured Properties"
+            eyebrow={t.home.featuredEyebrow}
+            title={t.home.featuredTitle}
           />
           <Link href="/search" className="text-sm font-semibold text-royal-600 flex items-center hover:underline">
-            View All Properties <ArrowRight className="ml-1 h-4 w-4" />
+            {t.home.viewAll} <ArrowRight className="ml-1 h-4 w-4" />
           </Link>
         </div>
 
@@ -52,12 +52,12 @@ export default async function HomePage() {
             </Suspense>
           </div>
           <div className="lg:col-span-1">
-            <RightRail />
+            <RightRail t={t} />
           </div>
         </div>
       </section>
 
-      <BrowseByType />
+      <BrowseByType t={t} />
 
       <EmiSection t={t} />
 
@@ -105,7 +105,7 @@ function EmiSection({ t }: { t: Dictionary }) {
  * it is whatever the master admin last uploaded, falling back to the image that
  * ships with the build when they have not set one.
  */
-function Hero({ backgroundUrl }: { backgroundUrl: string | null }) {
+function Hero({ backgroundUrl, t }: { backgroundUrl: string | null; t: Dictionary }) {
   return (
     <section className="relative flex min-h-[520px] flex-col items-center justify-center pt-12 pb-8 sm:min-h-[600px] sm:pt-16 sm:pb-32">
       {/* Background Image */}
@@ -143,7 +143,7 @@ function Hero({ backgroundUrl }: { backgroundUrl: string | null }) {
 
       {/* Floats over the hero edge from sm up; in flow on a phone. */}
       <div className="relative z-20 mx-auto mt-8 w-full max-w-6xl px-4 sm:absolute sm:-bottom-16 sm:mt-0 sm:px-6 lg:px-8">
-        <HeroSearch />
+        <HeroSearch t={t.heroSearch} />
       </div>
     </section>
   );
@@ -221,7 +221,7 @@ function RailSkeleton() {
 /* -------------------------------------------------------------------------- */
 /* Right Rail (Trust Badges)                                                   */
 /* -------------------------------------------------------------------------- */
-function RightRail() {
+function RightRail({ t }: { t: Dictionary }) {
   return (
     <div className="sticky top-24 rounded-2xl bg-ink-50/50 border border-ink-100 p-8 flex flex-col h-full lg:h-auto">
       <div className="space-y-8 flex-1">
@@ -230,8 +230,8 @@ function RightRail() {
             <ShieldCheck className="h-6 w-6" />
           </div>
           <div>
-            <h4 className="text-base font-bold text-ink-900">Verified Properties</h4>
-            <p className="mt-1 text-sm text-ink-500">All properties are verified for your peace of mind.</p>
+            <h4 className="text-base font-bold text-ink-900">{t.home.badges.verifiedTitle}</h4>
+            <p className="mt-1 text-sm text-ink-500">{t.home.badges.verifiedNote}</p>
           </div>
         </div>
 
@@ -240,8 +240,8 @@ function RightRail() {
             <BadgeCent className="h-6 w-6" />
           </div>
           <div>
-            <h4 className="text-base font-bold text-ink-900">Best Price Guarantee</h4>
-            <p className="mt-1 text-sm text-ink-500">Get the best value for your money.</p>
+            <h4 className="text-base font-bold text-ink-900">{t.home.badges.priceTitle}</h4>
+            <p className="mt-1 text-sm text-ink-500">{t.home.badges.priceNote}</p>
           </div>
         </div>
 
@@ -250,15 +250,15 @@ function RightRail() {
             <UserCheck className="h-6 w-6" />
           </div>
           <div>
-            <h4 className="text-base font-bold text-ink-900">Expert Agents</h4>
-            <p className="mt-1 text-sm text-ink-500">Our agents are here to help you find your dream home.</p>
+            <h4 className="text-base font-bold text-ink-900">{t.home.badges.agentsTitle}</h4>
+            <p className="mt-1 text-sm text-ink-500">{t.home.badges.agentsNote}</p>
           </div>
         </div>
       </div>
 
       <Button asChild size="lg" className="mt-10 w-full bg-royal-600 hover:bg-royal-700 text-white rounded-lg">
         <Link href="/about">
-          Learn More About Us <ArrowRight className="ml-2 h-4 w-4" />
+          {t.home.badges.learnMore} <ArrowRight className="ml-2 h-4 w-4" />
         </Link>
       </Button>
     </div>
@@ -268,26 +268,20 @@ function RightRail() {
 /* -------------------------------------------------------------------------- */
 /* Browse by type                                                              */
 /* -------------------------------------------------------------------------- */
-function BrowseByType() {
-  /*
-   * `query` rather than a bare subtype, because two of these are not subtypes
-   * at all. "Home stay" is a transaction type, and the tile labelled Villa was
-   * pointing at `warehouse`. Both were being fed into a property_subtype[] cast
-   * that rejected them, so those two tiles returned nothing at all.
-   */
+function BrowseByType({ t }: { t: Dictionary }) {
   const types = [
-    { query: 'subtype=house', icon: Home, label: 'Houses', note: 'Family homes', bg: 'bg-royal-50', text: 'text-royal-600' },
-    { query: 'subtype=apartment', icon: Building2, label: 'Apartments', note: 'Flats and studios', bg: 'bg-crimson-50', text: 'text-crimson-600' },
-    { query: 'category=land', icon: LandPlot, label: 'Land', note: 'Ghaderi and fields', bg: 'bg-emerald-50', text: 'text-emerald-600' },
-    { query: 'category=commercial', icon: Store, label: 'Shops and offices', note: 'For business', bg: 'bg-marigold-50', text: 'text-marigold-700' },
-    { query: 'transaction_type=short_stay', icon: Tent, label: 'Home stay', note: 'By the night', bg: 'bg-sand-100', text: 'text-sand-700' },
-    { query: 'subtype=villa', icon: Warehouse, label: 'Villas', note: 'Larger houses', bg: 'bg-ink-100', text: 'text-ink-600' },
+    { query: 'subtype=house', icon: Home, label: t.home.types.house.label, note: t.home.types.house.note, bg: 'bg-royal-50', text: 'text-royal-600' },
+    { query: 'subtype=apartment', icon: Building2, label: t.home.types.apartment.label, note: t.home.types.apartment.note, bg: 'bg-crimson-50', text: 'text-crimson-600' },
+    { query: 'category=land', icon: LandPlot, label: t.home.types.land.label, note: t.home.types.land.note, bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    { query: 'category=commercial', icon: Store, label: t.home.types.commercial.label, note: t.home.types.commercial.note, bg: 'bg-marigold-50', text: 'text-marigold-700' },
+    { query: 'transaction_type=short_stay', icon: Tent, label: t.home.types.homeStay.label, note: t.home.types.homeStay.note, bg: 'bg-sand-100', text: 'text-sand-700' },
+    { query: 'subtype=villa', icon: Warehouse, label: t.home.types.villa.label, note: t.home.types.villa.note, bg: 'bg-ink-100', text: 'text-ink-600' },
   ];
 
   return (
     <section className="bg-ink-50/40">
       <div className="mx-auto max-w-8xl px-4 py-16 sm:px-6 lg:px-8">
-        <SectionHeading title="Browse Properties By Type" />
+        <SectionHeading title={t.home.browseByTypeTitle} />
         <Reveal className="mt-8" stagger={0.04}>
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {types.map((type) => (

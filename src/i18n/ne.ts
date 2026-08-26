@@ -278,5 +278,76 @@ export const ne: Dictionary = {
     notStated: 'उल्लेख छैन',
     loading: 'लोड हुँदै…',
     saving: 'सेभ हुँदै…',
+    share: 'सेयर गर्नुहोस्',
+    shareOnWhatsApp: 'ह्वाट्सएपमा सेयर गर्नुहोस्',
+  },
+
+  headerNav: {
+    property: 'घरजग्गा',
+    buy: 'किन्ने',
+    buyNe: 'Buy',
+    rent: 'भाडामा',
+    rentNe: 'Rent',
+    land: 'जग्गा',
+    landNe: 'Land',
+    commercial: 'पसल र अफिस',
+    commercialNe: 'Commercial',
+    emi: 'किस्ता',
+    emiNe: 'EMI',
+    landSize: 'नाप',
+    landSizeNe: 'Size'
+  },
+
+  heroSearch: {
+    buy: 'किन्ने',
+    rent: 'भाडामा',
+    location: 'स्थान',
+    enterLocation: 'ठाउँको नाम लेख्नुहोस्',
+    propertyType: 'प्रकार',
+    selectType: 'प्रकार छान्नुहोस्',
+    minPrice: 'न्यूनतम मूल्य',
+    noMin: 'न्यूनतम छैन',
+    maxPrice: 'अधिकतम मूल्य',
+    noMax: 'अधिकतम छैन',
+    search: 'खोज्नुहोस्',
+    types: {
+      any: 'कुनै पनि',
+      house: 'घर',
+      apartment: 'अपार्टमेन्ट',
+      land: 'जग्गा',
+      shop: 'पसल वा अफिस'
+    },
+    prices: {
+      lakh25: '२५ लाख',
+      lakh50: '५० लाख',
+      crore1: '१ करोड',
+      crore2: '२ करोड',
+      crore5: '५ करोड',
+      crore10: '१० करोड'
+    }
+  },
+
+  home: {
+    featuredEyebrow: 'विशेष',
+    featuredTitle: 'विशेष घरजग्गा',
+    viewAll: 'सबै घरजग्गा हेर्नुहोस्',
+    browseByTypeTitle: 'प्रकार अनुसार खोज्नुहोस्',
+    types: {
+      house: { label: 'घर', note: 'पारिवारिक घर' },
+      apartment: { label: 'अपार्टमेन्ट', note: 'फ्ल्याट र स्टुडियो' },
+      land: { label: 'जग्गा', note: 'घडेरी र खेत' },
+      commercial: { label: 'पसल र अफिस', note: 'व्यापारको लागि' },
+      homeStay: { label: 'होमस्टे', note: 'रातको लागि' },
+      villa: { label: 'भिल्ला', note: 'ठूला घर' },
+    },
+    badges: {
+      verifiedTitle: 'प्रमाणित घरजग्गा',
+      verifiedNote: 'तपाईंको ढुक्कको लागि सबै घरजग्गा प्रमाणित गरिएका छन्।',
+      priceTitle: 'सबैभन्दा राम्रो मूल्य',
+      priceNote: 'तपाईंको पैसाको सही सदुपयोग गर्नुहोस्।',
+      agentsTitle: 'अनुभवी एजेन्टहरू',
+      agentsNote: 'हाम्रा एजेन्टहरू तपाईंको सपनाको घर खोज्न मद्दत गर्न तयार छन्।',
+      learnMore: 'हाम्रो बारेमा थप जान्नुहोस्'
+    }
   },
 };
