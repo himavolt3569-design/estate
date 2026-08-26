@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { SelectMenu } from '@/components/ui/select-menu';
 import { cn } from '@/lib/utils';
+import type { Dictionary } from '@/i18n';
 
 /**
  * The floating bar under the hero.
