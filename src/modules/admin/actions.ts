@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { authedAction } from '@/lib/auth/action';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 /*
  * Admin mutations.
@@ -184,5 +185,25 @@ export const reviewPayment = authedAction({
     revalidatePath('/dashboard/admin/payments');
     revalidatePath('/dashboard/admin');
     return null;
+  },
+});
+
+export const generateImpersonationLink = authedAction({
+  permission: 'user.manage',
+  schema: z.object({
+    email: z.string().email(),
+  }),
+  handler: async ({ input }) => {
+    const adminSupabase = createAdminClient('Generating magic link for admin impersonation');
+    
+    const { data, error } = await adminSupabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: input.email,
+    });
+
+    if (error) throw error;
+    if (!data?.properties?.action_link) throw new Error('No link generated');
+
+    return { url: data.properties.action_link };
   },
 });

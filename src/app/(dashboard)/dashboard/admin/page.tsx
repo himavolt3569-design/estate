@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, Building2, Eye, MessageSquare, Users } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Building2, CheckCircle2, CreditCard, Eye, Flag, Image as ImageIcon, ScrollText, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -12,7 +12,7 @@ import { getAdminStats } from '@/modules/admin/queries';
 import { LiveVisitorsPanel } from '@/modules/analytics/components/LiveVisitorsPanel';
 import { getLiveAnalytics } from '@/modules/analytics/queries';
 
-import { PageHeader, Panel } from '../components/PageHeader';
+import { PageHeader } from '../components/PageHeader';
 
 export const metadata: Metadata = { title: 'Control centre', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -80,7 +80,7 @@ export default async function AdminOverviewPage() {
       <PageHeader
         eyebrow="Master admin"
         title="Control centre"
-        subtitle="Everything on the platform, and everything waiting on you."
+        subtitle="Manage the platform, moderate content, and support users."
         action={
           <Button asChild>
             <Link href="/dashboard/listings/new">Post for a seller</Link>
@@ -88,100 +88,92 @@ export default async function AdminOverviewPage() {
         }
       />
 
-      {/* Live figures first: this is the only part of the screen that changes
-          while the owner is looking at it. */}
       <LiveVisitorsPanel initial={live} />
 
       <section>
-        <h2 className="label mb-4">The platform</h2>
-        <dl className="grid gap-px overflow-hidden rounded-2xl border border-ink-100 bg-ink-100 shadow-soft sm:grid-cols-2 lg:grid-cols-4">
-          <Figure label="People" value={totals.users.toLocaleString('en-IN')} icon={Users} href="/dashboard/admin/users" />
-          <Figure label="Sellers" value={totals.vendors.toLocaleString('en-IN')} href="/dashboard/admin/users" />
-          <Figure label="Live listings" value={totals.listingsLive.toLocaleString('en-IN')} icon={Building2} href="/dashboard/listings" />
-          <Figure label="Drafts not finished" value={totals.listingsDraft.toLocaleString('en-IN')} href="/dashboard/listings" />
-
-          <Figure label="Sold" value={totals.sold.toLocaleString('en-IN')} tone="good" href="/dashboard/admin/sales" />
-          <Figure label="Rented or leased" value={totals.rented.toLocaleString('en-IN')} tone="good" href="/dashboard/admin/sales" />
-          <Figure label="Value closed" value={formatPrice(totals.valueClosed)} tone="warm" href="/dashboard/admin/sales" />
-          <Figure label="Enquiries" value={totals.enquiries.toLocaleString('en-IN')} icon={MessageSquare} href="/dashboard/enquiries" />
-        </dl>
-
-        <p className="mt-3 flex items-center gap-2 text-xs text-ink-500">
-          <Eye aria-hidden className="size-3.5" />
-          {totals.views.toLocaleString('en-IN')} property views counted, one per person per day.
-        </p>
+        <h2 className="label mb-4 text-ink-900">Action Required</h2>
+        {queues.some(q => q.urgent) ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {queues.map((queue) => (
+              <Link
+                key={queue.label}
+                href={queue.href}
+                className={cn(
+                  'group flex flex-col justify-between rounded-2xl border bg-white p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-raised',
+                  queue.urgent ? 'border-crimson-200 bg-crimson-50/10' : 'border-ink-100 opacity-70 grayscale',
+                )}
+              >
+                <div>
+                  <p className="label text-ink-900">{queue.label}</p>
+                  <p
+                    className={cn(
+                      'figure mt-2.5 text-4xl',
+                      queue.urgent ? 'text-crimson-700' : 'text-ink-900',
+                    )}
+                  >
+                    {queue.value.toLocaleString('en-IN')}
+                  </p>
+                  {queue.note && <p className="mt-1 text-xs font-medium text-crimson-700">{queue.note}</p>}
+                </div>
+                <span className="mt-4 flex items-center gap-1 text-xs font-semibold text-ink-500 transition-colors group-hover:text-crimson-700">
+                  Manage <ArrowRight aria-hidden className="size-3" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50/50 py-12 text-center shadow-soft">
+            <CheckCircle2 className="mb-3 size-8 text-emerald-500" strokeWidth={1.5} />
+            <h3 className="text-lg font-medium text-emerald-900">You're all caught up!</h3>
+            <p className="mt-1 text-sm text-emerald-700">There are no pending tasks waiting for your review.</p>
+          </div>
+        )}
       </section>
 
       <section>
-        <h2 className="label mb-4">Waiting on you</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {queues.map((queue) => (
-            <Link
-              key={queue.label}
-              href={queue.href}
-              className={cn(
-                'group rounded-2xl border bg-white p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-raised',
-                queue.urgent ? 'border-crimson-200' : 'border-ink-100',
-              )}
-            >
-              <p className="label">{queue.label}</p>
-              <p
-                className={cn(
-                  'figure mt-2.5 text-4xl',
-                  queue.urgent ? 'text-crimson-700' : 'text-ink-900',
-                )}
-              >
-                {queue.value.toLocaleString('en-IN')}
-              </p>
-              {queue.note && <p className="mt-1 text-xs text-clay-700">{queue.note}</p>}
-              <span className="mt-3 flex items-center gap-1 text-xs font-medium text-ink-500 transition-colors group-hover:text-crimson-700">
-                Open <ArrowRight aria-hidden className="size-3" />
-              </span>
-            </Link>
-          ))}
+        <h2 className="label mb-4 text-ink-900">Quick Actions</h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <ActionCard title="Moderation" href="/dashboard/admin/moderation" icon={ShieldCheck} />
+          <ActionCard title="Users & Roles" href="/dashboard/admin/users" icon={Users} />
+          <ActionCard title="All Listings" href="/dashboard/admin/listings" icon={Building2} />
+          <ActionCard title="Sales & Rentals" href="/dashboard/admin/sales" icon={TrendingUp} />
+          <ActionCard title="Payments" href="/dashboard/admin/payments" icon={CreditCard} />
+          <ActionCard title="Reports" href="/dashboard/admin/reports" icon={Flag} />
+          <ActionCard title="Settings" href="/dashboard/admin/site" icon={ImageIcon} />
+          <ActionCard title="Audit Log" href="/dashboard/admin/audit" icon={ScrollText} />
         </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <Panel accent className="p-6 sm:p-8">
-          <h2 className="text-lg font-semibold text-ink-900">What this seat can do</h2>
-          <ul className="mt-4 grid gap-3 text-sm leading-relaxed text-ink-600">
-            <li>
-              <Link href="/dashboard/listings" className="font-medium text-crimson-700 hover:underline">
-                Every listing
-              </Link>{' '}
-              — read, edit and publish any property, whoever posted it.
-            </li>
-            <li>
-              <Link href="/dashboard/admin/users" className="font-medium text-crimson-700 hover:underline">
-                Every account
-              </Link>{' '}
-              — correct a name, change a sign-in email, set a password, change a role.
-            </li>
-            <li>
-              <Link href="/dashboard/listings/new" className="font-medium text-crimson-700 hover:underline">
-                Post on someone&rsquo;s behalf
-              </Link>{' '}
-              — for a seller who rang the office instead of using the site.
-            </li>
-            <li>
-              <Link href="/dashboard/admin/site" className="font-medium text-crimson-700 hover:underline">
-                The home page background
-              </Link>{' '}
-              — change the picture visitors land on.
-            </li>
-            <li>
-              <Link href="/dashboard/admin/audit" className="font-medium text-crimson-700 hover:underline">
-                The record
-              </Link>{' '}
-              — every privileged change is written down with your name and your reason.
-            </li>
-          </ul>
-        </Panel>
+      <div className="grid gap-6 lg:grid-cols-[1fr_350px]">
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="label text-ink-900">Platform Health</h2>
+            <p className="flex items-center gap-2 text-xs font-medium text-ink-500">
+              <Eye aria-hidden className="size-3.5" />
+              {totals.views.toLocaleString('en-IN')} daily views
+            </p>
+          </div>
+          <dl className="grid gap-px overflow-hidden rounded-2xl border border-ink-100 bg-ink-100 shadow-soft sm:grid-cols-3">
+            <Figure label="Total Users" value={totals.users.toLocaleString('en-IN')} icon={Users} href="/dashboard/admin/users" />
+            <Figure label="Live Listings" value={totals.listingsLive.toLocaleString('en-IN')} icon={Building2} href="/dashboard/admin/listings" />
+            <Figure label="Value Closed" value={formatPrice(totals.valueClosed)} tone="warm" href="/dashboard/admin/sales" />
+          </dl>
+        </section>
 
         <ActivityFeed />
       </div>
     </div>
+  );
+}
+
+function ActionCard({ title, href, icon: Icon }: { title: string; href: string; icon: React.ElementType }) {
+  return (
+    <Link href={href} className="group flex flex-col items-center justify-center gap-3 rounded-2xl border border-ink-100 bg-white p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:border-royal-200 hover:shadow-raised">
+      <div className="rounded-full bg-ink-50 p-3 text-ink-500 transition-colors group-hover:bg-royal-50 group-hover:text-royal-600">
+        <Icon className="size-6" strokeWidth={1.5} />
+      </div>
+      <span className="text-sm font-medium text-ink-700 transition-colors group-hover:text-royal-700">{title}</span>
+    </Link>
   );
 }
 

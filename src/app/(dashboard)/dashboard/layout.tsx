@@ -24,11 +24,11 @@ import { ROLE_LABELS } from '@/lib/auth/permissions';
 import { getTranslation } from '@/i18n';
 import { getSessionUser, isVendor } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
-import { signOut } from '@/modules/identity/actions';
 import { AccountTypePrompt } from '@/modules/identity/components/AccountTypePrompt';
 import { SetPasswordPrompt } from '@/modules/identity/components/SetPasswordPrompt';
 import { getUnreadMessageCount } from '@/modules/messaging/queries';
 
+import { ClientLogoutButton } from '@/components/navigation/ClientLogoutButton';
 import { SidebarNav } from './components/SidebarNav';
 
 /**
@@ -76,29 +76,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
    * entries are a separate group rather than the same links with a flag.
    */
   const nav = [
-    { href: '/dashboard', label: n.overview, icon: 'LayoutDashboard', show: true },
-    { href: '/dashboard/listings', label: admin ? 'All properties' : n.myProperties, icon: 'Building2', show: vendor || admin },
+    { href: admin ? '/dashboard/admin' : '/dashboard', label: n.overview, icon: 'LayoutDashboard', show: true },
+    { href: admin ? '/dashboard/admin/listings' : '/dashboard/listings', label: admin ? 'All properties' : n.myProperties, icon: 'Building2', show: vendor || admin },
     { href: '/dashboard/messages', label: 'Messages', icon: 'MessagesSquare', show: true, badge: unreadMessages },
     { href: '/dashboard/enquiries', label: admin ? 'All enquiries' : n.messages, icon: 'MessageSquare', show: vendor || admin },
     { href: '/dashboard/saved', label: n.saved, icon: 'Heart', show: !vendor && !admin },
     { href: '/dashboard/searches', label: n.savedSearches, icon: 'Search', show: !vendor && !admin },
   ].filter((item) => item.show);
 
-  const adminNav = [
-    { href: '/dashboard/admin', label: 'Control centre', icon: 'Gauge', show: admin },
-    { href: '/dashboard/admin/users', label: 'People', icon: 'Users', show: admin },
-    { href: '/dashboard/admin/moderation', label: 'Waiting for review', icon: 'ShieldCheck', show: admin },
-    { href: '/dashboard/admin/listings', label: 'Listings', icon: 'Building2', show: admin },
-    { href: '/dashboard/admin/sales', label: 'Sales', icon: 'TrendingUp', show: admin },
-    { href: '/dashboard/admin/payments', label: 'Payments', icon: 'CreditCard', show: admin },
-    { href: '/dashboard/admin/reports', label: 'Reports', icon: 'Flag', show: admin },
-    { href: '/dashboard/admin/site', label: 'Site settings', icon: 'Image', show: admin },
-    { href: '/dashboard/admin/audit', label: 'Record of changes', icon: 'ScrollText', show: admin },
-  ].filter((item) => item.show);
-
   // The master admin has no personal profile to curate — the seat is the
   // platform's, not a person's — so their settings group is the site's settings.
   const settingsNav = [
+    { href: '/dashboard/admin/site', label: 'Platform settings', icon: 'Image', show: admin },
+    { href: '/dashboard/admin/audit', label: 'Audit log', icon: 'ScrollText', show: admin },
     { href: '/dashboard/settings', label: n.profile, icon: 'Settings', show: !admin },
     { href: '/dashboard/settings/security', label: n.security, icon: 'ShieldCheck', show: true },
     { href: '/dashboard/settings/payments', label: n.payments, icon: 'CreditCard', show: vendor },
@@ -128,14 +118,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <Avatar src={user.avatarUrl} name={user.fullName} size="sm" />
             </Link>
 
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="rounded-sm border border-ink-200 px-3 py-1.5 text-xs text-ink-600 transition-colors hover:border-ink-300 hover:bg-ink-50"
-              >
-                {n.signOut}
-              </button>
-            </form>
+            <ClientLogoutButton label={n.signOut} />
           </div>
         </div>
       </header>
@@ -145,12 +128,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <nav aria-label="Dashboard" className="sticky top-24">
             <SidebarNav items={nav} />
 
-            {adminNav.length > 0 && (
-              <>
-                <p className="label mt-8 mb-3 px-4 text-crimson-600">Platform</p>
-                <SidebarNav items={adminNav} />
-              </>
-            )}
+
 
             {settingsNav.length > 0 && (
               <>
@@ -178,7 +156,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         className="fixed inset-x-0 bottom-0 z-50 border-t border-ink-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         <ul className="flex">
-          {[...nav, ...adminNav, ...settingsNav].slice(0, 5).map((item) => {
+          {[...nav, ...settingsNav].slice(0, 5).map((item) => {
             // Re-map string icons back to components for the mobile nav since it's still server-rendered
             const ICON_MAP: Record<string, React.ElementType> = {
               Building2,

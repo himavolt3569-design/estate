@@ -17,6 +17,7 @@ import {
   adminSetUserStatus,
   adminUpdateUserProfile,
 } from '../master';
+import { generateImpersonationLink } from '../../admin/actions';
 
 export type Person = {
   id: string;
@@ -81,17 +82,50 @@ export function PersonSheet({ person, onDone }: { person: Person; onDone: () => 
     onDone();
   }
 
+  async function handleImpersonate() {
+    if (!person.email) {
+      toast.error('Cannot impersonate a user without an email address.');
+      return;
+    }
+    
+    setBusy(true);
+    try {
+      const result = await generateImpersonationLink({ email: person.email });
+      if (result.ok && result.data) {
+        toast.success('Magic link generated! Opening securely...');
+        window.open(result.data.url, '_blank', 'noopener,noreferrer');
+      } else if (!result.ok) {
+        toast.error(result.error ?? 'Failed to generate impersonation link.');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to generate impersonation link.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="thread-top overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-raised">
       <div className="border-b border-ink-100 px-6 pt-6 pb-0">
         <div className="flex items-center gap-3">
           <Avatar src={person.avatar_url} name={person.full_name} size="lg" />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-lg font-semibold text-ink-900">
               {person.full_name || 'Unnamed account'}
             </p>
             <p className="mt-0.5 text-sm text-ink-500">{person.email ?? 'No email on file'}</p>
           </div>
+          {!isMaster && person.email && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleImpersonate}
+              disabled={busy}
+              className="ml-auto"
+            >
+              Login as User
+            </Button>
+          )}
         </div>
 
         <div className="mt-5 flex gap-1 overflow-x-auto">

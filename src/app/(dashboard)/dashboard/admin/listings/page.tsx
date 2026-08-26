@@ -58,8 +58,6 @@ export default async function AdminListingsPage() {
       <ul className="space-y-3">
         {listings.map((listing) => {
           const cover = listing.images?.find((image) => image.is_cover) ?? listing.images?.[0];
-          const province = listing.location?.path?.split('.')[1] ?? 'nepal';
-          const href = `/properties/${province}/${listing.location?.slug ?? 'nepal'}/${listing.slug}`;
           const isVerified = listing.verified_at != null;
 
           return (
@@ -84,13 +82,9 @@ export default async function AdminListingsPage() {
                       {listing.reference_code} · {listing.location?.name_en ?? 'Location not set'}
                     </p>
                     <h2 className="mt-1.5 truncate font-semibold tracking-[-0.02em] text-ink-900">
-                      {listing.status === 'published' ? (
-                        <Link href={href} target="_blank" className="hover:text-royal-700">
-                          {listing.title}
-                        </Link>
-                      ) : (
-                        listing.title
-                      )}
+                      <Link href={`/dashboard/admin/listings/${listing.id}/review`} className="hover:text-royal-700">
+                        {listing.title}
+                      </Link>
                     </h2>
                   </div>
 
@@ -117,15 +111,21 @@ export default async function AdminListingsPage() {
                   />
                 </dl>
 
-                {listing.status === 'published' ? (
-                  <div className="mt-4 border-t border-ink-100 pt-3">
+                <div className="mt-4 border-t border-ink-100 pt-3 flex items-center justify-between">
+                  {listing.status === 'published' ? (
                     <VerifyListingToggle propertyId={listing.id} verified={isVerified} />
-                  </div>
-                ) : (
-                  <p className="mt-4 border-t border-ink-100 pt-3 text-xs text-ink-500">
-                    A listing can be verified once it is live.
-                  </p>
-                )}
+                  ) : (
+                    <p className="text-xs text-ink-500">
+                      A listing can be verified once it is live.
+                    </p>
+                  )}
+                  <Link
+                    href={`/dashboard/admin/listings/${listing.id}/review`}
+                    className="text-sm font-semibold text-royal-600 hover:text-royal-700"
+                  >
+                    Review &amp; Manage
+                  </Link>
+                </div>
               </div>
             </li>
           );

@@ -6,8 +6,9 @@ import { Badge, EmptyState } from '@/components/ui/primitives';
 import { formatPrice, formatRelative } from '@/lib/format';
 import { ROLE_LABELS } from '@/lib/auth/permissions';
 import type { Role } from '@/lib/auth/session';
-import { ModerationDecision } from '@/modules/admin/components/ModerationDecision';
 import { getModerationQueue } from '@/modules/admin/queries';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = { title: 'Moderation', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -96,8 +97,12 @@ export default async function ModerationPage() {
                     </p>
                   )}
 
-                  <div className="mt-5 border-t border-ink-100 pt-4">
-                    <ModerationDecision propertyId={item.id} />
+                  <div className="mt-5 border-t border-ink-100 pt-4 flex items-center justify-end">
+                    <Button asChild>
+                      <Link href={`/dashboard/admin/listings/${item.id}/review`}>
+                        Review Listing
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </div>
