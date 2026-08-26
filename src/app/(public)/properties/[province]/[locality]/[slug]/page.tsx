@@ -122,6 +122,8 @@ export default async function PropertyPage({ params }: { params: Params }) {
             storagePath: image.storagePath,
             alt: image.alt,
             isCover: image.isCover,
+            is360: (image as any).is360,
+            hotspots: (image as any).hotspots,
           }))}
           title={property.title}
         />

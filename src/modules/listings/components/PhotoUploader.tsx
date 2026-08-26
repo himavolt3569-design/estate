@@ -1,14 +1,14 @@
 'use client';
 
 import imageCompression from 'browser-image-compression';
-import { Check, ImagePlus, Loader2, Star, Trash2, TriangleAlert } from 'lucide-react';
+import { Check, ImagePlus, Loader2, Star, Trash2, TriangleAlert, View } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
-import { deleteListingImage, registerListingImage, setListingCoverImage } from '../actions';
+import { deleteListingImage, registerListingImage, setListingCoverImage, toggleListingImage360 } from '../actions';
 import { MIN_IMAGES } from '../schema';
 
 export type UploadedImage = {
@@ -16,6 +16,7 @@ export type UploadedImage = {
   storagePath: string;
   url: string;
   isCover: boolean;
+  is360: boolean;
 };
 
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp'];
@@ -202,7 +203,7 @@ export function PhotoUploader({
             data: { publicUrl },
           } = supabase.storage.from('property-media').getPublicUrl(uploaded.card ?? uploaded.full);
 
-          added.push({ id: result.data.id, storagePath: uploaded.full, url: publicUrl, isCover });
+          added.push({ id: result.data.id, storagePath: uploaded.full, url: publicUrl, isCover, is360: false });
         }
 
         if (added.length > 0) {
@@ -256,6 +257,17 @@ export function PhotoUploader({
 
     onChange(images.map((item) => ({ ...item, isCover: item.id === image.id })));
     toast.success('Cover photo set.');
+  }
+
+  async function toggle360(image: UploadedImage) {
+    const next = !image.is360;
+    const result = await toggleListingImage360({ id: image.id, propertyId, is360: next });
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    onChange(images.map((item) => (item.id === image.id ? { ...item, is360: next } : item)));
+    toast.success(next ? 'Marked as 360° View.' : 'Removed 360° View mark.');
   }
 
   const short = Math.max(0, MIN_IMAGES - images.length);
@@ -402,6 +414,17 @@ export function PhotoUploader({
                     Make main
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => void toggle360(image)}
+                  className={cn(
+                    "rounded-md px-2 py-1 text-2xs font-semibold flex items-center gap-1",
+                    image.is360 ? "bg-royal-600 text-white hover:bg-royal-700" : "bg-white/95 text-ink-800 hover:bg-white"
+                  )}
+                >
+                  <View className="size-3" />
+                  360°
+                </button>
                 <button
                   type="button"
                   onClick={() => void remove(image)}

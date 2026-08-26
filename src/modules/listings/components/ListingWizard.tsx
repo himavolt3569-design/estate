@@ -7,6 +7,7 @@ import {
   Home,
   LandPlot,
   Loader2,
+  PenTool,
   Send,
   Store,
 } from 'lucide-react';
@@ -48,7 +49,12 @@ import {
 } from '../schema';
 import { emptyContactNumber, type ContactNumberDraft } from '../contact-numbers';
 import { ContactNumbersField } from './ContactNumbersField';
-import { PhotoUploader, type UploadedImage } from './PhotoUploader';
+import {
+  PhotoUploader,
+  type UploadedImage,
+} from '@/modules/listings/components/PhotoUploader';
+import { TourBuilder } from '@/modules/listings/components/TourBuilder';
+import { generateTitle, generateDescription } from '../generators';
 
 const LocationPickerMap = dynamic(() => import('@/components/map/LocationPickerMap'), {
   ssr: false,
@@ -132,9 +138,9 @@ const EMPTY: Draft = {
 const STEPS = [
   { key: 'what', en: 'What you are listing', ne: 'के राख्दै हुनुहुन्छ' },
   { key: 'where', en: 'Where it is', ne: 'कहाँ छ' },
-  { key: 'about', en: 'About the property', ne: 'विवरण' },
   { key: 'size', en: 'Size and rooms', ne: 'क्षेत्रफल र कोठा' },
-  { key: 'photos', en: 'Photos', ne: 'फोटो' },
+  { key: 'about', en: 'About the property', ne: 'विवरण' },
+  { key: 'photos', en: 'Photos & 3D', ne: 'फोटो र थ्रीडी' },
   { key: 'send', en: 'Check and send', ne: 'जाँचेर पठाउनुहोस्' },
 ] as const;
 
@@ -313,7 +319,7 @@ export function ListingWizard({
       if (!draft.locationId) found.locationId = 'Choose the district';
     }
 
-    if (index === 2) {
+    if (index === 3) {
       const title = draft.title.trim();
       const description = draft.description.trim();
       if (title.length < 10) found.title = 'Give it a name of at least 10 characters';
@@ -395,14 +401,14 @@ export function ListingWizard({
   async function next() {
     if (!validate(step)) return;
 
-    // Steps 0–2 collect everything a valid row needs, so the draft lands as
+    // Steps 0–3 collect everything a valid row needs, so the draft lands as
     // soon as they are done rather than at the very end.
-    if (step === 2) {
+    if (step === 3) {
       const id = await save({ silent: true });
       if (!id) return;
     }
 
-    if (step === 3 && propertyId) {
+    if (step > 3 && propertyId) {
       const saved = await save({ silent: true });
       if (!saved) return;
     }
@@ -633,7 +639,7 @@ export function ListingWizard({
               <Field
                 label="Nearest landmark or street"
                 htmlFor="addressLine"
-                hint="Optional — a school, chowk or temple people know"
+                hint="Optional: a school, chowk or temple people know"
               >
                 <AddressAutocomplete
                   value={draft.addressLine}
@@ -674,61 +680,6 @@ export function ListingWizard({
 
           {/* ---------------------------------------------------------- */}
           {step === 2 && (
-            <StepShell
-              title="Tell people about it"
-              subtitle="Write it the way you would describe it to a neighbour."
-            >
-              <Field
-                label="Give the listing a name"
-                htmlFor="title"
-                required
-                error={errors.title}
-                hint={`${draft.title.trim().length} / 140`}
-              >
-                <Input
-                  id="title"
-                  value={draft.title}
-                  maxLength={140}
-                  onChange={(event) => set('title', event.target.value)}
-                  placeholder="3 bedroom house with parking in Budhanilkantha"
-                />
-              </Field>
-
-              <Field
-                label="Describe the property"
-                htmlFor="description"
-                required
-                error={errors.description}
-                hint={`${draft.description.trim().length} / 5000`}
-              >
-                <Textarea
-                  id="description"
-                  rows={8}
-                  maxLength={5000}
-                  value={draft.description}
-                  onChange={(event) => set('description', event.target.value)}
-                  placeholder="How many rooms are there? What is nearby — school, bus, hospital? Is the road wide enough for a car? Which way does it face? Is the lalpurja clear?"
-                />
-              </Field>
-
-              {/* The prompts follow the deal. Somebody looking for a flat to
-                  rent does not care whether the lalpurja is clear of loans;
-                  they care whether the water runs in Chaitra. */}
-              <div className="rounded-xl border border-royal-100 bg-royal-50/60 p-4">
-                <p className="text-xs font-semibold tracking-wide text-royal-900 uppercase">
-                  {renting ? 'Things renters always ask' : 'Things buyers always ask'}
-                </p>
-                <ul className="mt-2.5 grid gap-1.5 text-sm text-royal-900/80 sm:grid-cols-2">
-                  {(renting ? RENTER_QUESTIONS : BUYER_QUESTIONS).map((question) => (
-                    <li key={question}>• {question}</li>
-                  ))}
-                </ul>
-              </div>
-            </StepShell>
-          )}
-
-          {/* ---------------------------------------------------------- */}
-          {step === 3 && (
             <StepShell
               title={
                 isLand(draft.category)
@@ -901,13 +852,93 @@ export function ListingWizard({
           )}
 
           {/* ---------------------------------------------------------- */}
+          {step === 3 && (
+            <StepShell
+              title="Tell people about it"
+              subtitle="Write it the way you would describe it to a neighbour."
+            >
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    const loc = draft.addressLine || districts.find(d => d.id === draft.locationId)?.name_en || '';
+                    set('title', generateTitle(draft, loc));
+                    set('description', generateDescription(draft, loc));
+                  }}
+                  className="gap-2 border-royal-200 text-royal-700 hover:bg-royal-50 hover:text-royal-800"
+                >
+                  <PenTool className="size-4" />
+                  Auto-fill description
+                </Button>
+              </div>
+
+              <Field
+                label="Give the listing a name"
+                htmlFor="title"
+                required
+                error={errors.title}
+                hint={`${draft.title.trim().length} / 140`}
+              >
+                <Input
+                  id="title"
+                  value={draft.title}
+                  maxLength={140}
+                  onChange={(event) => set('title', event.target.value)}
+                  placeholder="3 bedroom house with parking in Budhanilkantha"
+                />
+              </Field>
+
+              <Field
+                label="Describe the property"
+                htmlFor="description"
+                required
+                error={errors.description}
+                hint={`${draft.description.trim().length} / 5000`}
+              >
+                <Textarea
+                  id="description"
+                  rows={10}
+                  maxLength={5000}
+                  value={draft.description}
+                  onChange={(event) => set('description', event.target.value)}
+                  placeholder="How many rooms are there? What is nearby, like a school, bus stop, or hospital? Is the road wide enough for a car? Which way does it face? Is the lalpurja clear?"
+                />
+              </Field>
+
+              <div className="rounded-xl border border-royal-100 bg-royal-50/60 p-4">
+                <p className="text-xs font-semibold tracking-wide text-royal-900 uppercase">
+                  {renting ? 'Things renters always ask' : 'Things buyers always ask'}
+                </p>
+                <ul className="mt-2.5 grid gap-1.5 text-sm text-royal-900/80 sm:grid-cols-2">
+                  {(renting ? RENTER_QUESTIONS : BUYER_QUESTIONS).map((question) => (
+                    <li key={question}>• {question}</li>
+                  ))}
+                </ul>
+              </div>
+            </StepShell>
+          )}
+
+          {/* ---------------------------------------------------------- */}
           {step === 4 && (
             <StepShell
-              title="Add photos"
-              subtitle={`At least ${MIN_IMAGES}. Listings with clear photos get far more calls.`}
+              title="Photos & 3D"
+              subtitle={`At least ${MIN_IMAGES} photos. Listings with clear photos get far more calls.`}
             >
+              <div className="rounded-xl border border-royal-100 bg-royal-50/60 p-4">
+                <p className="text-sm font-medium text-royal-900">How to capture 360° photos</p>
+                <p className="mt-1 text-sm text-royal-800">
+                  Use your phone camera's built-in <b>Panorama</b> mode to capture a wide shot of the room. When you upload it here, mark it as <b>360° View</b>, and we will automatically turn it into an interactive 3D viewer!
+                </p>
+              </div>
+
               {propertyId ? (
-                <PhotoUploader propertyId={propertyId} images={images} onChange={setImages} />
+                <div className="space-y-12">
+                  <PhotoUploader propertyId={propertyId} images={images} onChange={setImages} />
+                  {images.some(i => i.is360) && (
+                    <TourBuilder propertyId={propertyId} images={images} onChange={setImages} />
+                  )}
+                </div>
               ) : (
                 <p className="rounded-xl border border-clay-200 bg-clay-50 px-4 py-3 text-sm text-clay-800">
                   Go back and finish the earlier steps first — photos are attached to the saved

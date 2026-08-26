@@ -243,6 +243,8 @@ export type PropertyDetail = {
     height: number | null;
     alt: string | null;
     isCover: boolean;
+    is360: boolean;
+    hotspots: any;
   }>;
   videos: Array<{ id: string; kind: string; externalId: string | null; url: string | null; title: string | null }>;
   floorPlans: Array<{ id: string; path: string }>;

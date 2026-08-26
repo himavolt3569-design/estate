@@ -14,6 +14,7 @@ export type GalleryImage = {
   alt: string | null;
   isCover: boolean;
   is360?: boolean;
+  hotspots?: any[];
 };
 
 /**
@@ -289,6 +290,11 @@ function Lightbox({
           <PanoramaViewer 
             src={current.renditions.full || `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-media/${current.storagePath}`}
             className="h-full w-full max-w-7xl"
+            hotspots={current.hotspots}
+            onHotspotClick={(targetId) => {
+              const targetIndex = images.findIndex((img) => img.id === targetId);
+              if (targetIndex !== -1) onIndex(targetIndex);
+            }}
           />
         ) : (
           <PropertyImage

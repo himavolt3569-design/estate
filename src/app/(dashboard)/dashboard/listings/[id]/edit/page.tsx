@@ -92,6 +92,7 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
               storagePath: image.storage_path,
               url: publicUrl(image.storage_path),
               isCover: image.is_cover,
+              is360: image.is_360,
             })),
           draft: {
             category: listing.category as never,

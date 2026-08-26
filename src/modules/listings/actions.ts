@@ -416,6 +416,7 @@ export const registerListingImage = authedAction({
     isCover: z.boolean().default(false),
     position: z.number().int().min(0).max(60).default(0),
     altText: z.string().max(200).optional(),
+    is360: z.boolean().default(false),
   }),
   permission: 'property.edit',
   handler: async ({ input, supabase }) => {
@@ -440,7 +441,8 @@ export const registerListingImage = authedAction({
         is_cover: input.isCover,
         position: input.position,
         alt_text: input.altText ?? null,
-      })
+        is_360: input.is360,
+      } as any)
       .select('id')
       .single();
 
@@ -448,6 +450,42 @@ export const registerListingImage = authedAction({
 
     revalidatePath(`/dashboard/listings/${input.propertyId}/edit`);
     return { id: data.id };
+  },
+});
+
+export const toggleListingImage360 = authedAction({
+  schema: z.object({ id: z.string().uuid(), propertyId: z.string().uuid(), is360: z.boolean() }),
+  permission: 'property.edit',
+  handler: async ({ input, supabase }) => {
+    const { error } = await supabase
+      .from('property_images')
+      .update({ is_360: input.is360 } as any)
+      .eq('id', input.id)
+      .eq('property_id', input.propertyId);
+
+    if (error) throw error;
+    revalidatePath(`/dashboard/listings/${input.propertyId}/edit`);
+    return { updated: true };
+  },
+});
+
+export const saveImageHotspots = authedAction({
+  schema: z.object({ 
+    id: z.string().uuid(), 
+    propertyId: z.string().uuid(), 
+    hotspots: z.any() // JSONB array of hotspots
+  }),
+  permission: 'property.edit',
+  handler: async ({ input, supabase }) => {
+    const { error } = await supabase
+      .from('property_images')
+      .update({ hotspots: input.hotspots } as any)
+      .eq('id', input.id)
+      .eq('property_id', input.propertyId);
+
+    if (error) throw error;
+    revalidatePath(`/dashboard/listings/${input.propertyId}/edit`);
+    return { updated: true };
   },
 });
 
