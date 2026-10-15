@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowDownUp, ArrowRight, Building2, Home as HomeIcon, LandPlot, MapPin, Search, ShieldCheck, Store, UserCheck, Warehouse } from 'lucide-react';
+import { ArrowDownUp, ArrowRight, Bell, Building2, Home as HomeIcon, LandPlot, MapPin, Search, ShieldCheck, Store, UserCheck, Warehouse } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input, Skeleton } from '@/components/ui/primitives';
@@ -95,7 +95,7 @@ export default function Home() {
   const clearFilters = () => applyFilters(emptySearch);
 
   return <>
-    <section className="relative isolate flex flex-col items-center justify-center pb-8 pt-10 sm:pt-14 lg:min-h-[650px] lg:pb-28">
+    <section className="relative isolate flex flex-col items-center justify-center pb-14 pt-10 sm:pt-14 lg:min-h-[500px] lg:pb-16">
       <div className="absolute inset-0 z-0">
         <Image src="/images/hero-bg.png" alt="" fill priority sizes="100vw" className="object-cover brightness-[0.8]" />
         <div className="absolute inset-0 bg-gradient-to-r from-royal-950/95 via-royal-950/65 to-royal-950/30" />
@@ -103,26 +103,23 @@ export default function Home() {
       </div>
       <div className="relative z-10 mx-auto grid w-full max-w-8xl items-center gap-2 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-5 lg:px-8">
         <div className="relative z-10 flex flex-col items-start">
+          <p className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-white"><Bell aria-hidden className="size-4" />{ui.savedSearchesTitle}</p>
           <h1 className={`max-w-2xl text-balance text-4xl font-bold tracking-tight text-white drop-shadow-md ${locale === 'ne' ? 'leading-[1.25] sm:text-5xl lg:text-[clamp(2.5rem,4vw,3.75rem)]' : 'sm:text-6xl lg:text-7xl'}`}>{ui.heroTitle}</h1>
           <p className="mt-5 max-w-xl text-base font-medium text-white drop-shadow-md sm:mt-6 sm:text-lg">{ui.heroIntro}</p>
-          <Button asChild size="lg" className="mt-7 h-13 px-7 text-base font-semibold sm:mt-8 sm:h-14 sm:px-8 sm:text-lg"><Link href="#rentals">{ui.exploreListings} <ArrowRight aria-hidden className="ml-2 size-5" /></Link></Button>
+          <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 sm:mt-8">
+            <Button asChild size="lg" className="h-13 px-7 text-base font-semibold sm:h-14 sm:px-8 sm:text-lg"><Link href="#saved-searches">{ui.seeMyMatches} <ArrowRight aria-hidden className="ml-2 size-5" /></Link></Button>
+            <Link href="#rentals" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white underline-offset-4 hover:underline">{ui.browseRentals} <ArrowRight aria-hidden className="size-4" /></Link>
+          </div>
         </div>
         <div className="relative mx-auto hidden w-full max-w-[520px] justify-center sm:my-0 sm:flex lg:translate-x-4"><HeroHomeScene /></div>
       </div>
-      <form role="search" onSubmit={event => { event.preventDefault(); jumpToListings(); }} className="relative z-20 mx-auto mt-4 w-full max-w-6xl px-4 sm:px-6 lg:absolute lg:-bottom-16 lg:mt-0 lg:px-8">
-        <div className="rounded-2xl border border-white/70 bg-white/95 p-4 shadow-floating backdrop-blur-xl lg:p-6">
-          <div className="mb-5 border-b border-ink-100 pb-2 text-sm font-semibold text-crimson-700">{ui.forRent}</div>
-          <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2 lg:grid-cols-[2fr_1.25fr_1.25fr_1fr]">
-            <label htmlFor="home-search" className="block text-sm font-medium text-ink-700">{ui.locationTitle}<div className="relative mt-1"><Input id="home-search" value={search} onChange={event => setSearch(event.target.value)} placeholder={ui.locationHint} className="pr-10" /><MapPin aria-hidden className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ink-400" /></div></label>
-            <div><label htmlFor="home-property-type" className="block text-sm font-medium text-ink-700">{ui.propertyType}</label><SelectMenu id="home-property-type" value={type} onValueChange={setType} options={typeOptions} className="mt-1" /></div>
-            <label htmlFor="home-max-rent" className="block text-sm font-medium text-ink-700">{ui.maxRent}<Input id="home-max-rent" value={max} onChange={event => setMax(event.target.value)} type="number" min="0" placeholder={ui.rentHint} className="mt-1" /></label>
-            <Button type="submit" size="lg" className="h-12 w-full"><Search aria-hidden className="size-4" /> {ui.search}</Button>
-          </div>
-        </div>
-      </form>
     </section>
 
-    <section aria-labelledby="featured-heading" className="mx-auto hidden max-w-8xl px-4 pt-10 sm:block sm:px-6 lg:px-8 lg:pt-28">
+    <section id="saved-searches" aria-label={ui.savedSearchesTitle} className="relative z-20 mx-auto -mt-6 max-w-8xl scroll-mt-28 px-4 sm:px-6 lg:px-8">
+      <SavedSearchPanel filters={filters} listings={items} listingsLoading={loading} listingsError={error} allowSave landing />
+    </section>
+
+    <section aria-labelledby="featured-heading" className="mx-auto hidden max-w-8xl px-4 pt-10 sm:block sm:px-6 lg:px-8">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3"><div><p className="label text-crimson-700">{ui.featured}</p><h2 id="featured-heading" className="mt-1 text-2xl font-semibold text-ink-900 sm:text-3xl">{ui.featuredTitle}</h2></div><Link href="#rentals" className="inline-flex items-center gap-1 text-sm font-semibold text-royal-700 hover:underline">{ui.seeAll} <ArrowRight aria-hidden className="size-4" /></Link></div>
       {featured ? <Link href={`/listing/${featured.id}`} className="group grid overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-royal-700 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
         <div className="relative aspect-[16/10] max-h-[300px] overflow-hidden bg-ink-100 md:aspect-auto md:min-h-[270px]">{featured.photoUrls?.[0] ? <img src={featured.photoUrls[0]} alt={featured.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" /> : <div className="flex h-full items-center justify-center text-ink-500">{ui.noPhoto}</div>}</div>
@@ -136,7 +133,16 @@ export default function Home() {
     </section>}
 
     <section id="rentals" aria-labelledby="listings-heading" className="mx-auto max-w-8xl scroll-mt-24 px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className="label text-crimson-700">{ui.listingsEyebrow}</p><h2 id="listings-heading" className="mt-2 text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">{ui.listingsTitle}</h2></div><Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex"><Link href="/dashboard?tab=post">{ui.listPlace} <ArrowRight aria-hidden className="size-4" /></Link></Button></div>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className="label text-ink-500">{ui.browseEyebrow}</p><h2 id="listings-heading" className="mt-2 text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">{ui.browseRentals}</h2><p className="mt-2 max-w-xl text-sm text-ink-500">{ui.browseIntro}</p></div><Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex"><Link href="/dashboard?tab=post">{ui.listPlace} <ArrowRight aria-hidden className="size-4" /></Link></Button></div>
+
+      <form role="search" aria-label={ui.browseRentals} onSubmit={event => { event.preventDefault(); jumpToListings(); }} className="mb-5 rounded-2xl border border-ink-200 bg-white p-4 sm:p-5">
+        <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2 lg:grid-cols-[2fr_1.25fr_1.25fr_1fr]">
+          <label htmlFor="home-search" className="block text-sm font-medium text-ink-700">{ui.locationTitle}<div className="relative mt-1"><Input id="home-search" value={search} onChange={event => setSearch(event.target.value)} placeholder={ui.locationHint} className="pr-10" /><MapPin aria-hidden className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ink-400" /></div></label>
+          <div><label htmlFor="home-property-type" className="block text-sm font-medium text-ink-700">{ui.propertyType}</label><SelectMenu id="home-property-type" value={type} onValueChange={setType} options={typeOptions} className="mt-1" /></div>
+          <label htmlFor="home-max-rent" className="block text-sm font-medium text-ink-700">{ui.maxRent}<Input id="home-max-rent" value={max} onChange={event => setMax(event.target.value)} type="number" min="0" placeholder={ui.rentHint} className="mt-1" /></label>
+          <Button type="submit" variant="royal" size="lg" className="h-12 w-full"><Search aria-hidden className="size-4" /> {ui.browseRentals}</Button>
+        </div>
+      </form>
 
       <div className="mb-5 grid gap-3 rounded-2xl border border-ink-100 bg-ink-50/70 px-4 py-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:px-5">
         <div className="flex flex-wrap items-center gap-3"><p className="text-sm font-semibold text-ink-800">{loading ? ui.loading : `${filtered.length} ${ui.found}`}</p>{filtersActive && <button type="button" onClick={clearFilters} className="text-xs font-semibold text-crimson-700 underline underline-offset-2 hover:text-crimson-900">{ui.clearFilters}</button>}</div>
@@ -144,7 +150,6 @@ export default function Home() {
       </div>
 
       <details className="mb-5 rounded-xl border border-ink-100 bg-white p-4"><summary className="cursor-pointer text-sm font-semibold text-royal-800">{ui.moreFilters}</summary><div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><label className="text-sm font-medium text-ink-700">{ui.minRent}<Input value={min} onChange={event => setMin(event.target.value)} type="number" min="0" placeholder={ui.rentHint} className="mt-1" /></label><div><label className="text-sm font-medium text-ink-700" htmlFor="filter-furnishing">{ui.furnishing}</label><SelectMenu id="filter-furnishing" value={furnishing} onValueChange={setFurnishing} options={[{value:'',label:ui.anyFurnishing},{value:'furnished',label:ui.furnished},{value:'semiFurnished',label:ui.semiFurnished},{value:'unfurnished',label:ui.unfurnished}]} className="mt-1" /></div><label className="text-sm font-medium text-ink-700">{ui.facilityContains}<Input value={facility} onChange={event => setFacility(event.target.value)} placeholder={ui.facilityHint} className="mt-1" /></label><label className="flex items-center gap-2 self-end rounded-lg border border-ink-100 px-3 py-3 text-sm font-medium"><input type="checkbox" checked={verifiedOnly} onChange={event => setVerifiedOnly(event.target.checked)} /> {ui.verifiedOnly}</label></div></details>
-      <div className="mb-7"><SavedSearchPanel filters={filters} listings={items} listingsLoading={loading} listingsError={error} allowSave /></div>
 
       {error && <div role="alert" className="mb-5 rounded-xl border border-clay-200 bg-clay-50 px-4 py-3 text-sm text-clay-700">Could not load listings: {error}</div>}
       {loading ? <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3" aria-label={ui.loading}>{Array.from({ length: 6 }, (_, index) => <div key={index} className="overflow-hidden rounded-2xl border border-ink-100 bg-white"><Skeleton className="listing-card-media rounded-none" /><div className="space-y-3 p-5"><Skeleton className="h-5 w-3/4" /><Skeleton className="h-4 w-1/2" /><Skeleton className="h-6 w-1/3" /></div></div>)}</div>
