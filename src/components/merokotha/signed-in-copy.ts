@@ -3,6 +3,9 @@
 import { useSiteLanguage } from './site-language';
 
 const nepali: Record<string, string> = {
+  'Save your area, budget and property type once. See matching rentals and what’s new each time you return.': 'आफूलाई चाहिएको क्षेत्र, बजेट र घरजग्गाको प्रकार एकपटक सेभ गर्नुहोस्। फर्कँदा मिल्ने र नयाँ थपिएका विज्ञापन हेर्नुहोस्।',
+  'Keep your searches in one place. New matches are highlighted when you return.': 'आफ्ना खोज एकै ठाउँमा राख्नुहोस्। फर्कँदा नयाँ मिलान छुट्टै देखिन्छन्।',
+  'Sign in to save a search': 'खोज सेभ गर्न साइन इन गर्नुहोस्',
   'Live matches for your exact criteria. Open a search to explore its rentals.': 'तपाईंका मापदण्डसँग मिल्ने विज्ञापन प्रत्यक्ष अद्यावधिक हुन्छन्। विज्ञापन हेर्न खोज खोल्नुहोस्।',
   'Manage searches': 'खोज व्यवस्थापन गर्नुहोस्',
   'Create a saved search': 'नयाँ खोज सेभ गर्नुहोस्',

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { addDoc, collection, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { ArrowRight, Bell, BookmarkPlus, Search, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import { Skeleton, Surface } from '@/components/ui/primitives';
 import { db } from '@/lib/firebase/client';
 import { useDocs } from '@/lib/firebase/hooks';
@@ -24,11 +25,12 @@ type Props = {
   allowSave?: boolean;
   showResults?: boolean;
   activeSearchId?: string;
+  landing?: boolean;
 };
 
-export function SavedSearchPanel({ filters = emptySearch, listings, listingsLoading = false, listingsError = '', allowSave = false, showResults = false, activeSearchId = '' }: Props) {
+export function SavedSearchPanel({ filters = emptySearch, listings, listingsLoading = false, listingsError = '', allowSave = false, showResults = false, activeSearchId = '', landing = false }: Props) {
   const tr = useSignedInText();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [deletingId, setDeletingId] = useState('');
@@ -42,7 +44,19 @@ export function SavedSearchPanel({ filters = emptySearch, listings, listingsLoad
   const searches = [...saved.items].sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt) || a.name.localeCompare(b.name));
   const active = searches.find(item => item.id === activeSearchId);
 
-  if (!user) return allowSave ? <p className="text-sm text-ink-500">{tr('Sign in to save this search and see new matches here.')}</p> : null;
+  const panelClassName = `overflow-hidden p-5 sm:p-6 ${landing ? 'border-royal-200 border-t-4 border-t-crimson-600 shadow-lg' : ''}`;
+  const introduction = <div className="flex items-start gap-3">
+    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-royal-50 text-royal-700"><Bell aria-hidden className="size-5" /></span>
+    <div><h2 className={`font-semibold text-ink-900 ${landing ? 'text-xl sm:text-2xl' : 'text-lg'}`}>{tr('Saved searches & new matches')}</h2><p className="mt-1 max-w-xl text-sm text-ink-500">{tr(landing ? 'Save your area, budget and property type once. See matching rentals and what’s new each time you return.' : 'Live matches for your exact criteria. Open a search to explore its rentals.')}</p></div>
+  </div>;
+
+  if (!user) return landing ? <Surface className={panelClassName}>
+    {introduction}
+    {authLoading ? <div aria-label={tr('Loading saved searches…')} className="mt-5"><Skeleton className="h-12 w-full" /></div> : <div className="mt-5 rounded-xl bg-royal-50/60 p-4 sm:flex sm:items-center sm:justify-between sm:gap-6">
+      <p className="max-w-lg text-sm text-ink-600">{tr('Keep your searches in one place. New matches are highlighted when you return.')}</p>
+      <Button asChild className="mt-4 h-auto min-h-11 w-full whitespace-normal py-3 text-center sm:mt-0 sm:w-auto sm:shrink-0"><Link href="/sign-in?next=%2F%23saved-searches"><BookmarkPlus aria-hidden className="size-4" />{tr('Sign in to save a search')}</Link></Button>
+    </div>}
+  </Surface> : allowSave ? <p className="text-sm text-ink-500">{tr('Sign in to save this search and see new matches here.')}</p> : null;
 
   const save = async (name: string, criteria: SearchFilters) => {
     if (busy || saved.loading || saved.error) return;
@@ -79,23 +93,20 @@ export function SavedSearchPanel({ filters = emptySearch, listings, listingsLoad
   };
 
   return <div className="space-y-6">
-    <Surface className="overflow-hidden p-5 sm:p-6">
+    <Surface className={panelClassName}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-royal-50 text-royal-700"><Bell aria-hidden className="size-5" /></span>
-          <div><h2 className="text-lg font-semibold text-ink-900">{tr('Saved searches & new matches')}</h2><p className="mt-1 max-w-xl text-sm text-ink-500">{tr('Live matches for your exact criteria. Open a search to explore its rentals.')}</p></div>
-        </div>
+        {introduction}
         {!showResults && <Link href="/dashboard?tab=searches" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-royal-700 hover:underline">{tr('Manage searches')} <ArrowRight aria-hidden className="size-4" /></Link>}
       </div>
 
-      {allowSave && <details ref={creator} className="mt-5 rounded-xl border border-ink-200 bg-ink-50/40 p-4" open={showResults && !saved.loading && !searches.length ? true : undefined}>
+      {allowSave && <details ref={creator} className="mt-5 rounded-xl border border-ink-200 bg-ink-50/40 p-4" open={(showResults || landing) && !saved.loading && !searches.length ? true : undefined}>
         <summary className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-royal-800"><BookmarkPlus aria-hidden className="size-4" />{tr('Create a saved search')}</summary>
         <div className="mt-4"><SavedSearchForm key={formVersion} initialFilters={filters} listings={available} loading={loading} error={error} busy={busy || saved.loading || Boolean(saved.error)} onSubmit={save} /></div>
       </details>}
 
       {saved.loading && <div aria-label={tr('Loading saved searches…')} className="mt-5 space-y-3"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div>}
       {saved.error && <p role="alert" className="mt-4 text-sm text-clay-700">{tr('Could not load saved searches')}: {saved.error}</p>}
-      {!saved.loading && !saved.error && !searches.length && <div className="mt-5 rounded-xl border border-dashed border-ink-200 p-5 text-center"><Search aria-hidden className="mx-auto size-6 text-ink-400" /><p className="mt-2 text-sm font-semibold">{tr('No saved searches yet.')}</p><p className="mt-1 text-sm text-ink-500">{tr('Save an area, budget, or property type to keep its matches in one place.')}</p></div>}
+      {!saved.loading && !saved.error && !searches.length && !(landing && allowSave) && <div className="mt-5 rounded-xl border border-dashed border-ink-200 p-5 text-center"><Search aria-hidden className="mx-auto size-6 text-ink-400" /><p className="mt-2 text-sm font-semibold">{tr('No saved searches yet.')}</p><p className="mt-1 text-sm text-ink-500">{tr('Save an area, budget, or property type to keep its matches in one place.')}</p></div>}
       {!saved.error && Boolean(searches.length) && <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {searches.map(item => {
           const criteria = savedSearchFilters(item);
