@@ -17,6 +17,7 @@
     "test:rules:saved-searches": "node scripts/test-saved-search-rules.mjs",
     "test:browser:saved-searches": "node scripts/test-saved-search-browser.mjs",
     "test:browser:listing-duplicates": "node scripts/test-listing-duplicates-browser.mjs",
+    "test:browser:listing-autofill": "node scripts/test-listing-autofill-browser.mjs",
     "test:watch": "vitest",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"supabase/**/*.sql\"",
     "db:start": "supabase start",

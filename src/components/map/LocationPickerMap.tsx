@@ -106,12 +106,17 @@ export default function LocationPickerMap({
     mapRef.current = map;
 
     // Handle container resizing smoothly
-    const ro = new ResizeObserver(() => map.invalidateSize());
+    let disposed = false;
+    const resize = () => { if (!disposed) map.invalidateSize(); };
+    const ro = new ResizeObserver(resize);
     ro.observe(containerRef.current);
-    setTimeout(() => map.invalidateSize(), 200);
-    setTimeout(() => map.invalidateSize(), 800);
+    const firstResize = setTimeout(resize, 200);
+    const finalResize = setTimeout(resize, 800);
 
     return () => {
+      disposed = true;
+      clearTimeout(firstResize);
+      clearTimeout(finalResize);
       ro.disconnect();
       map.remove();
       mapRef.current = null;
