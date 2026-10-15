@@ -1,5 +1,5 @@
 {
-  "name": "kitta",
+  "name": "estate-merokotha-website",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,6 +14,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:rules:saved-searches": "node scripts/test-saved-search-rules.mjs",
+    "test:browser:saved-searches": "node scripts/test-saved-search-browser.mjs",
     "test:watch": "vitest",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"supabase/**/*.sql\"",
     "db:start": "supabase start",
@@ -60,6 +62,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.43.0",
+    "firebase": "^12.19.0",
     "gsap": "^3.15.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.560.0",

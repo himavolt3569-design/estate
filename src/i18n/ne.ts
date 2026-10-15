@@ -20,6 +20,7 @@ export const ne: Dictionary = {
     commercial: 'पसल र अफिस',
     signIn: 'लगइन',
     listProperty: 'आफ्नो घरजग्गा राख्नुहोस्',
+    listPropertyShort: 'राख्नुहोस्',
     dashboard: 'मेरो खाता',
     browseListings: 'घरजग्गा हेर्नुहोस्',
     home: 'कित्ता होम',

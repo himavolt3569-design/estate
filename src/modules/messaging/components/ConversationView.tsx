@@ -143,7 +143,7 @@ export function ConversationView({
     : null;
 
   return (
-    <div className="flex h-[calc(100dvh-11rem)] flex-col rounded-2xl border border-ink-100 bg-white shadow-soft">
+    <div className="flex h-[calc(100dvh-13rem)] flex-col rounded-2xl border border-ink-100 bg-white shadow-soft lg:h-[calc(100dvh-11rem)]">
       {/* -------------------- Header with the listing preview -------------------- */}
       <header className="shrink-0 border-b border-ink-100 p-4">
         <div className="flex items-center gap-3">

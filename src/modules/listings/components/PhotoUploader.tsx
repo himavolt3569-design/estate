@@ -368,8 +368,8 @@ export function PhotoUploader({
           <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0 text-marigold-600" />
           <span>
             {images.length === 0
-              ? `Add ${MIN_IMAGES} photos to send this for checking.`
-              : `${images.length} saved. Add ${short} more ${short === 1 ? 'photo' : 'photos'} to send this for checking.`}
+              ? `Add ${MIN_IMAGES} photos before this can go live.`
+              : `${images.length} saved. Add ${short} more ${short === 1 ? 'photo' : 'photos'} before this can go live.`}
             <span className="mt-0.5 block text-xs text-marigold-900/75">
               Each one is saved as soon as it uploads. You can stop here and add the rest later.
             </span>
@@ -380,7 +380,7 @@ export function PhotoUploader({
           <Check aria-hidden className="mt-0.5 size-4 shrink-0 text-emerald-600" />
           <span>
             {images.length} {images.length === 1 ? 'photo' : 'photos'} saved — that is enough to
-            send it for checking.
+            put it live.
             <span className="mt-0.5 block text-xs text-emerald-900/75">
               Add more whenever you like; they go on the end of the ones already here.
             </span>

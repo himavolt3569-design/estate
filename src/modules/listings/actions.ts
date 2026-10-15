@@ -307,14 +307,21 @@ export const updateListing = authedAction({
 /* ========================================================================== */
 
 /**
- * Sends a draft to the moderation queue.
+ * Puts a finished draft live.
+ *
+ * This used to move the listing to `pending_review` and wait for an admin. That
+ * gate is gone (migration 0032): a seller who has filled the form in publishes
+ * their own listing, and moderation is now something that happens to a live
+ * listing rather than a queue in front of it. The verified seal is unaffected —
+ * "live" and "checked by our team" were always two separate claims, and only
+ * the second one still needs a person.
  *
  * The photo minimum and the cover-image rule live in a trigger, so they are
  * checked here first only to produce a sentence a seller can act on rather than
  * a raised exception. The trigger remains the thing that actually enforces it,
  * and MIN_IMAGES is the one number both sides read.
  */
-export const submitListingForReview = authedAction({
+export const publishListing = authedAction({
   schema: z.object({ id: z.string().uuid() }),
   permission: 'property.edit',
   handler: async ({ input, supabase }) => {
@@ -326,21 +333,25 @@ export const submitListingForReview = authedAction({
     if ((count ?? 0) < MIN_IMAGES) {
       throw Object.assign(
         new Error(
-          `Add at least ${MIN_IMAGES} photos before sending this for checking. You have ${count ?? 0}.`,
+          `Add at least ${MIN_IMAGES} photos before putting this live. You have ${count ?? 0}.`,
         ),
         { code: '23514' },
       );
     }
 
+    // published_at and expires_at are set by tg_properties_require_media(), so
+    // they are not written here — one place decides when a listing went live.
     const { error } = await supabase
       .from('properties')
-      .update({ status: 'pending_review' })
+      .update({ status: 'published' })
       .eq('id', input.id);
 
     if (error) throw error;
 
     revalidatePath('/dashboard/listings');
-    return { submitted: true };
+    revalidatePath('/search');
+    revalidatePath('/');
+    return { published: true };
   },
 });
 

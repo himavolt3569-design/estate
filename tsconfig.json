@@ -46,6 +46,9 @@
   "exclude": [
     "node_modules",
     ".next",
-    "out"
+    "**/.next-saved-search-*/**",
+    "out",
+    "src/legacy-app",
+    "src/legacy-proxy.ts"
   ]
 }

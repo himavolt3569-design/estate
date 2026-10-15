@@ -7,6 +7,7 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { SelectMenu } from '@/components/ui/select-menu';
 import type { Dictionary } from '@/i18n';
+import { useSiteLanguage } from '@/components/merokotha/site-language';
 
 /*
  * A working land-unit converter.
@@ -64,6 +65,7 @@ function toBighaChain(sqm: number) {
 const nf = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
 
 export function AreaConverter({ t }: { t: Dictionary['converter'] }) {
+  const { ui } = useSiteLanguage();
   const [amount, setAmount] = React.useState('4');
   const [unit, setUnit] = React.useState<Unit>('aana');
 
@@ -76,9 +78,6 @@ export function AreaConverter({ t }: { t: Dictionary['converter'] }) {
 
   // A ±15% band around the converted size, so the result is a way into the
   // listings rather than a dead end.
-  const searchHref = `/search?category=land&area_min=${Math.round(sqm * 0.85)}&area_max=${Math.round(
-    sqm * 1.15,
-  )}`;
 
   return (
     <div className="thread-top overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-raised">
@@ -140,8 +139,8 @@ export function AreaConverter({ t }: { t: Dictionary['converter'] }) {
           </div>
 
           <Button asChild variant="secondary" size="sm" className="mt-6 w-full sm:w-auto">
-            <Link href={searchHref}>
-              {t.findSimilar} <ArrowRight aria-hidden />
+            <Link href="/#rentals">
+              {ui.browse} <ArrowRight aria-hidden />
             </Link>
           </Button>
         </div>

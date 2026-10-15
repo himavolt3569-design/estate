@@ -30,18 +30,12 @@ const securityHeaders = [
       'interest-cohort=()',
     ].join(', '),
   },
-  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
 ];
 
-const supabaseHost = (() => {
-  try {
-    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://localhost:54321').hostname;
-  } catch {
-    return 'localhost';
-  }
-})();
-
 const nextConfig: NextConfig = {
+  // Isolated browser checks can run alongside the normal development server.
+  distDir: process.env.MEROKOTHA_TEST_DIST_DIR || '.next',
   reactStrictMode: true,
   poweredByHeader: false,
 
@@ -70,10 +64,7 @@ const nextConfig: NextConfig = {
     // client-side pipeline (docs/01-architecture.md §6), so next/image is used
     // only for the few assets that genuinely benefit from it.
     formats: ['image/avif', 'image/webp'],
-    remotePatterns: [
-      { protocol: 'https', hostname: supabaseHost, pathname: '/storage/v1/object/public/**' },
-      { protocol: 'http', hostname: 'localhost', port: '54321', pathname: '/storage/v1/object/public/**' },
-    ],
+    remotePatterns: [],
   },
 
   async headers() {
@@ -94,12 +85,6 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  async redirects() {
-    return [
-      // The canonical listing URL carries its province and district for SEO.
-      { source: '/property/:slug', destination: '/properties/:slug', permanent: true },
-    ];
-  },
 };
 
 export default nextConfig;

@@ -1,0 +1,153 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ────────────────────────────────────────────────────────────
+    // HELPER FUNCTIONS
+    // ────────────────────────────────────────────────────────────
+
+    // Is the request from a signed-in user?
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // FIXED: null-safe — request.auth.uid on a signed-out request
+    // errors, so isAuth() must be checked first.
+    function isMe(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    // Is the caller a superAdmin? (used as a bypass for moderation)
+    function isStorageAdmin() {
+      return isAuth() &&
+        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'superAdmin';
+    }
+
+    // Is the caller the owner of this listing?
+    // (upload flow creates the Firestore doc before photos upload,
+    // so the doc always exists at upload time)
+    function isListingOwner(listingId) {
+      return isAuth() &&
+        firestore.exists(/databases/(default)/documents/listings/$(listingId)) &&
+        firestore.get(/databases/(default)/documents/listings/$(listingId)).data.ownerId == request.auth.uid;
+    }
+
+    // Is the caller a participant of this chat?
+    // (chat thread screen only opens for existing chats)
+    function isChatParticipant(chatId) {
+      return isAuth() &&
+        firestore.exists(/databases/(default)/documents/chats/$(chatId)) && (
+        firestore.get(/databases/(default)/documents/chats/$(chatId)).data.ownerId == request.auth.uid ||
+        firestore.get(/databases/(default)/documents/chats/$(chatId)).data.customerId == request.auth.uid);
+    }
+
+    // Is the file a valid image under 5MB?
+    function isValidImage() {
+      return request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // LISTING PHOTOS
+    // Path: listings/{listingId}/{fileName}
+    // ────────────────────────────────────────────────────────────
+
+    match /listings/{listingId}/{fileName} {
+
+      // Anyone can read listing photos
+      // (public so landing page can show photos to non-logged-in visitors)
+      allow read: if true;
+
+      // FIXED: previously ANY signed-in user could upload into ANY
+      // listing folder and overwrite others' photos ("ownership enforced
+      // at Firestore level" was not true for Storage). Now only the
+      // listing owner (or admin) can upload. Split create/update from
+      // delete: request.resource is null on delete, so isValidImage()
+      // must never be evaluated for deletes.
+      allow create, update: if (isListingOwner(listingId) || isStorageAdmin()) && isValidImage();
+
+      // Only the listing owner (or admin) can delete listing photos
+      allow delete: if isListingOwner(listingId) || isStorageAdmin();
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // USER PROFILE PHOTOS
+    // Path: users/{userId}/{fileName}
+    // ────────────────────────────────────────────────────────────
+
+    match /users/{userId}/{fileName} {
+
+      // Anyone signed in can view profile photos
+      allow read: if isAuth();
+
+      // Only the user themselves can upload their profile photo
+      // Must be a valid image under 5MB
+      allow create, update: if isMe(userId) && isValidImage();
+
+      // Only the user themselves can delete their profile photo
+      allow delete: if isMe(userId);
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // CHAT PHOTOS
+    // Path: chats/{chatId}/{fileName}
+    // ────────────────────────────────────────────────────────────
+
+    match /chats/{chatId}/{fileName} {
+
+      // Only the two participants (or admin) can read.
+      allow read: if isChatParticipant(chatId) || isStorageAdmin();
+
+      // HARDENED: uploads must be stamped with the uploader's uid, and a
+      // participant can no longer overwrite or delete the OTHER participant's
+      // attachment just by knowing the chat id. Previously `create, update`
+      // and `delete` were participant-wide, so either side could tamper with
+      // the other's media. Legacy photos (uploaded before this metadata
+      // existed) have no `uploadedBy` and are therefore immutable
+      // client-side — which matches the app, which never edits or removes
+      // chat photos.
+      allow create: if (isChatParticipant(chatId) || isStorageAdmin())
+        && isValidImage()
+        && request.resource.metadata.uploadedBy == request.auth.uid;
+
+      allow update: if isStorageAdmin()
+        || (isChatParticipant(chatId)
+            && resource.metadata.uploadedBy == request.auth.uid
+            && request.resource.metadata.uploadedBy == request.auth.uid);
+
+      allow delete: if isStorageAdmin()
+        || (isChatParticipant(chatId) && resource.metadata.uploadedBy == request.auth.uid);
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // AD BANNERS
+    // Path: ads/{fileName}
+    // ────────────────────────────────────────────────────────────
+
+    match /ads/{fileName} {
+
+      // Public so landing page can show banners to logged-out visitors
+      allow read: if true;
+
+      // Only superAdmin can upload/delete banner images
+      allow create, update: if isStorageAdmin() && isValidImage();
+      allow delete: if isStorageAdmin();
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // CATCH-ALL DENY
+    // Anything not matched above is denied
+    // ────────────────────────────────────────────────────────────
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,722 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ────────────────────────────────────────────────────────────
+    // HELPER FUNCTIONS
+    // ────────────────────────────────────────────────────────────
+
+    // Is request coming from any signed-in user?
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Is the signed-in user this specific uid?
+    function isMe(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    // Cached read of the caller's user doc (exists-guard first:
+    // get() on a missing doc errors, so every role check below
+    // requires exists() before reading .data).
+    function callerExists() {
+      return isAuth() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Is the signed-in user a superAdmin?
+    function isAdmin() {
+      return callerExists() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superAdmin';
+    }
+
+    // Is the signed-in user NOT banned?
+    function notBanned() {
+      return callerExists() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isBanned', false) == false;
+    }
+
+    // Is the signed-in user an admin-verified agent?
+    // Agent privilege derives from `agentStatus` (set only via an approved
+    // application), never from the legacy `role` field. Only verified agents
+    // may post rooms on behalf of owners.
+    function isVerifiedAgent() {
+      return notBanned() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('agentStatus', 'none') == 'verified';
+    }
+
+    // Does the update only touch the listed fields?
+    function onlyFields(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+
+    // Tours remain optional on older Android records. Panorama URLs must point
+    // into this rental's existing public Storage folder; nested hotspot data
+    // is validated and safely rendered by the tour reader.
+    function validTourScene(scene, listingId) {
+      return scene is map
+        && scene.keys().hasAll(['id', 'title', 'imageUrl', 'hotspots'])
+        && scene.keys().hasOnly(['id', 'title', 'imageUrl', 'hotspots'])
+        && scene.id is string && scene.id.size() > 0 && scene.id.size() <= 80
+        && scene.title is string && scene.title.size() > 0 && scene.title.size() <= 80
+        && scene.imageUrl is string && scene.imageUrl.size() <= 2000
+        && (scene.imageUrl.matches('https://firebasestorage[.]googleapis[.]com/v0/b/[^/]+/o/listings%2F' + listingId + '%2F.*')
+          || (isAuth() && request.auth.token.get('aud', '') == 'demo-merokotha-feature-tests'
+            && scene.imageUrl.matches('http://127[.]0[.]0[.]1:9198/v0/b/demo-merokotha-feature-tests[.]appspot[.]com/o/listings%2F' + listingId + '%2F.*')))
+        && scene.hotspots is list && scene.hotspots.size() <= 12;
+    }
+    function validTour(scenes, listingId) {
+      return scenes is list && scenes.size() <= 8
+        && (scenes.size() <= 0 || validTourScene(scenes[0], listingId))
+        && (scenes.size() <= 1 || validTourScene(scenes[1], listingId))
+        && (scenes.size() <= 2 || validTourScene(scenes[2], listingId))
+        && (scenes.size() <= 3 || validTourScene(scenes[3], listingId))
+        && (scenes.size() <= 4 || validTourScene(scenes[4], listingId))
+        && (scenes.size() <= 5 || validTourScene(scenes[5], listingId))
+        && (scenes.size() <= 6 || validTourScene(scenes[6], listingId))
+        && (scenes.size() <= 7 || validTourScene(scenes[7], listingId));
+    }
+
+    // Is the current user a participant of a given chat?
+    function isChatParticipant(chatId) {
+      return isChatOwnerSide(chatId) || isChatCustomerSide(chatId);
+    }
+
+    // The lister-side participant. Owners AND agents occupy the `ownerId`
+    // slot, so this must be compared against the stored id, never against the
+    // caller's role string.
+    function isChatOwnerSide(chatId) {
+      return isAuth() &&
+        exists(/databases/$(database)/documents/chats/$(chatId)) &&
+        get(/databases/$(database)/documents/chats/$(chatId)).data.ownerId == request.auth.uid;
+    }
+
+    // The enquirer-side participant.
+    function isChatCustomerSide(chatId) {
+      return isAuth() &&
+        exists(/databases/$(database)/documents/chats/$(chatId)) &&
+        get(/databases/$(database)/documents/chats/$(chatId)).data.customerId == request.auth.uid;
+    }
+
+    // Unread accounting is per-side:
+    //   * a participant may always clear their OWN counter (marking read);
+    //   * a participant may only RAISE the other side's counter, and only on
+    //     a genuine send (the summary is attributed to them in the same write).
+    // This stops a malicious participant from inflating the other party's
+    // badge, or zeroing it to hide messages.
+    function chatUnreadUpdateAllowed(chatId) {
+      let ownerBefore = resource.data.get('unreadOwner', 0);
+      let ownerAfter  = request.resource.data.get('unreadOwner', 0);
+      let custBefore  = resource.data.get('unreadCustomer', 0);
+      let custAfter   = request.resource.data.get('unreadCustomer', 0);
+      let senderNow   = request.resource.data.get('lastMessageSenderId', null);
+      let lastActivityNow  = request.resource.data.get('lastMessageAt', null);
+      let lastActivityPrev = resource.data.get('lastMessageAt', null);
+      // A counter may rise only alongside a newly authored activity timestamp.
+      // Comparing the previous sender is not enough: the same person can and
+      // should send twice in a row, and each genuine send gets a newer server
+      // timestamp.
+      let isSending   = senderNow == request.auth.uid
+        && lastActivityNow != null
+        && lastActivityNow != lastActivityPrev
+        && (lastActivityPrev == null || lastActivityNow > lastActivityPrev);
+      return isChatOwnerSide(chatId)
+        ? (ownerAfter <= ownerBefore
+            && (custAfter == custBefore || (isSending && custAfter > custBefore)))
+        : (custAfter <= custBefore
+            && (ownerAfter == ownerBefore || (isSending && ownerAfter > ownerBefore)));
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // USERS
+    // /users/{userId}
+    // ────────────────────────────────────────────────────────────
+
+    match /users/{userId} {
+
+      // Full profile documents contain phone, email, push tokens and
+      // moderation flags — readable only by the owner and admins.
+      // Display names/photos for other users come from `usersPublic`
+      // below (and from denormalized chat/listing fields).
+      allow get: if isMe(userId) || isAdmin();
+      allow list: if isAdmin();
+
+      // A user can only create their OWN document
+      // Role must be owner, customer, or agent — cannot self-assign superAdmin.
+      // Agents self-register as unverified; only an admin-verified agent
+      // (isVerified == true) can post listings.
+      allow create: if isMe(userId)
+        && request.resource.data.keys().hasAll(['name', 'phone', 'role', 'createdAt'])
+        && request.resource.data.role in ['owner', 'customer', 'agent'];
+
+      // FIXED: self-update is limited to profile fields only.
+      // Previously any user could set role='superAdmin', clear isBanned,
+      // or change phone/createdAt on their own doc (privilege escalation).
+      // `agentStatus` is likewise immutable self-side: only an admin
+      // decision (application approval) may change it.
+      // superAdmin can update any user (ban/unban, role and agentStatus).
+      allow update: if isAdmin();
+      allow update: if isMe(userId) && notBanned()
+        && onlyFields(['name', 'location', 'photoUrl', 'contactEmail', 'agentBio', 'fcmToken', 'fcmTokens', 'role', 'updatedAt'])
+        && request.resource.data.role in ['owner', 'customer', 'agent']
+        && request.resource.data.phone == resource.data.phone
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.get('agentStatus', 'none') == resource.data.get('agentStatus', 'none');
+
+      // Only superAdmin can delete user documents
+      allow delete: if isAdmin();
+
+      // ── Favourites sub-collection ──────────────────────────
+      // /users/{userId}/favourites/{listingId}
+      match /favourites/{listingId} {
+        // Only the user themselves (or admin) can read/write their favourites
+        allow read, write: if isMe(userId) || isAdmin();
+      }
+
+      // Saved searches are private to their account, including superAdmins.
+      // Parent user-document permissions do not cover subcollections.
+      match /savedSearches/{searchId} {
+        allow get, list: if isMe(userId);
+        allow create: if isMe(userId) && notBanned()
+          && request.resource.data.keys().hasAll(['name', 'filters', 'createdAt', 'lastViewedAt'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 80;
+        allow update, delete: if isMe(userId) && notBanned();
+      }
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // PUBLIC PROFILES
+    // /usersPublic/{userId} — {name, photoUrl, updatedAt} only
+    // ────────────────────────────────────────────────────────────
+
+    match /usersPublic/{userId} {
+
+      // Any signed-in user may resolve a display name/photo (e.g. the
+      // agent badge on room details). Nothing sensitive lives here.
+      allow get: if isAuth();
+      allow list: if isAdmin();
+
+      // Owners maintain their own projection; admins may fix any.
+      // Field allowlist keeps phone/email/tokens out of this collection
+      // even if a client tries to write them here.
+      allow create: if (isMe(userId) || isAdmin())
+        && request.resource.data.keys().hasAll(['name'])
+        && request.resource.data.keys().hasOnly(['name', 'photoUrl', 'updatedAt'])
+        && request.resource.data.name is string;
+      allow update: if isAdmin();
+      allow update: if isMe(userId) && notBanned()
+        && onlyFields(['name', 'photoUrl', 'updatedAt']);
+
+      allow delete: if isAdmin();
+    }
+
+    // Public directory entries are created with agent approval. Verified
+    // agents may update their display information, but cannot grant status.
+    match /agentsPublic/{agentId} {
+      allow get, list: if true;
+      allow create: if isAdmin() || (isMe(agentId) && isVerifiedAgent()
+        && request.resource.data.keys().hasOnly(['name', 'location', 'photoUrl', 'bio', 'updatedAt']));
+      allow update: if isAdmin() || (isMe(agentId) && isVerifiedAgent()
+        && onlyFields(['name', 'location', 'photoUrl', 'bio', 'updatedAt']));
+      allow delete: if isAdmin();
+    }
+
+    match /adminDecisions/{decisionId} {
+      allow get, list, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // LISTINGS
+    // /listings/{listingId}
+    // ────────────────────────────────────────────────────────────
+
+    match /listings/{listingId} {
+
+      // PUBLIC READ — anyone (logged in or not) can read active listings
+      // This powers the landing page for unauthenticated visitors
+      allow read: if resource.data.get('status', '') == 'active';
+
+      // Authenticated non-banned users can read all listings
+      // (owner sees their own paused/rented listings, admin sees all)
+      allow read: if isAuth() && notBanned();
+
+      // superAdmin can always read everything
+      allow read: if isAdmin();
+
+      // Any non-banned signed-in user can post a listing as themselves
+      // (ownerId == their uid, no agentId) — browsing and posting are
+      // capabilities of one account, not separate roles.
+      // Listing goes active immediately — no payment required
+      allow create: if isAuth() && notBanned()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.get('agentId', null) == null
+        && request.resource.data.keys().hasAll([
+            'ownerId', 'ownerName', 'title',
+            'rentPerMonth', 'status', 'createdAt'
+          ])
+        && request.resource.data.status == 'active'
+        && request.resource.data.get('verificationStatus', 'pending') == 'pending'
+        && request.resource.data.get('verifiedAt', null) == null
+        && request.resource.data.get('verifiedBy', null) == null
+        && request.resource.data.get('verificationReason', null) == null
+        && request.resource.data.rentPerMonth is number
+        && request.resource.data.rentPerMonth > 0
+        && validTour(request.resource.data.get('tourScenes', []), listingId);
+
+      // Verified agents post on behalf of owners: ownerId and agentId are
+      // both the agent's uid, with the real-owner contact entered manually.
+      // The real-owner phone lives in the restricted `ownerContact`
+      // subcollection below — never top-level, where public listing reads
+      // would expose it. (Legacy listings may still carry a top-level
+      // `ownerPhone`; it is ignored by new clients.)
+      allow create: if isVerifiedAgent()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.agentId == request.auth.uid
+        && request.resource.data.keys().hasAll([
+            'ownerId', 'agentId', 'ownerName', 'title',
+            'rentPerMonth', 'status', 'createdAt'
+          ])
+        && request.resource.data.ownerName is string
+        && request.resource.data.ownerName.size() > 0
+        && request.resource.data.get('ownerPhone', null) == null
+        && request.resource.data.status == 'active'
+        && request.resource.data.get('verificationStatus', 'pending') == 'pending'
+        && request.resource.data.get('verifiedAt', null) == null
+        && request.resource.data.get('verifiedBy', null) == null
+        && request.resource.data.get('verificationReason', null) == null
+        && request.resource.data.rentPerMonth is number
+        && request.resource.data.rentPerMonth > 0
+        && validTour(request.resource.data.get('tourScenes', []), listingId);
+
+      // FIXED: ownerId and createdAt are immutable — previously an owner
+      // could reassign a listing to another user or rewrite its age.
+      // agentId is likewise immutable, so an agent listing cannot be
+      // converted into an owner listing (or vice versa) after creation.
+      // The listing owner OR superAdmin can update a listing.
+      // (For agent listings, ownerId is the agent's uid, so the agent
+      // who posted it can update it.)
+      allow update: if isAdmin() ||
+        (isAuth() && notBanned() && resource.data.ownerId == request.auth.uid
+          && request.resource.data.ownerId == resource.data.ownerId
+          && request.resource.data.get('agentId', null) == resource.data.get('agentId', null)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && validTour(request.resource.data.get('tourScenes', []), listingId)
+          && (
+            (request.resource.data.get('verificationStatus', null) == resource.data.get('verificationStatus', null)
+              && request.resource.data.get('verifiedAt', null) == resource.data.get('verifiedAt', null)
+              && request.resource.data.get('verifiedBy', null) == resource.data.get('verifiedBy', null)
+              && request.resource.data.get('verificationReason', null) == resource.data.get('verificationReason', null)
+              && (resource.data.get('verificationStatus', null) != 'verified'
+                || onlyFields(['status', 'updatedAt', 'viewCount'])))
+            || (request.resource.data.get('verificationStatus', null) == 'pending'
+              && request.resource.data.get('verifiedAt', null) == null
+              && request.resource.data.get('verifiedBy', null) == null
+              && request.resource.data.get('verificationReason', null) == null)
+          )
+          // Top-level `ownerPhone` is legacy: it may stay or be removed,
+          // never set — new contact details go to `ownerContact`.
+          && (request.resource.data.get('ownerPhone', null) == null
+            || request.resource.data.get('ownerPhone', null) == resource.data.get('ownerPhone', null)));
+
+      // Anyone may bump the view counter by exactly one — it is display-only
+      // and the detail screen is reachable without sign-in. Steps are fixed
+      // at +1 so a client cannot forge arbitrary counts; nothing else may
+      // change in the same write.
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount'])
+        && request.resource.data.viewCount == resource.data.get('viewCount', 0) + 1;
+
+      // The listing owner OR superAdmin can delete a listing
+      allow delete: if isAdmin() ||
+        (isAuth() && resource.data.ownerId == request.auth.uid);
+
+      // ── Real-owner contact sub-collection ────────────────────
+      // /listings/{listingId}/ownerContact/{docId}
+      // Holds the manually entered real-owner contact for agent-posted
+      // listings. Only the posting agent (ownerId slot) and superAdmin can
+      // read or write it — public listing reads never include it.
+      match /ownerContact/{docId} {
+        // Single-document reads by the posting agent or admin.
+        // Collection listing is admin-only (same rationale as /users).
+        allow get: if isAdmin() || (isAuth() && (
+          get(/databases/$(database)/documents/listings/$(listingId)).data.ownerId == request.auth.uid
+        ));
+        allow list: if isAdmin();
+
+        // The posting agent (or admin) maintains the contact. Phone must be
+        // a non-empty string; name is stored alongside for the agent's
+        // inquiry banner.
+        allow create, update: if isAdmin() || (isAuth() && notBanned()
+          && get(/databases/$(database)/documents/listings/$(listingId)).data.ownerId == request.auth.uid
+          && get(/databases/$(database)/documents/listings/$(listingId)).data.get('verificationStatus', null) != 'verified'
+          && request.resource.data.keys().hasAll(['name', 'phone'])
+          && request.resource.data.name is string
+          && request.resource.data.phone is string
+          && request.resource.data.phone.size() > 0);
+
+        allow delete: if isAdmin();
+      }
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // INQUIRIES
+    // /inquiries/{inquiryId}
+    // ────────────────────────────────────────────────────────────
+
+    match /inquiries/{inquiryId} {
+
+      // Only the customer who sent it, the owner who received it,
+      // or a superAdmin can read an inquiry
+      allow read: if isAdmin() || (isAuth() && (
+        resource.data.customerId == request.auth.uid ||
+        resource.data.ownerId   == request.auth.uid
+      ));
+
+      // Any non-banned signed-in user can inquire on someone else's
+      // listing, as themselves. Self-inquiry (ownerId == customerId) is
+      // rejected — previously impossible only because roles were exclusive.
+      allow create: if isAuth() && notBanned()
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.ownerId != request.auth.uid
+        && request.resource.data.keys().hasAll([
+            'listingId', 'customerId', 'ownerId',
+            'message', 'status', 'createdAt'
+          ])
+        && request.resource.data.status == 'pending';
+
+      // The listing owner can update the status (accept / decline)
+      // superAdmin can update anything.
+      // FIXED: owner may only move status to accepted/declined —
+      // previously any status value (or a forged customerId) passed.
+      allow update: if isAdmin() ||
+        (isAuth() && resource.data.ownerId == request.auth.uid
+          && request.resource.data.status in ['accepted', 'declined']
+          && onlyFields(['status', 'declineReason', 'updatedAt']));
+
+      // Nobody can delete inquiries from the client
+      // (superAdmin can if needed)
+      allow delete: if isAdmin();
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // AGENT APPLICATIONS
+    // /agentApplications/{userId}
+    // ────────────────────────────────────────────────────────────
+    //
+    // One document per applicant (id == applicant uid). Submitting an
+    // application grants nothing — agent privileges unlock only when an
+    // admin approves it (flipping users/{uid}.agentStatus to 'verified').
+
+    match /agentApplications/{userId} {
+
+      // The applicant and superAdmin can read the application.
+      allow get: if isAdmin() || isMe(userId);
+      allow list: if isAdmin();
+
+      // The applicant files their own pending application. Re-applying
+      // after a rejection overwrites the same document (still pending).
+      // Status is always 'pending' on applicant writes — approval lives
+      // exclusively on the admin path below.
+      allow create: if isMe(userId) && notBanned()
+        && request.resource.data.keys().hasAll([
+            'uid', 'fullName', 'phone', 'location', 'status', 'createdAt'
+          ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() > 0
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() > 0
+        && request.resource.data.location is string
+        && request.resource.data.location.size() > 0
+        && request.resource.data.status == 'pending';
+
+      // Re-application edits core fields but never the decision. `reason`
+      // is included so a re-filed application clears the old verdict.
+      allow update: if isMe(userId) && notBanned()
+        && onlyFields([
+            'fullName', 'phone', 'location', 'notes', 'reason',
+            'status', 'createdAt', 'updatedAt'
+          ])
+        && request.resource.data.status == 'pending'
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      // Admin decision (approve/reject). The companion
+      // users/{uid}.agentStatus flip is a separate admin write.
+      allow update: if isAdmin()
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status in ['approved', 'rejected'];
+
+      // Only superAdmin can delete applications
+      allow delete: if isAdmin();
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // CHATS
+    // /chats/{chatId}
+    // /chats/{chatId}/messages/{messageId}
+    // ────────────────────────────────────────────────────────────
+
+    // A changed conversation summary must be authored by its writer. Checking
+    // only whether the sender id "changed" is not enough: if the previous
+    // sender was already the other party, an unchanged sender id would let a
+    // participant post new text while attributing it to them. The only summary
+    // change that may keep another writer's id is the one-way legacy backfill.
+    function summaryAttributionAllowed() {
+      let lastMessageNow    = request.resource.data.get('lastMessage', null);
+      let lastMessagePrev   = resource.data.get('lastMessage', null);
+      let lastActivityNow   = request.resource.data.get('lastMessageAt', null);
+      let lastActivityPrev  = resource.data.get('lastMessageAt', null);
+      let messageChanged  = lastMessageNow != lastMessagePrev;
+      let activityChanged = lastActivityNow != lastActivityPrev;
+      let legacyBackfill  = lastActivityPrev == null;
+      let attributedToMe  = request.resource.data.get('lastMessageSenderId', null) == request.auth.uid;
+      return (!messageChanged || attributedToMe)
+        && (!activityChanged || legacyBackfill || attributedToMe);
+    }
+
+    match /chats/{chatId} {
+
+      // Only participants (owner + customer) or superAdmin can read a chat.
+      //
+      // `get` keeps the admin bypass. `list` is split per side and lookup-free:
+      // each statement mirrors exactly one client query
+      // (`where ownerId == me` / `where customerId == me`), which is what lets
+      // the query planner prove the query can only return the caller's own
+      // conversations. A combined `a == me || b == me` form is not provable
+      // against a single-field filter, so the list would be rejected.
+      allow get: if isAdmin() || (isAuth() && (
+        resource.data.ownerId    == request.auth.uid ||
+        resource.data.customerId == request.auth.uid
+      ));
+      allow list: if isAuth()
+        && resource.data.ownerId == request.auth.uid;
+      allow list: if isAuth()
+        && resource.data.customerId == request.auth.uid;
+
+      // A chat is created when an inquiry is accepted.
+      //
+      // HARDENED: the conversation must be backed by a REAL accepted inquiry
+      // for the same listing and the same two participants. Previously any
+      // signed-in non-banned user could mint a chat for any listingId and
+      // insert themselves as `customerId`, then read and write it.
+      allow create: if isAuth() && notBanned()
+        && request.resource.data.keys().hasAll([
+            'ownerId', 'customerId', 'listingId',
+            'listingTitle', 'createdAt', 'inquiryId'
+          ])
+        && request.resource.data.ownerId is string
+        && request.resource.data.customerId is string
+        && request.resource.data.listingId is string
+        && request.resource.data.listingTitle is string
+        && request.resource.data.ownerId != request.resource.data.customerId
+        && (request.resource.data.ownerId    == request.auth.uid ||
+            request.resource.data.customerId == request.auth.uid)
+        // Starts clean — nobody is "unread" in a brand new thread.
+        && request.resource.data.get('unreadOwner', 0) == 0
+        && request.resource.data.get('unreadCustomer', 0) == 0
+        // The conversation list orders by latest activity, so the thread needs
+        // an activity timestamp from its very first write. Otherwise it would
+        // sort below every older conversation that already had one.
+        && request.resource.data.lastMessageAt == request.resource.data.createdAt
+        && exists(/databases/$(database)/documents/inquiries/$(request.resource.data.inquiryId))
+        && get(/databases/$(database)/documents/inquiries/$(request.resource.data.inquiryId)).data.status      == 'accepted'
+        && get(/databases/$(database)/documents/inquiries/$(request.resource.data.inquiryId)).data.listingId   == request.resource.data.listingId
+        && get(/databases/$(database)/documents/inquiries/$(request.resource.data.inquiryId)).data.ownerId    == request.resource.data.ownerId
+        && get(/databases/$(database)/documents/inquiries/$(request.resource.data.inquiryId)).data.customerId == request.resource.data.customerId;
+
+      // Only participants can update the conversation summary and counters.
+      //
+      // HARDENED: identity fields are immutable, so a participant can no
+      // longer rewrite `ownerId`/`customerId` to add themselves to a
+      // conversation or hand it to someone else. Unread counters move only in
+      // the direction permitted by `chatUnreadUpdateAllowed`.
+      allow update: if isAdmin();
+      allow update: if isChatParticipant(chatId) && notBanned()
+        // Identity is immutable.
+        && request.resource.data.ownerId    == resource.data.ownerId
+        && request.resource.data.customerId == resource.data.customerId
+        && request.resource.data.listingId  == resource.data.listingId
+        && request.resource.data.createdAt  == resource.data.createdAt
+        && request.resource.data.get('inquiryId', null)     == resource.data.get('inquiryId', null)
+        && request.resource.data.get('ownerName', null)    == resource.data.get('ownerName', null)
+        && request.resource.data.get('customerName', null) == resource.data.get('customerName', null)
+        && request.resource.data.get('listingTitle', null)  == resource.data.get('listingTitle', null)
+        // Nothing outside the summary / counters is writable.
+        && onlyFields([
+            'lastMessage', 'lastMessageAt', 'lastMessageSenderId',
+            'unreadOwner', 'unreadCustomer'
+          ])
+        && request.resource.data.get('unreadOwner', 0) >= 0
+        && request.resource.data.get('unreadCustomer', 0) >= 0
+        // Activity time moves forward only. The null branch permits the
+        // one-way backfill of legacy chats that predate `lastMessageAt`.
+        && (resource.data.get('lastMessageAt', null) == null
+            || request.resource.data.get('lastMessageAt', null) == resource.data.get('lastMessageAt', null)
+            || request.resource.data.lastMessageAt > resource.data.lastMessageAt)
+        // A conversation summary may only be authored by its writer. The legacy
+        // backfill is the only summary change that can retain another id.
+        && summaryAttributionAllowed()
+        && chatUnreadUpdateAllowed(chatId);
+
+      // Only superAdmin can delete chats
+      allow delete: if isAdmin();
+
+
+      // ── Messages sub-collection ────────────────────────────
+      // /chats/{chatId}/messages/{messageId}
+      match /messages/{messageId} {
+
+        // Only participants or superAdmin can read messages
+        allow read: if isAdmin() || isChatParticipant(chatId);
+
+        // Sender must be a participant of THIS chat —
+        // prevents anyone who knows a chatId from injecting messages.
+        // text must be a string within 1000 chars (empty text is allowed for
+        // image-only messages).
+        //
+        // HARDENED: `createdAt` must be a real server timestamp. Previously a
+        // client could back- or forward-date messages to reorder a thread.
+        allow create: if isAuth() && notBanned()
+          && request.resource.data.senderId == request.auth.uid
+          && isChatParticipant(chatId)
+          && request.resource.data.keys().hasAll([
+              'senderId', 'text', 'createdAt', 'isRead'
+            ])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 1000
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.createdAt >= request.time - duration.value(5, 'm')
+          && request.resource.data.createdAt <= request.time + duration.value(5, 'm');
+
+        // Only the isRead flag can be updated (mark as read).
+        // Message content cannot be edited after sending.
+        //
+        // HARDENED: receipts are one-way and self-vouching is forbidden —
+        // a sender can no longer flip their own `isRead` to fake a delivery
+        // receipt, nor un-read a message that was already seen.
+        allow update: if isAuth() && notBanned()
+          && isChatParticipant(chatId)
+          && onlyFields(['isRead'])
+          && request.resource.data.isRead == true
+          && resource.data.senderId != request.auth.uid;
+
+        // Nobody can delete messages (superAdmin only)
+        allow delete: if isAdmin();
+      }
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // ADS
+    // /ads/{adId}
+    // ────────────────────────────────────────────────────────────
+
+    match /ads/{adId} {
+      // Anyone (logged in or not) can read ads
+      // This powers the ad banners on the landing page
+      // and all customer-facing screens
+      allow read: if true;
+
+      // Only superAdmin can create, update, or delete ads
+      allow write: if isAdmin();
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // CATEGORIES
+    // /categories/{categoryId}
+    // ────────────────────────────────────────────────────────────
+
+    match /categories/{categoryId} {
+      // Categories are fully public — anyone can read them
+      // This powers the landing page category chips and search filters
+      // even for logged-out visitors
+      allow read: if true;
+
+      // Only superAdmin can create, update, or delete categories
+      allow write: if isAdmin();
+    }
+
+
+    // ────────────────────────────────────────────────────────────
+    // CATCH-ALL DENY
+    // Anything not explicitly allowed above is denied
+    // ────────────────────────────────────────────────────────────
+
+
+    // Web-only visit events contain a random browser identifier, source host,
+    // device size and server time. No account identity or private contact data.
+    match /listingVisits/{visitId} {
+      allow get: if isAdmin() || (notBanned() && resource.data.ownerId == request.auth.uid);
+      allow list: if request.query.limit <= 2000
+        && (isAdmin() || (notBanned() && resource.data.ownerId == request.auth.uid));
+      allow create: if (!isAuth() || notBanned())
+        && request.resource.data.keys().hasAll(['listingId', 'ownerId', 'visitorId', 'referrer', 'device', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['listingId', 'ownerId', 'visitorId', 'referrer', 'device', 'createdAt'])
+        && request.resource.data.listingId is string
+        && request.resource.data.ownerId is string
+        && request.resource.data.visitorId is string
+        && request.resource.data.visitorId.matches('[a-zA-Z0-9_-]{1,80}')
+        && visitId.matches(request.resource.data.listingId + '_' + request.resource.data.visitorId + '_[0-9]+')
+        && request.resource.data.referrer is string
+        && request.resource.data.referrer.size() > 0 && request.resource.data.referrer.size() <= 253
+        && request.resource.data.referrer.matches('[a-zA-Z0-9.-]+')
+        && request.resource.data.device in ['mobile', 'desktop']
+        && request.resource.data.createdAt == request.time
+        && exists(/databases/$(database)/documents/listings/$(request.resource.data.listingId))
+        && get(/databases/$(database)/documents/listings/$(request.resource.data.listingId)).data.status == 'active'
+        && get(/databases/$(database)/documents/listings/$(request.resource.data.listingId)).data.ownerId == request.resource.data.ownerId
+        && (!isAuth() || request.auth.uid != request.resource.data.ownerId);
+      allow update, delete: if false;
+    }
+
+    // One immutable submission per renter/listing. Reporters can follow their
+    // own decisions; listers never receive the reporter's identity or details.
+    match /listingReports/{reportId} {
+      allow get: if isAdmin() || (notBanned() && resource.data.reporterId == request.auth.uid);
+      allow list: if request.query.limit <= 200
+        && (isAdmin() || (notBanned() && resource.data.reporterId == request.auth.uid));
+      allow create: if notBanned()
+        && request.resource.data.keys().hasAll(['listingId', 'listingTitle', 'ownerId', 'reporterId', 'reason', 'details', 'status', 'decisionReason', 'decidedBy', 'decidedAt', 'createdAt', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['listingId', 'listingTitle', 'ownerId', 'reporterId', 'reason', 'details', 'status', 'decisionReason', 'decidedBy', 'decidedAt', 'createdAt', 'updatedAt'])
+        && request.resource.data.listingId is string
+        && reportId == request.resource.data.listingId + '_' + request.auth.uid
+        && request.resource.data.reporterId == request.auth.uid
+        && request.resource.data.ownerId != request.auth.uid
+        && exists(/databases/$(database)/documents/listings/$(request.resource.data.listingId))
+        && request.resource.data.ownerId == get(/databases/$(database)/documents/listings/$(request.resource.data.listingId)).data.ownerId
+        && request.resource.data.listingTitle == get(/databases/$(database)/documents/listings/$(request.resource.data.listingId)).data.title
+        && request.resource.data.reason in ['fraud', 'duplicate', 'wrong_location', 'unavailable', 'misleading_price', 'stolen_photos', 'not_owner', 'offensive', 'other']
+        && request.resource.data.details is string && request.resource.data.details.size() >= 10 && request.resource.data.details.size() <= 1000
+        && request.resource.data.status == 'open'
+        && request.resource.data.decisionReason == null
+        && request.resource.data.decidedBy == null && request.resource.data.decidedAt == null
+        && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
+      allow update: if isAdmin()
+        && resource.data.status in ['open', 'reviewing']
+        && request.resource.data.status in ['reviewing', 'resolved', 'dismissed']
+        && request.resource.data.status != resource.data.status
+        && onlyFields(['status', 'decisionReason', 'decidedBy', 'decidedAt', 'updatedAt'])
+        && request.resource.data.decisionReason is string
+        && request.resource.data.decisionReason.size() >= 5 && request.resource.data.decisionReason.size() <= 1000
+        && request.resource.data.decidedBy == request.auth.uid
+        && request.resource.data.decidedAt == request.time && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
