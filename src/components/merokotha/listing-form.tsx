@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { GeoPoint } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
@@ -23,6 +23,8 @@ export function ListingForm() {
   const { user, profile } = useAuth();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
+  const submissionId = useRef<string | null>(null);
   const [agent, setAgent] = useState(false);
   const [point, setPoint] = useState<{ lat: number; lng: number } | null>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -34,7 +36,8 @@ export function ListingForm() {
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (busy) return;
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     const form = new FormData(event.currentTarget);
     try {
@@ -54,7 +57,8 @@ export function ListingForm() {
         throw new Error('Enter a valid contact or WhatsApp number.');
       }
 
-      const id = await createListing(user.uid, form.get('contactIsAnonymous') === 'on' ? 'Private lister' : profile.name, {
+      submissionId.current ||= crypto.randomUUID();
+      const id = await createListing(submissionId.current, user.uid, form.get('contactIsAnonymous') === 'on' ? 'Private lister' : profile.name, {
         title,
         roomType: String(form.get('roomType')),
         rentPerMonth: rent,
@@ -77,9 +81,10 @@ export function ListingForm() {
       toast.success(t('Rental posted', 'घरजग्गा राखियो'));
       router.push(`/listing/${id}`);
     } catch (error) {
+      submitting.current = false;
       toast.error(error instanceof Error ? error.message : 'Could not post listing');
     } finally {
-      setBusy(false);
+      if (!submitting.current) setBusy(false);
     }
   };
 

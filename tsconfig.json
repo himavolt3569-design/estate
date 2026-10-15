@@ -47,6 +47,7 @@
     "node_modules",
     ".next",
     "**/.next-saved-search-*/**",
+    "**/.next-duplicate-tests/**",
     "out",
     "src/legacy-app",
     "src/legacy-proxy.ts"
