@@ -1,9 +1,11 @@
 allowBuilds:
-  '@prisma/engines': set this to true or false
-  esbuild: set this to true or false
-  prisma: set this to true or false
-  sharp: set this to true or false
-  unrs-resolver: set this to true or false
+  '@firebase/util': false
+  '@prisma/engines': false
+  esbuild: true
+  prisma: false
+  protobufjs: false
+  sharp: true
+  unrs-resolver: true
 minimumReleaseAgeExclude:
   - '@supabase/auth-js@2.111.0'
   - '@supabase/functions-js@2.111.0'

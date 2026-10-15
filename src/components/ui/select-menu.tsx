@@ -92,7 +92,7 @@ export function SelectMenu({
           position="popper"
           sideOffset={6}
           className={cn(
-            'z-100 max-h-72 min-w-(--radix-select-trigger-width) overflow-hidden rounded-xl border border-ink-100 bg-white/80 backdrop-blur-xl shadow-floating',
+            'z-100 max-h-72 min-w-(--radix-select-trigger-width) overflow-hidden rounded-xl border border-ink-100 bg-white shadow-floating font-sans',
             'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
           )}
         >

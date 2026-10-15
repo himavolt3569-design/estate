@@ -46,10 +46,12 @@ export function StatTile({
 
   const body = (
     <>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2 text-ink-400">
-          {Icon && <Icon aria-hidden className="size-3.5" />}
-          <p className="label">{label}</p>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5 text-ink-400">
+          {Icon && <Icon aria-hidden className="size-3.5 shrink-0" />}
+          {/* The label is an uppercase micro-label at 11px; on a two-up phone
+              grid it has to be allowed two lines rather than being clipped. */}
+          <p className="label leading-[1.3]">{label}</p>
         </div>
         {href && (
           <ArrowRight
@@ -59,10 +61,10 @@ export function StatTile({
         )}
       </div>
 
-      <div className="mt-3 flex items-end justify-between gap-3">
+      <div className="mt-3 flex items-end justify-between gap-2">
         <p
           className={cn(
-            'text-4xl leading-none font-semibold tracking-tight',
+            'min-w-0 truncate text-3xl leading-none font-semibold tracking-tight sm:text-4xl',
             tone === 'pending' && 'text-ochre-700',
             tone === 'good' && Number(value) > 0 && 'text-emerald-700',
             (tone === 'flat' || (tone === 'good' && !Number(value))) && 'text-ink-900',
@@ -72,19 +74,24 @@ export function StatTile({
           {suffix && <span className="ml-1 text-base font-normal text-ink-400">{suffix}</span>}
         </p>
 
+        {/* The sparkline is supporting detail. At two tiles across a 375px
+            screen there is no room for it beside the figure, and squeezing it
+            in is what pushed these cards over their own width. */}
         {trend && trend.length > 1 && (
-          <Sparkline points={trend} color={trendColor} />
+          <span className="hidden shrink-0 sm:block">
+            <Sparkline points={trend} color={trendColor} />
+          </span>
         )}
       </div>
 
       {delta != null && (
         <p
           className={cn(
-            'mt-2.5 flex items-center gap-1.5 text-xs',
+            'mt-2.5 flex flex-wrap items-center gap-x-1.5 text-xs',
             rising ? 'text-emerald-700' : falling ? 'text-clay-700' : 'text-ink-500',
           )}
         >
-          <DeltaIcon aria-hidden className="size-3.5" />
+          <DeltaIcon aria-hidden className="size-3.5 shrink-0" />
           <span className="nums font-semibold">
             {rising ? '+' : ''}
             {delta.toLocaleString('en-IN')}
@@ -98,7 +105,7 @@ export function StatTile({
   );
 
   const className =
-    'group relative block rounded-2xl border border-ink-100 bg-white p-5 shadow-soft transition-all';
+    'group relative block rounded-2xl border border-ink-100 bg-white p-4 shadow-soft transition-all sm:p-5';
 
   return href ? (
     <Link href={href} className={cn(className, 'hover:-translate-y-0.5 hover:shadow-raised')}>

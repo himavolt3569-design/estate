@@ -16,6 +16,7 @@ export const en = {
     commercial: 'Shops and offices',
     signIn: 'Sign in',
     listProperty: 'Post your property',
+    listPropertyShort: 'Post',
     dashboard: 'My account',
     browseListings: 'See properties',
     home: 'Kitta home',

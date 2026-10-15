@@ -23,7 +23,7 @@ import { SelectMenu } from '@/components/ui/select-menu';
 import { formatIndianDigits } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
-import { createListing, submitListingForReview, updateListing } from '../actions';
+import { createListing, publishListing, updateListing } from '../actions';
 import type { FeatureOption, LocationOption } from '../queries';
 import {
   AREA_UNITS,
@@ -141,7 +141,7 @@ const STEPS = [
   { key: 'size', en: 'Size and rooms', ne: 'क्षेत्रफल र कोठा' },
   { key: 'about', en: 'About the property', ne: 'विवरण' },
   { key: 'photos', en: 'Photos & 3D', ne: 'फोटो र थ्रीडी' },
-  { key: 'send', en: 'Check and send', ne: 'जाँचेर पठाउनुहोस्' },
+  { key: 'send', en: 'Check and publish', ne: 'जाँचेर प्रकाशित गर्नुहोस्' },
 ] as const;
 
 const BUYER_QUESTIONS = [
@@ -215,6 +215,13 @@ export function ListingWizard({
    * price, and they had no way to tell it was still saved.
    */
   const [images, setImages] = useState<UploadedImage[]>(existing?.images ?? []);
+
+  /*
+   * Editing something buyers can already see is a different act from putting a
+   * new listing up, so the last step says so rather than offering to publish a
+   * listing that is already published.
+   */
+  const alreadyLive = existing?.status === 'published';
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -433,7 +440,7 @@ export function ListingWizard({
     if (!saved) return;
 
     setSaving(true);
-    const result = await submitListingForReview({ id: propertyId });
+    const result = await publishListing({ id: propertyId });
     setSaving(false);
 
     if (!result.ok) {
@@ -442,7 +449,11 @@ export function ListingWizard({
     }
 
     localStorage.removeItem('kitta-listing-draft');
-    toast.success('Sent for checking. We will tell you as soon as it is live.');
+    toast.success(
+      alreadyLive
+        ? 'Saved. Your changes are live now.'
+        : 'Your property is live. Buyers can find it in search now.',
+    );
     router.push('/dashboard/listings');
     router.refresh();
   }
@@ -466,7 +477,7 @@ export function ListingWizard({
       />
 
       <div className="thread-top overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-soft">
-        <div className="space-y-7 p-6 sm:p-8">
+        <div className="space-y-6 p-4 sm:space-y-7 sm:p-8">
           {/* ---------------------------------------------------------- */}
           {step === 0 && (
             <StepShell
@@ -952,7 +963,7 @@ export function ListingWizard({
           {step === 5 && (
             <StepShell
               title="Check it over"
-              subtitle="Nothing is public yet. We look at every listing before it goes live."
+              subtitle="Nothing is public yet. Read it through, then put it live — it appears in search straight away."
             >
               <dl className="grid gap-px overflow-hidden rounded-xl border border-ink-200 bg-ink-200 sm:grid-cols-2">
                 <Summary label="Name" value={draft.title || '—'} />
@@ -990,7 +1001,7 @@ export function ListingWizard({
               {imageCount < MIN_IMAGES && (
                 <p className="rounded-xl border border-marigold-200 bg-marigold-50 px-4 py-3 text-sm text-marigold-900">
                   You need {MIN_IMAGES - imageCount} more{' '}
-                  {MIN_IMAGES - imageCount === 1 ? 'photo' : 'photos'} before this can be checked.{' '}
+                  {MIN_IMAGES - imageCount === 1 ? 'photo' : 'photos'} before this can go live.{' '}
                   <button
                     type="button"
                     onClick={() => setStep(4)}
@@ -1002,8 +1013,10 @@ export function ListingWizard({
               )}
 
               <div className="rounded-xl border border-royal-100 bg-royal-50/60 p-4 text-sm leading-relaxed text-royal-900/85">
-                When you send it, our team checks the details and the photos. That usually takes a
-                day. You will get a message either way, and you can keep editing it in the meantime.
+                Your listing goes live the moment you publish it, and buyers can find it in search
+                straight away. You can edit it or take it down at any time from My properties. Our
+                team still checks listings afterwards and adds the green seal to the ones it has
+                seen the paperwork for.
               </div>
             </StepShell>
           )}
@@ -1012,18 +1025,23 @@ export function ListingWizard({
         {/* ------------------------------------------------------------ */}
         {/* Footer                                                        */}
         {/* ------------------------------------------------------------ */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 bg-ink-50/60 px-6 py-4 sm:px-8">
+        {/*
+          Three controls do not fit across a 375px screen, and letting them wrap
+          put "Continue" on its own line under a left-aligned "Back" — which
+          reads as two unrelated buttons. Stacked on a phone, in a row from sm.
+        */}
+        <div className="flex flex-col-reverse gap-2.5 border-t border-ink-100 bg-ink-50/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-8">
           <Button
             type="button"
             variant="ghost"
             onClick={back}
             disabled={step === 0 || saving}
-            className={cn(step === 0 && 'invisible')}
+            className={cn(step === 0 && 'hidden sm:invisible sm:inline-flex')}
           >
             <ArrowLeft aria-hidden /> Back
           </Button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3">
             {propertyId && step < STEPS.length - 1 && (
               <Button
                 type="button"
@@ -1048,8 +1066,20 @@ export function ListingWizard({
                 onClick={() => void submit()}
                 disabled={saving || imageCount < MIN_IMAGES || !propertyId}
               >
-                {saving ? <Loader2 aria-hidden className="animate-spin" /> : <Send aria-hidden />}
-                Send for checking
+                {saving ? (
+                  <Loader2 aria-hidden className="animate-spin" />
+                ) : alreadyLive ? (
+                  <Check aria-hidden />
+                ) : (
+                  <Send aria-hidden />
+                )}
+                {saving
+                  ? alreadyLive
+                    ? 'Saving…'
+                    : 'Publishing…'
+                  : alreadyLive
+                    ? 'Save changes'
+                    : 'Publish it'}
               </Button>
             )}
           </div>
@@ -1072,43 +1102,82 @@ function Stepper({
   onJump: (index: number) => void;
   overrides?: Partial<Record<(typeof STEPS)[number]['key'], { en: string; ne: string } | undefined>>;
 }) {
-  return (
-    <ol className="flex flex-wrap gap-x-1 gap-y-2">
-      {STEPS.map((entry, index) => {
-        const step = { ...entry, ...(overrides[entry.key] ?? {}) };
-        const done = index < current;
-        const active = index === current;
+  const steps = STEPS.map((entry) => ({ ...entry, ...(overrides[entry.key] ?? {}) }));
+  const here = steps[current]!;
 
-        return (
-          <li key={step.key} className="flex-1 basis-32">
-            <button
-              type="button"
-              onClick={() => onJump(index)}
-              disabled={index >= current}
-              className="w-full text-left disabled:cursor-default"
+  return (
+    <>
+      {/*
+        On a phone, six labels across 375px wrap to three lines each and the
+        stepper ends up taller than the question it is introducing. The bars
+        still show the whole shape of the form; the words describe only where
+        you actually are, which is the part that changes.
+      */}
+      <div className="sm:hidden">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-sm font-semibold text-ink-900">
+            {here.en}
+            <span aria-hidden className="ml-2 text-xs font-normal text-ink-400">
+              {here.ne}
+            </span>
+          </p>
+          <p className="nums shrink-0 text-xs font-medium text-ink-500">
+            {current + 1}/{steps.length}
+          </p>
+        </div>
+        <ol className="mt-2.5 flex gap-1" aria-label={`Step ${current + 1} of ${steps.length}`}>
+          {steps.map((step, index) => (
+            <li
+              key={step.key}
+              aria-current={index === current ? 'step' : undefined}
+              className={cn(
+                'h-1 flex-1 rounded-full transition-colors',
+                index === current ? 'thread' : index < current ? 'bg-emerald-500' : 'bg-ink-200',
+              )}
             >
-              <span
-                className={cn(
-                  'block h-1 rounded-full transition-colors',
-                  active ? 'thread' : done ? 'bg-emerald-500' : 'bg-ink-200',
-                )}
-              />
-              <span
-                className={cn(
-                  'mt-2 block text-xs leading-tight font-medium',
-                  active ? 'text-ink-900' : done ? 'text-emerald-700' : 'text-ink-400',
-                )}
+              <span className="sr-only">{step.en}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <ol className="hidden flex-wrap gap-x-1 gap-y-2 sm:flex">
+        {steps.map((step, index) => {
+          const done = index < current;
+          const active = index === current;
+
+          return (
+            <li key={step.key} className="min-w-0 flex-1 basis-32">
+              <button
+                type="button"
+                onClick={() => onJump(index)}
+                disabled={index >= current}
+                aria-current={active ? 'step' : undefined}
+                className="w-full text-left disabled:cursor-default"
               >
-                {step.en}
-              </span>
-              <span aria-hidden className="mt-0.5 block text-2xs leading-tight text-ink-400">
-                {step.ne}
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ol>
+                <span
+                  className={cn(
+                    'block h-1 rounded-full transition-colors',
+                    active ? 'thread' : done ? 'bg-emerald-500' : 'bg-ink-200',
+                  )}
+                />
+                <span
+                  className={cn(
+                    'mt-2 block text-xs leading-tight font-medium',
+                    active ? 'text-ink-900' : done ? 'text-emerald-700' : 'text-ink-400',
+                  )}
+                >
+                  {step.en}
+                </span>
+                <span aria-hidden className="mt-0.5 block text-2xs leading-tight text-ink-400">
+                  {step.ne}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    </>
   );
 }
 

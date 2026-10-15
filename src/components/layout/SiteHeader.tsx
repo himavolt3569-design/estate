@@ -12,60 +12,86 @@ export async function SiteHeader() {
   const [user, { t, locale }] = await Promise.all([getSessionUser(), getTranslation()]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-ink-100 bg-white/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-[68px] max-w-8xl items-center gap-6 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="shrink-0" aria-label={t.nav.home}>
-          <Wordmark />
-        </Link>
+    <>
+      {/*
+        Only the 64px bar is pinned.
 
-        <HeaderNav t={t.headerNav} />
+        The browse rail used to sit inside this sticky header, so on a phone
+        168px — nearly a quarter of the screen — was permanently occupied by
+        chrome before any content. It is a way in to the four property types,
+        not something anybody needs mid-scroll, so it scrolls away with the page
+        and comes back at the top.
+      */}
+      <header className="sticky top-0 z-50 border-b border-ink-100 bg-white/70 backdrop-blur-xl">
+        {/*
+          Every child in this row is allowed to shrink, and the two that must
+          not — the wordmark and the action pair — say so explicitly. The old
+          row let a "Post your property" button at its natural width push the
+          header out to 500px on a 375px screen, which is what put a horizontal
+          scrollbar on every page of the site.
+        */}
+        <div className="mx-auto flex h-16 max-w-8xl items-center gap-3 px-4 sm:h-[68px] sm:gap-6 sm:px-6 lg:px-8">
+          <Link href="/" className="shrink-0" aria-label={t.nav.home}>
+            <Wordmark />
+          </Link>
 
-        <div className="ml-auto flex items-center gap-2 sm:gap-3">
-          <a
-            href="tel:+9779801234567"
-            className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-50 hover:text-ink-900 xl:flex"
-          >
-            <Phone aria-hidden className="size-4 text-crimson-600" />
-            <span className="nums">+977 9801234567</span>
-          </a>
+          <HeaderNav t={t.headerNav} />
 
-          <LanguageSwitcher current={locale} />
+          <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-3">
+            <a
+              href="tel:+9779801234567"
+              className="hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-50 hover:text-ink-900 xl:flex"
+            >
+              <Phone aria-hidden className="size-4 text-crimson-600" />
+              <span className="nums">+977 9801234567</span>
+            </a>
 
-          {user ? (
-            <>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/dashboard">{user.fullName?.split(' ')[0] ?? t.nav.dashboard}</Link>
-              </Button>
-              <Button asChild size="sm" className="hidden sm:inline-flex">
-                <Link href="/dashboard/listings/new">{t.nav.listProperty}</Link>
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/login">{t.nav.signIn}</Link>
-              </Button>
-              <Button asChild size="sm">
-                <Link href="/register">{t.nav.listProperty}</Link>
-              </Button>
-            </>
-          )}
+            {/* The footer carries a switcher of its own below sm, so nothing is
+                lost by dropping it out of the header on a phone. */}
+            <LanguageSwitcher current={locale} className="hidden md:flex" />
+
+            {user ? (
+              <>
+                <Button asChild variant="ghost" size="sm" className="min-w-0 max-w-32 px-2 sm:px-3">
+                  <Link href="/dashboard" className="truncate">
+                    {user.fullName?.split(' ')[0] ?? t.nav.dashboard}
+                  </Link>
+                </Button>
+                <Button asChild size="sm" className="hidden shrink-0 sm:inline-flex">
+                  <Link href="/dashboard/listings/new">{t.nav.listProperty}</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild variant="ghost" size="sm" className="shrink-0 px-2 sm:px-3">
+                  <Link href="/login">{t.nav.signIn}</Link>
+                </Button>
+                <Button asChild size="sm" className="shrink-0">
+                  {/* The full sentence does not fit beside a sign-in link at
+                      375px, and truncating it mid-word reads as a bug. */}
+                  <Link href="/register">
+                    <span className="sm:hidden">{t.nav.listPropertyShort}</span>
+                    <span className="hidden sm:inline">{t.nav.listProperty}</span>
+                  </Link>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      </header>
 
       <MobileNav t={t.headerNav} />
-    </header>
+    </>
   );
 }
-
 
 export async function SiteFooter() {
   const { locale, t } = await getTranslation();
 
   return (
     <footer className="border-t border-royal-800 bg-royal-950 text-white">
-      <div className="mx-auto max-w-8xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto max-w-8xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <div className="grid gap-10 sm:grid-cols-2 sm:gap-12 lg:grid-cols-4">
           <div>
             <Wordmark tone="light" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-royal-300">{t.footer.about}</p>
@@ -101,7 +127,7 @@ export async function SiteFooter() {
           />
         </div>
 
-        <div className="mt-14 flex flex-col gap-2 border-t border-royal-800 pt-6 text-2xs text-royal-400 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-2 border-t border-royal-800 pt-6 text-2xs text-royal-400 sm:mt-14 sm:flex-row sm:items-center sm:justify-between">
           <p className="nums">© {new Date().getFullYear()} Kitta</p>
           <p>
             {t.footer.mapCredit}{' '}

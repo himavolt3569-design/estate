@@ -1,0 +1,125 @@
+import type { GeoPoint, Timestamp } from "firebase/firestore";
+import type { SearchFilters } from "@/lib/listing-search";
+import type { TourScene } from "@/lib/virtual-tour";
+import type { ReportReason, ReportStatus } from "@/lib/listing-reports";
+
+export type RecordDoc = { id: string; [key: string]: unknown };
+export type Profile = RecordDoc & {
+  name: string;
+  phone: string;
+  email?: string;
+  contactEmail?: string;
+  role: string;
+  photoUrl?: string;
+  location?: string;
+  agentBio?: string;
+  isBanned?: boolean;
+  agentStatus?: string;
+};
+export type Listing = RecordDoc & {
+  ownerId: string;
+  ownerName: string;
+  title: string;
+  roomType: string;
+  rentPerMonth: number;
+  depositAmount?: number;
+  floor?: number;
+  totalFloors?: number;
+  furnishing?: string;
+  facilities?: string[];
+  description?: string;
+  photoUrls?: string[];
+  tourScenes?: TourScene[];
+  geoPoint?: GeoPoint | null;
+  address?: string;
+  nearbyLandmarks?: string;
+  availableFrom?: Timestamp | Date;
+  status: string;
+  viewCount?: number;
+  agentId?: string | null;
+  verificationStatus?: string;
+  verificationReason?: string;
+  publicContactNumber?: string;
+  publicCallNumber?: string;
+  publicWhatsAppNumber?: string;
+  contactIsAnonymous?: boolean;
+};
+export type Inquiry = RecordDoc & {
+  listingId: string;
+  listingTitle: string;
+  customerId: string;
+  customerName: string;
+  ownerId: string;
+  ownerName?: string;
+  agentId?: string | null;
+  message: string;
+  moveInDate?: Timestamp;
+  status: string;
+  declineReason?: string;
+};
+export type Chat = RecordDoc & {
+  ownerId: string;
+  customerId: string;
+  listingId: string;
+  listingTitle: string;
+  ownerName?: string;
+  customerName?: string;
+  inquiryId: string;
+  lastMessage?: string;
+  lastMessageAt?: Timestamp;
+  unreadOwner?: number;
+  unreadCustomer?: number;
+};
+export type AgentApplication = RecordDoc & {
+  uid: string;
+  fullName: string;
+  phone: string;
+  location: string;
+  notes?: string;
+  status: string;
+  reason?: string;
+};
+export type SavedSearch = RecordDoc & {
+  name: string;
+  filters: SearchFilters;
+  criteriaVersion?: number;
+  createdAt?: Timestamp;
+  lastViewedAt?: Timestamp;
+};
+export type PublicAgent = RecordDoc & {
+  name: string;
+  location?: string;
+  photoUrl?: string;
+  bio?: string;
+};
+export type AdminDecision = RecordDoc & {
+  action: string;
+  targetId: string;
+  targetName: string;
+  decision: string;
+  reason?: string;
+  actorId: string;
+  createdAt?: Timestamp;
+};
+export type ListingVisit = RecordDoc & {
+  listingId: string;
+  ownerId: string;
+  visitorId: string;
+  referrer: string;
+  device: "mobile" | "desktop";
+  createdAt?: Timestamp;
+};
+export type ListingReport = RecordDoc & {
+  listingId: string;
+  listingTitle: string;
+  ownerId: string;
+  reporterId: string;
+  reason: ReportReason;
+  details: string;
+  status: ReportStatus;
+  decisionReason?: string | null;
+  decidedBy?: string | null;
+  decidedAt?: Timestamp | null;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+};

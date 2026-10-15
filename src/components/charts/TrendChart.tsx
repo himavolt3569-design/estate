@@ -1,10 +1,17 @@
-'use client';
+"use client";
 
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
-import { AREA_FILL_OPACITY, CHART, dayLabel, dayLabelLong, niceScale, tick } from './tokens';
+import {
+  AREA_FILL_OPACITY,
+  CHART,
+  dayLabel,
+  dayLabelLong,
+  niceScale,
+  tick,
+} from "./tokens";
 
 export type TrendPoint = { date: string; value: number };
 
@@ -25,15 +32,15 @@ export function TrendChart({
   points,
   label,
   color = CHART.views,
-  variant = 'area',
+  variant = "area",
   height = 190,
-  emptyMessage = 'Nothing recorded yet',
+  emptyMessage = "Nothing recorded yet",
   className,
 }: {
   points: TrendPoint[];
   label: string;
   color?: string;
-  variant?: 'area' | 'column';
+  variant?: "area" | "column";
   height?: number;
   emptyMessage?: string;
   className?: string;
@@ -65,14 +72,18 @@ export function TrendChart({
    * positions for columns pushes half of the first bar out over the axis.
    */
   const x = (index: number) =>
-    variant === 'column'
+    variant === "column"
       ? pad.left + (index + 0.5) * band
       : points.length === 1
         ? pad.left + plotWidth / 2
         : pad.left + (index / (points.length - 1)) * plotWidth;
-  const y = (value: number) => pad.top + plotHeight - (value / scale.max) * plotHeight;
+  const y = (value: number) =>
+    pad.top + plotHeight - (value / scale.max) * plotHeight;
 
-  const peak = values.reduce((best, value, index) => (value > values[best]! ? index : best), 0);
+  const peak = values.reduce(
+    (best, value, index) => (value > values[best]! ? index : best),
+    0,
+  );
 
   const pointAt = useCallback(
     (clientX: number) => {
@@ -84,9 +95,11 @@ export function TrendChart({
       const scaleX = rect.width === 0 ? 1 : width / rect.width;
       const offset = (clientX - rect.left) * scaleX - pad.left;
       const index =
-        variant === 'column'
+        variant === "column"
           ? Math.floor(offset / band)
-          : Math.round((plotWidth === 0 ? 0 : offset / plotWidth) * (points.length - 1));
+          : Math.round(
+              (plotWidth === 0 ? 0 : offset / plotWidth) * (points.length - 1),
+            );
 
       return Math.min(points.length - 1, Math.max(0, index));
     },
@@ -94,11 +107,11 @@ export function TrendChart({
   );
 
   function onKeyDown(event: React.KeyboardEvent) {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
     setActive((current) => {
       const start = current ?? points.length - 1;
-      const next = event.key === 'ArrowLeft' ? start - 1 : start + 1;
+      const next = event.key === "ArrowLeft" ? start - 1 : start + 1;
       return Math.min(points.length - 1, Math.max(0, next));
     });
   }
@@ -106,7 +119,10 @@ export function TrendChart({
   if (points.length === 0) {
     return (
       <div
-        className={cn('flex items-center justify-center text-sm text-ink-400', className)}
+        className={cn(
+          "flex items-center justify-center text-sm text-ink-400",
+          className,
+        )}
         style={{ height }}
       >
         {emptyMessage}
@@ -115,30 +131,35 @@ export function TrendChart({
   }
 
   const linePath = points
-    .map((point, index) => `${index === 0 ? 'M' : 'L'}${x(index).toFixed(1)} ${y(point.value).toFixed(1)}`)
-    .join(' ');
+    .map(
+      (point, index) =>
+        `${index === 0 ? "M" : "L"}${x(index).toFixed(1)} ${y(point.value).toFixed(1)}`,
+    )
+    .join(" ");
   const areaPath = `${linePath} L${x(points.length - 1).toFixed(1)} ${pad.top + plotHeight} L${x(0).toFixed(1)} ${pad.top + plotHeight} Z`;
 
   // First, middle and last only. Every date across 30 days collides on a phone.
-  const axisIndexes = [0, Math.floor((points.length - 1) / 2), points.length - 1].filter(
-    (value, index, list) => list.indexOf(value) === index,
-  );
+  const axisIndexes = [
+    0,
+    Math.floor((points.length - 1) / 2),
+    points.length - 1,
+  ].filter((value, index, list) => list.indexOf(value) === index);
 
   const hovered = active == null ? null : points[active];
 
   return (
-    <div ref={ref} className={cn('relative', className)}>
+    <div ref={ref} className={cn("relative min-w-0 w-full", className)}>
       <svg
         ref={svgRef}
-        width={measured ? width : '100%'}
+        width={measured ? width : "100%"}
         height={height}
         // Left at the default xMidYMid meet: the fallback scales uniformly, so
         // the type never stretches on the way to being measured.
         viewBox={measured ? undefined : `0 0 ${width} ${height}`}
         role="img"
         tabIndex={0}
-        aria-label={`${label}. ${total.toLocaleString('en-IN')} in total across ${points.length} ${points.length === 1 ? 'day' : 'days'}. Use the left and right arrow keys to read each value.`}
-        className="touch-pan-y outline-none focus-visible:ring-2 focus-visible:ring-royal-500/30"
+        aria-label={`${label}. ${total.toLocaleString("en-IN")} in total across ${points.length} ${points.length === 1 ? "day" : "days"}. Use the left and right arrow keys to read each value.`}
+        className="block max-w-full touch-pan-y outline-none focus-visible:ring-2 focus-visible:ring-royal-500/30"
         onPointerMove={(event) => setActive(pointAt(event.clientX))}
         onPointerLeave={() => setActive(null)}
         onKeyDown={onKeyDown}
@@ -161,7 +182,7 @@ export function TrendChart({
               textAnchor="end"
               fontSize={11}
               fill={CHART.muted}
-              style={{ fontVariantNumeric: 'tabular-nums' }}
+              style={{ fontVariantNumeric: "tabular-nums" }}
             >
               {tick(value)}
             </text>
@@ -173,7 +194,13 @@ export function TrendChart({
             key={index}
             x={x(index)}
             y={height - 8}
-            textAnchor={index === 0 ? 'start' : index === points.length - 1 ? 'end' : 'middle'}
+            textAnchor={
+              index === 0
+                ? "start"
+                : index === points.length - 1
+                  ? "end"
+                  : "middle"
+            }
             fontSize={11}
             fill={CHART.muted}
           >
@@ -191,7 +218,7 @@ export function TrendChart({
           >
             {emptyMessage}
           </text>
-        ) : variant === 'area' ? (
+        ) : variant === "area" ? (
           <>
             <path d={areaPath} fill={color} fillOpacity={AREA_FILL_OPACITY} />
             <path
@@ -235,11 +262,17 @@ export function TrendChart({
           <text
             x={x(peak)}
             y={Math.max(12, y(values[peak]!) - 10)}
-            textAnchor={peak === 0 ? 'start' : peak === points.length - 1 ? 'end' : 'middle'}
+            textAnchor={
+              peak === 0
+                ? "start"
+                : peak === points.length - 1
+                  ? "end"
+                  : "middle"
+            }
             fontSize={11}
             fontWeight={600}
             fill={CHART.ink}
-            style={{ fontVariantNumeric: 'tabular-nums' }}
+            style={{ fontVariantNumeric: "tabular-nums" }}
           >
             {tick(values[peak]!)}
           </text>
@@ -257,7 +290,7 @@ export function TrendChart({
               stroke={CHART.axis}
               strokeWidth={1}
             />
-            {variant === 'area' && (
+            {variant === "area" && (
               <circle
                 cx={x(active!)}
                 cy={y(hovered.value)}
@@ -281,11 +314,17 @@ export function TrendChart({
           }}
         >
           <p className="nums text-sm font-semibold text-ink-900">
-            {hovered.value.toLocaleString('en-IN')}{' '}
-            <span className="font-normal text-ink-500">{label.toLowerCase()}</span>
+            {hovered.value.toLocaleString("en-IN")}{" "}
+            <span className="font-normal text-ink-500">
+              {label.toLowerCase()}
+            </span>
           </p>
           <p className="mt-0.5 flex items-center gap-1.5 text-2xs text-ink-500">
-            <span aria-hidden className="h-0.5 w-3 rounded-full" style={{ background: color }} />
+            <span
+              aria-hidden
+              className="h-0.5 w-3 rounded-full"
+              style={{ background: color }}
+            />
             {dayLabelLong(hovered.date)}
           </p>
         </div>
@@ -355,13 +394,26 @@ export function Sparkline({
   const y = (value: number) => height - 2 - (value / max) * (height - 4);
 
   const path = points
-    .map((value, index) => `${index === 0 ? 'M' : 'L'}${(index * step).toFixed(1)} ${y(value).toFixed(1)}`)
-    .join(' ');
+    .map(
+      (value, index) =>
+        `${index === 0 ? "M" : "L"}${(index * step).toFixed(1)} ${y(value).toFixed(1)}`,
+    )
+    .join(" ");
 
   return (
     <svg width={width} height={height} aria-hidden className="overflow-visible">
-      <path d={`${path} L${width} ${height} L0 ${height} Z`} fill={color} fillOpacity={0.1} />
-      <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" />
+      <path
+        d={`${path} L${width} ${height} L0 ${height} Z`}
+        fill={color}
+        fillOpacity={0.1}
+      />
+      <path
+        d={path}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+      />
       <circle cx={width} cy={y(points.at(-1)!)} r={2.5} fill={color} />
     </svg>
   );

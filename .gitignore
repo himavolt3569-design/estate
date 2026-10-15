@@ -1,5 +1,6 @@
 node_modules/
 .next/
+.next-saved-search-*/
 out/
 build/
 dist/
@@ -18,11 +19,26 @@ next-env.d.ts
 
 npm-debug.log*
 yarn-error.log*
+firebase-debug.log*
+firestore-debug.log*
+storage-debug.log*
 .pnpm-debug.log*
 
 .vercel
 coverage/
 .vitest/
+
+# Local visual review files from the design comparison.
+/.chrome-preview*/
+/.chrome-review*/
+/home-desktop.png
+/home-mobile.png
+/home-mobile-accurate.png
+/dashboard-desktop.png
+/dashboard-mobile-accurate.png
+/.listing-chrome-profile*/
+/listing-preview*.png
+/home-review*.png
 
 supabase/.branches
 supabase/.temp

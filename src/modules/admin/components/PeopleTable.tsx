@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { Avatar } from '@/components/media/Avatar';
+import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/primitives';
 import { SelectMenu } from '@/components/ui/select-menu';
 import { formatDate } from '@/lib/format';
@@ -104,77 +105,79 @@ export function PeopleTable({ people }: { people: Person[] }) {
         {filtered.length} of {people.length} {people.length === 1 ? 'account' : 'accounts'}
       </p>
 
-      <div className="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-soft">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-3xl border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-ink-100 bg-ink-50/70 text-left">
-                <Th>Person</Th>
-                <Th>Role</Th>
-                <Th>Status</Th>
-                <Th>Joined</Th>
-                <Th className="text-right">Manage</Th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-100">
-              {filtered.map((person) => (
-                <tr key={person.id} className="transition-colors hover:bg-ink-50/60">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <Avatar src={person.avatar_url} name={person.full_name} size="sm" />
-                      <div className="min-w-0">
-                        <p className="font-medium text-ink-900">
-                          {person.full_name || 'Unnamed account'}
-                        </p>
-                        <p className="mt-0.5 text-xs text-ink-500">
-                          {person.email ?? '—'}
-                          {person.phone ? ` · ${person.phone}` : ''}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-ink-600">
-                    {ROLE_LABEL[person.role] ?? person.role}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge tone={STATUS_TONE[person.status as keyof typeof STATUS_TONE] ?? 'neutral'}>
-                      {person.status.replace('_', ' ')}
-                    </Badge>
-                  </td>
-                  <td className="nums px-4 py-3 text-xs text-ink-500">
-                    {formatDate(person.created_at)}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setSelected(person)}
-                      className="rounded-lg px-3 py-1.5 text-xs font-semibold text-crimson-700 transition-colors hover:bg-crimson-50"
-                    >
-                      Open
-                    </button>
-                  </td>
-                </tr>
-              ))}
-
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-sm text-ink-500">
-                    Nobody matches that.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      {filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-ink-200 px-4 py-12 text-center text-sm text-ink-500">
+          Nobody matches that.
         </div>
-      </div>
+      ) : (
+        <DataTable
+          caption="Everyone on the platform"
+          rows={filtered}
+          rowKey={(person) => person.id}
+          columns={[
+            {
+              key: 'person',
+              header: 'Person',
+              role: 'title',
+              cell: (person) => (
+                <div className="flex items-center gap-3">
+                  <Avatar src={person.avatar_url} name={person.full_name} size="sm" loading="lazy" />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-ink-900">
+                      {person.full_name || 'Unnamed account'}
+                    </p>
+                    {/* An email is one unbreakable token; without this it was
+                        the widest thing on the card. */}
+                    <p className="mt-0.5 text-xs break-all text-ink-500">
+                      {person.email ?? '—'}
+                      {person.phone ? ` · ${person.phone}` : ''}
+                    </p>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              key: 'status',
+              header: 'Status',
+              role: 'badge',
+              cell: (person) => (
+                <Badge tone={STATUS_TONE[person.status as keyof typeof STATUS_TONE] ?? 'neutral'}>
+                  {person.status.replace('_', ' ')}
+                </Badge>
+              ),
+            },
+            {
+              key: 'role',
+              header: 'Role',
+              cell: (person) => (
+                <span className="text-ink-600">{ROLE_LABEL[person.role] ?? person.role}</span>
+              ),
+            },
+            {
+              key: 'joined',
+              header: 'Joined',
+              cell: (person) => (
+                <span className="nums text-xs text-ink-500">{formatDate(person.created_at)}</span>
+              ),
+            },
+            {
+              key: 'manage',
+              header: 'Manage',
+              role: 'action',
+              align: 'right',
+              cell: (person) => (
+                <button
+                  type="button"
+                  onClick={() => setSelected(person)}
+                  className="rounded-lg border border-ink-200 px-3 py-1.5 text-xs font-semibold text-crimson-700 transition-colors hover:bg-crimson-50 lg:border-transparent"
+                >
+                  Open
+                </button>
+              ),
+            },
+          ]}
+        />
+      )}
     </div>
-  );
-}
-
-function Th({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return (
-    <th className={`px-4 py-3 text-2xs tracking-wide text-ink-400 uppercase ${className}`}>
-      {children}
-    </th>
   );
 }

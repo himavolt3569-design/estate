@@ -2,6 +2,7 @@
 
 import { ChevronDown, TriangleAlert, Wallet } from 'lucide-react';
 import Link from 'next/link';
+import { useSiteLanguage } from '@/components/merokotha/site-language';
 import { useId, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -166,6 +167,7 @@ function spoken(value: number): string {
 }
 
 export function EmiCalculator({ t }: { t: Copy }) {
+  const { ui } = useSiteLanguage();
   const [price, setPrice] = useState(10_000_000);
   const [downPayment, setDownPayment] = useState(3_000_000);
   const [rate, setRate] = useState(9.5);
@@ -427,8 +429,8 @@ export function EmiCalculator({ t }: { t: Copy }) {
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <Button asChild size="sm">
-              <Link href={`/search?transaction_type=sale&price_max=${Math.round(price * 100)}`}>
-                {t.findWithin}
+              <Link href="/#rentals">
+                {ui.browse}
               </Link>
             </Button>
             <button

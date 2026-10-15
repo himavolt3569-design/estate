@@ -1,10 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import { Viewer } from '@photo-sphere-viewer/core';
-import { MarkersPlugin } from '@photo-sphere-viewer/markers-plugin';
-import '@photo-sphere-viewer/core/index.css';
-import '@photo-sphere-viewer/markers-plugin/index.css';
+import { useEffect, useRef, useState } from "react";
+import { Viewer, type events as ViewerEvents } from "@photo-sphere-viewer/core";
+import {
+  MarkersPlugin,
+  type events as MarkerEvents,
+} from "@photo-sphere-viewer/markers-plugin";
+import { escapeTourLabel } from "@/lib/virtual-tour";
+import "@photo-sphere-viewer/core/index.css";
+import "@photo-sphere-viewer/markers-plugin/index.css";
 
 export type Hotspot = {
   id: string;
@@ -13,6 +17,22 @@ export type Hotspot = {
   targetImageId?: string;
   label?: string;
 };
+
+function syncMarkers(viewer: Viewer, hotspots: Hotspot[]) {
+  viewer.getPlugin<MarkersPlugin>(MarkersPlugin).setMarkers(
+    hotspots.map((marker) => ({
+      id: marker.id,
+      position: { yaw: marker.yaw, pitch: marker.pitch },
+      html:
+        '<button type="button" aria-label="' +
+        escapeTourLabel(marker.label || "Go to room") +
+        '" style="padding:8px 12px;background:white;color:#163660;border:1px solid #b8c7d9;border-radius:8px;box-shadow:0 2px 8px #0003;font-weight:600;cursor:pointer;white-space:nowrap">' +
+        escapeTourLabel(marker.label || "Go to room") +
+        " →</button>",
+      anchor: "center center",
+    })),
+  );
+}
 
 export function PanoramaViewer({
   src,
@@ -27,64 +47,111 @@ export function PanoramaViewer({
   onHotspotClick?: (id: string) => void;
   onSphereClick?: (yaw: number, pitch: number) => void;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const container = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
-
+  const callbacks = useRef({ onHotspotClick, onSphereClick });
+  const currentHotspots = useRef(hotspots);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
-    if (!containerRef.current) return;
-
-    viewerRef.current = new Viewer({
-      container: containerRef.current,
-      panorama: src,
-      navbar: ['zoom', 'fullscreen'],
-      defaultZoomLvl: 0,
-      touchmoveTwoFingers: true,
-      mousewheelCtrlKey: true,
-      plugins: [[MarkersPlugin, {}]],
-    });
-
-    const viewer = viewerRef.current;
-    const markersPlugin = viewer.getPlugin(MarkersPlugin) as MarkersPlugin;
-
-    const onSelect = (e: any) => {
-      if (onHotspotClick) onHotspotClick(e.marker.id);
-    };
-
-    const onClick = (e: any) => {
-      if (!e.data.rightclick && onSphereClick) {
-        onSphereClick(e.data.yaw, e.data.pitch);
-      }
-    };
-
-    markersPlugin.addEventListener('select-marker', onSelect);
-    viewer.addEventListener('click', onClick);
-
-    return () => {
-      markersPlugin.removeEventListener('select-marker', onSelect);
-      viewer.removeEventListener('click', onClick);
-      viewer.destroy();
-      viewerRef.current = null;
-    };
-  }, [src]); // Re-create viewer only on src change
-
-  // Sync markers when hotspots prop changes
+    callbacks.current = { onHotspotClick, onSphereClick };
+  }, [onHotspotClick, onSphereClick]);
   useEffect(() => {
-    if (!viewerRef.current) return;
-    const markersPlugin = viewerRef.current.getPlugin(MarkersPlugin) as MarkersPlugin;
-    markersPlugin.clearMarkers();
-    
-    hotspots.forEach((h) => {
-      markersPlugin.addMarker({
-        id: h.id,
-        position: { yaw: h.yaw, pitch: h.pitch },
-        html: h.label
-          ? `<div class="px-2 py-1 bg-white/95 text-ink-900 rounded-md shadow border border-ink-200 font-semibold text-sm cursor-pointer whitespace-nowrap hover:bg-white">${h.label}</div>`
-          : `<div class="w-4 h-4 bg-royal-600 rounded-full border-2 border-white shadow cursor-pointer hover:scale-125 transition-transform"></div>`,
-        size: { width: 0, height: 0 },
-        anchor: 'center center',
-      });
-    });
+    currentHotspots.current = hotspots;
+    if (viewerRef.current) syncMarkers(viewerRef.current, hotspots);
   }, [hotspots]);
+  useEffect(() => {
+    let dispose = () => {};
+    setError(false);
+    setLoading(true);
+    // Strict Mode rehearses effect setup/cleanup. Starting a network-backed
+    // viewer in that rehearsal can leave Three's shared request queue aborted.
+    // Initialize after cleanup has had a chance to cancel the rehearsal.
+    const timer = window.setTimeout(() => {
+      if (!container.current) return;
+      let viewer: Viewer;
+      try {
+        viewer = new Viewer({
+          container: container.current,
+          panorama: src,
+          navbar: ["zoom", "fullscreen"],
+          defaultZoomLvl: 0,
+          touchmoveTwoFingers: true,
+          mousewheelCtrlKey: true,
+          plugins: [[MarkersPlugin, { clickEventOnMarker: false }]],
+        });
+      } catch {
+        setError(true);
+        setLoading(false);
+        return;
+      }
+      viewerRef.current = viewer;
+      const markers = viewer.getPlugin<MarkersPlugin>(MarkersPlugin);
+      const select = (event: MarkerEvents.SelectMarkerEvent) =>
+        callbacks.current.onHotspotClick?.(event.marker.id);
+      const click = (event: ViewerEvents.ClickEvent) => {
+        if (!event.data.rightclick)
+          callbacks.current.onSphereClick?.(event.data.yaw, event.data.pitch);
+      };
+      const failed = () => {
+        setError(true);
+        setLoading(false);
+      };
+      const ready = () => {
+        syncMarkers(viewer, currentHotspots.current);
+        setLoading(false);
+      };
+      markers.addEventListener("select-marker", select);
+      viewer.addEventListener("click", click);
+      viewer.addEventListener("panorama-error", failed);
+      viewer.addEventListener("ready", ready);
+      syncMarkers(viewer, currentHotspots.current);
+      dispose = () => {
+        markers.removeEventListener("select-marker", select);
+        viewer.removeEventListener("click", click);
+        viewer.removeEventListener("panorama-error", failed);
+        viewer.removeEventListener("ready", ready);
+        viewer.destroy();
+        viewerRef.current = null;
+      };
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      dispose();
+    };
+  }, [src]);
 
-  return <div ref={containerRef} className={className} />;
+  return (
+    <div className={"relative " + (className || "")}>
+      <div
+        ref={container}
+        className="h-full w-full"
+        aria-label="Interactive 360 degree panorama"
+      />
+      {loading && (
+        <p
+          role="status"
+          className="pointer-events-none absolute inset-x-0 top-4 text-center text-sm"
+        >
+          Loading panorama…
+        </p>
+      )}
+      {error && (
+        <div
+          role="alert"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-ink-50 p-6 text-center text-sm text-ink-700"
+        >
+          <p>The interactive panorama could not load on this device.</p>
+          <a
+            href={src}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-royal-700 underline"
+          >
+            Open the panorama photo
+          </a>
+        </div>
+      )}
+    </div>
+  );
 }

@@ -1,6 +1,6 @@
-import Link from 'next/link';
+import Link from "next/link";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 /** The frame every chart sits in, so a dashboard reads as one surface. */
 export function ChartCard({
@@ -20,20 +20,27 @@ export function ChartCard({
   return (
     <section
       className={cn(
-        'rounded-2xl border border-ink-100 bg-white p-5 shadow-soft sm:p-6',
+        "min-w-0 rounded-2xl border border-ink-100 bg-white p-5 shadow-soft sm:p-6",
         className,
       )}
     >
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-ink-900">{title}</h3>
-          {subtitle && <p className="mt-1 text-xs leading-relaxed text-ink-500">{subtitle}</p>}
+          {subtitle && (
+            <p className="mt-1 text-xs leading-relaxed text-ink-500">
+              {subtitle}
+            </p>
+          )}
         </div>
 
         {legend && legend.length > 0 && (
           <ul className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
             {legend.map((entry) => (
-              <li key={entry.label} className="flex items-center gap-1.5 text-xs text-ink-600">
+              <li
+                key={entry.label}
+                className="flex items-center gap-1.5 text-xs text-ink-600"
+              >
                 <span
                   aria-hidden
                   className="h-0.5 w-3.5 rounded-full"
@@ -80,12 +87,12 @@ export function RangeTabs({
             key={days}
             href={`${basePath}?days=${days}`}
             scroll={false}
-            aria-current={selected ? 'true' : undefined}
+            aria-current={selected ? "true" : undefined}
             className={cn(
-              'rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors',
+              "rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
               selected
-                ? 'bg-royal-800 text-white shadow-sm'
-                : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900',
+                ? "bg-royal-800 text-white shadow-sm"
+                : "text-ink-600 hover:bg-ink-50 hover:text-ink-900",
             )}
           >
             {days} days

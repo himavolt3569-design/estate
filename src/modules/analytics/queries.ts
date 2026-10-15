@@ -56,7 +56,7 @@ export type PortfolioAnalytics = {
     enquiries: number;
     status: string;
   }>;
-  /** Drafts that cannot be sent for checking yet, with the reason. */
+  /** Drafts that cannot go live yet, with the reason. */
   needsAttention: Array<{ id: string; title: string; reason: string }>;
 };
 
@@ -215,8 +215,8 @@ export async function getPortfolioAnalytics(days: number): Promise<PortfolioAnal
             row.status === 'rejected'
               ? 'Sent back to you — open it to see what to change'
               : short > 0
-                ? `Needs ${short} more ${short === 1 ? 'photo' : 'photos'} before it can be checked`
-                : 'Ready to send for checking',
+                ? `Needs ${short} more ${short === 1 ? 'photo' : 'photos'} before it can go live`
+                : 'Finished — open it to publish',
         };
       }),
   };
@@ -293,6 +293,25 @@ export type BuyerActivity = {
   enquiriesSent: number;
   /** What the buyer has saved, grouped — "you are mostly looking at land". */
   byCategory: Array<{ label: string; value: number }>;
+  /** Where the shortlist actually is. A buyer's search is nearly always local. */
+  byLocality: Array<{ label: string; value: number }>;
+  /**
+   * The shortlist's own price range.
+   *
+   * This is the one number a buyer cannot work out for themselves without
+   * opening every saved listing, and it is what tells them whether they have
+   * been shortlisting within their budget or drifting above it.
+   */
+  priceBand: { min: number; max: number; median: number } | null;
+  /** How many of the saved ones our team has actually been out to check. */
+  verifiedSaved: number;
+  /** Saved searches in full, so the dashboard can link into each one. */
+  searches: Array<{
+    id: string;
+    name: string;
+    notify: boolean;
+    frequency: string | null;
+  }>;
   recent: Array<{
     id: string;
     title: string;
@@ -302,6 +321,8 @@ export type BuyerActivity = {
     locationSlug: string | null;
     provinceSlug: string | null;
     savedAt: string;
+    verified: boolean;
+    locality: string | null;
   }>;
 };
 
@@ -328,14 +349,18 @@ export async function getBuyerActivity(): Promise<BuyerActivity> {
         `
         created_at,
         property:properties!favorites_property_id_fkey (
-          id, title, slug, price, price_period, category,
-          location:locations!properties_location_id_fkey ( slug, path )
+          id, title, slug, price, price_period, category, verified_at,
+          location:locations!properties_location_id_fkey ( name_en, slug, path )
         )
       `,
       )
       .order('created_at', { ascending: false })
       .limit(50),
-    supabase.from('saved_searches').select('id', { count: 'exact', head: true }),
+    supabase
+      .from('saved_searches')
+      .select('id, name, notify, frequency')
+      .order('created_at', { ascending: false })
+      .limit(6),
     supabase.from('enquiries').select('id', { count: 'exact', head: true }),
   ]);
 
@@ -348,26 +373,62 @@ export async function getBuyerActivity(): Promise<BuyerActivity> {
       price: number;
       price_period: string | null;
       category: string;
-      location: { slug: string; path: string } | null;
+      verified_at: string | null;
+      location: { name_en: string; slug: string; path: string } | null;
     } | null;
   };
 
   const rows = ((favorites.data ?? []) as unknown as FavoriteRow[]).filter((row) => row.property);
 
   const grouped = new Map<string, number>();
+  const localities = new Map<string, number>();
   for (const row of rows) {
     const label = CATEGORY_LABELS[row.property!.category] ?? row.property!.category;
     grouped.set(label, (grouped.get(label) ?? 0) + 1);
+
+    const locality = row.property!.location?.name_en;
+    if (locality) localities.set(locality, (localities.get(locality) ?? 0) + 1);
   }
+
+  /*
+   * Sale prices and monthly rents share one column, so mixing them would put a
+   * 2-crore house and a 15,000-rupee flat in the same range and make the band
+   * meaningless. Only outright prices count toward it.
+   */
+  const outrightPrices = rows
+    .filter((row) => row.property!.price_period == null)
+    .map((row) => row.property!.price)
+    .sort((a, b) => a - b);
+
+  const priceBand =
+    outrightPrices.length > 0
+      ? {
+          min: outrightPrices[0]!,
+          max: outrightPrices.at(-1)!,
+          median: outrightPrices[Math.floor((outrightPrices.length - 1) / 2)]!,
+        }
+      : null;
 
   return {
     savedCount: rows.length,
-    savedSearchCount: searches.count ?? 0,
+    savedSearchCount: searches.data?.length ?? 0,
     enquiriesSent: enquiries.count ?? 0,
     byCategory: [...grouped.entries()]
       .map(([label, value]) => ({ label, value }))
       .sort((a, b) => b.value - a.value),
-    recent: rows.slice(0, 4).map((row) => ({
+    byLocality: [...localities.entries()]
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5),
+    priceBand,
+    verifiedSaved: rows.filter((row) => row.property!.verified_at != null).length,
+    searches: (searches.data ?? []).map((row) => ({
+      id: row.id as string,
+      name: row.name as string,
+      notify: Boolean(row.notify),
+      frequency: (row.frequency as string | null) ?? null,
+    })),
+    recent: rows.slice(0, 5).map((row) => ({
       id: row.property!.id,
       title: row.property!.title,
       price: row.property!.price,
@@ -377,6 +438,8 @@ export async function getBuyerActivity(): Promise<BuyerActivity> {
       // nepal.bagmati.kathmandu — the second label is the province.
       provinceSlug: row.property!.location?.path?.split('.')[1] ?? null,
       savedAt: row.created_at,
+      verified: row.property!.verified_at != null,
+      locality: row.property!.location?.name_en ?? null,
     })),
   };
 }

@@ -12,6 +12,9 @@ for (const line of readFileSync(envFile, 'utf8').split('\n')) {
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 async function run() {
+  if (!process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD.length < 12) {
+    throw new Error('Set ADMIN_PASSWORD to at least 12 characters before running this utility.');
+  }
   const { data: users, error } = await supabase.auth.admin.listUsers();
   if (error) { console.error(error); return; }
   
@@ -26,13 +29,13 @@ async function run() {
   const adminProfile = profiles[0];
   const user = users.users.find(u => u.id === adminProfile.id);
   
-  console.log(`Updating password for ${user.email}...`);
-  const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, { password: 'HimaVolt@Admin#2026' });
+    console.log('Admin password updated.');
+  const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, { password: process.env.ADMIN_PASSWORD });
   
   if (updateError) {
     console.error('Failed to update password:', updateError);
   } else {
-    console.log('Password updated successfully to: HimaVolt@Admin#2026');
+    console.log('Admin password updated.');
   }
 }
 
