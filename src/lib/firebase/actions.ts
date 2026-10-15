@@ -1,5 +1,5 @@
 import type { User } from 'firebase/auth';
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, limit, query, serverTimestamp, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, limit, query, runTransaction, serverTimestamp, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { db, storage } from './client';
 import type { AgentApplication, Inquiry, Listing, Profile } from './types';
@@ -32,13 +32,21 @@ export async function uploadImages(path: string, files: File[]) {
     return getDownloadURL(item);
   }));
 }
-export async function createListing(uid: string, ownerName: string, input: Omit<Listing, 'id' | 'ownerId' | 'ownerName' | 'photoUrls' | 'status' | 'viewCount'>, files: File[], contact?: { name: string; phone: string }) {
-  const listingRef = doc(collection(db(), 'listings'));
-  const batch = writeBatch(db());
-  batch.set(listingRef, { ...input, ownerId: uid, ownerName, photoUrls: [], status: 'active', verificationStatus: 'pending', viewCount: 0, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-  await batch.commit();
+export async function createListing(listingId: string, uid: string, ownerName: string, input: Omit<Listing, 'id' | 'ownerId' | 'ownerName' | 'photoUrls' | 'status' | 'viewCount'>, files: File[], contact?: { name: string; phone: string }) {
+  // A form retains this ID through retries, including a failed photo/contact step.
+  // The transaction also handles two simultaneous requests for the same ID.
+  const listingRef = doc(db(), 'listings', listingId);
+  const existingPhotos = await runTransaction(db(), async transaction => {
+    const existing = await transaction.get(listingRef);
+    if (existing.exists()) {
+      if (existing.data().ownerId !== uid) throw new Error('This rental belongs to another account.');
+      return (existing.data().photoUrls || []) as string[];
+    }
+    transaction.set(listingRef, { ...input, ownerId: uid, ownerName, photoUrls: [], status: 'active', verificationStatus: 'pending', viewCount: 0, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    return [] as string[];
+  });
   if (contact) await setDoc(doc(db(), 'listings', listingRef.id, 'ownerContact', 'info'), contact);
-  if (files.length) {
+  if (files.length && !existingPhotos.length) {
     const photoUrls = await uploadImages(`listings/${listingRef.id}`, files);
     await updateDoc(listingRef, { photoUrls, updatedAt: serverTimestamp() });
   }

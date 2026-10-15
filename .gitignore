@@ -1,6 +1,7 @@
 node_modules/
 .next/
 .next-saved-search-*/
+.next-duplicate-tests/
 out/
 build/
 dist/
