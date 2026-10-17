@@ -1,0 +1,9 @@
+{
+  "version": "2026-10-17.1",
+  "source": "Android canonical files; website mirror",
+  "files": {
+    "firestore.rules": "8a9503cb5e6e1dfe26e9efdfce49073e2a53cdd3fb0d7025baae7f3d93d8b482",
+    "firestore.indexes.json": "f81a4fc6a702e596eaff8a1de80efc7fd949b190739d5d59bf43887bc8ea2657",
+    "storage.rules": "9470b3e5dac627de0e2f6bd59e9273e6abc498b3b28c7d8caf4ac5fc2b9351da"
+  }
+}

@@ -146,6 +146,9 @@ function EditForm({
         verifiedAt: deleteField(),
         verifiedBy: deleteField(),
         verificationReason: deleteField(),
+        reviewedAt: deleteField(),
+        reviewedBy: deleteField(),
+        reviewReason: deleteField(),
         updatedAt: serverTimestamp(),
       });
       const removed = (listing.photoUrls || []).filter(
