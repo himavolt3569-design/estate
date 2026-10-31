@@ -1,41 +1,39 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowDownUp, ArrowRight, Bell, Building2, Home as HomeIcon, LandPlot, MapPin, Search, ShieldCheck, Store, UserCheck, Warehouse } from 'lucide-react';
+import { ArrowRight, Home as HomeIcon, MapPin, Search, ShieldCheck, UserCheck, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input, Skeleton } from '@/components/ui/primitives';
 import { SelectMenu } from '@/components/ui/select-menu';
 import { ListingCard, money } from '@/components/merokotha/listing-card';
-import { HeroHomeScene } from '@/components/merokotha/hero-home-scene';
-import { SponsorCard, activeSponsors, type SponsorAd } from '@/components/merokotha/sponsor-card';
+import { AdCarousel } from '@/components/merokotha/sponsor-card';
+import { useCampaigns } from '@/components/merokotha/ad-provider';
+import { FeaturedListing } from '@/components/merokotha/featured-listing';
+import { HomeMotion } from '@/components/merokotha/home-motion';
+import { RentalFilters, propertyTypes } from '@/components/merokotha/rental-filters';
 import { useSiteLanguage } from '@/components/merokotha/site-language';
 import { SavedSearchPanel } from '@/components/merokotha/saved-search-panel';
 import { useDocs } from '@/lib/firebase/hooks';
 import type { Listing } from '@/lib/firebase/types';
 import { emptySearch, listingCreatedAt, matchesSearch, searchFromUrl, type SearchFilters } from '@/lib/listing-search';
 import { listingFeed } from '@/lib/listing-feed';
+import { isForSale, listingPrice } from '@/lib/listing-commerce';
+import type { MapArea } from '@/components/merokotha/map-view';
 
-const MapView = dynamic(() => import('@/components/merokotha/map-view'), { ssr: false });
-const propertyTypes = [
-  { value: 'room', label: 'Rooms', ne: 'कोठा', note: 'A place of your own', icon: HomeIcon, color: 'bg-royal-50 text-royal-600' },
-  { value: 'flat', label: 'Flats', ne: 'फ्ल्याट', note: 'Room to settle in', icon: Building2, color: 'bg-crimson-50 text-crimson-600' },
-  { value: 'apartment', label: 'Apartments', ne: 'अपार्टमेन्ट', note: 'City living', icon: Warehouse, color: 'bg-emerald-50 text-emerald-600' },
-  { value: 'house', label: 'Houses', ne: 'घर', note: 'Space for everyone', icon: HomeIcon, color: 'bg-marigold-50 text-marigold-700' },
-  { value: 'office', label: 'Offices', ne: 'अफिस', note: 'A better workday', icon: Building2, color: 'bg-sand-100 text-sand-700' },
-  { value: 'shop', label: 'Shops', ne: 'पसल', note: 'Find your storefront', icon: Store, color: 'bg-ink-100 text-ink-600' },
-  { value: 'land', label: 'Land', ne: 'जग्गा', note: 'Room to build', icon: LandPlot, color: 'bg-royal-50 text-royal-700' },
-] as const;
+const MapView = dynamic(() => import('@/components/merokotha/map-view'), { ssr: false, loading: () => <Skeleton className="h-[340px] w-full rounded-xl" /> });
 
 export default function Home() {
   const { ui, locale } = useSiteLanguage();
   const { items, error, loading } = useDocs<Listing>('listings', 'status', 'active');
-  const { items: ads } = useDocs<SponsorAd>('ads');
+  const { campaigns: landingAds, settings } = useCampaigns('landing');
+  const { campaigns: feedAds } = useCampaigns('listings');
   const [search, setSearch] = useState('');
   const [type, setType] = useState('');
+  const [transactionType, setTransactionType] = useState<'all' | 'rent' | 'sale'>('rent');
   const [max, setMax] = useState('');
   const [min, setMin] = useState('');
   const [furnishing, setFurnishing] = useState('');
@@ -43,130 +41,86 @@ export default function Home() {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sort, setSort] = useState('recommended');
   const [showMap, setShowMap] = useState(false);
+  const [mapBounds, setMapBounds] = useState<MapArea | null>(null);
+  const [area, setArea] = useState<MapArea | null>(null);
+  const [selectedId, setSelectedId] = useState<string>();
   const [nearby, setNearby] = useState<{ lat: number; lng: number } | null>(null);
-  const [visibleCount, setVisibleCount] = useState(9);
-  const filters: SearchFilters = { search, roomType: type, minRent: min, maxRent: max, furnishing, facility, verifiedOnly, nearby };
-
+  const [visibleCount, setVisibleCount] = useState(12);
+  const filters: SearchFilters = { search, roomType: type, minRent: min, maxRent: max, furnishing, facility, verifiedOnly, nearby, transactionType };
   useEffect(() => {
-    const fromUrl = searchFromUrl(window.location.search);
+    setShowMap(window.matchMedia('(max-width: 767px)').matches);
     if (window.location.search) {
-      setSearch(fromUrl.search); setType(fromUrl.roomType); setMin(fromUrl.minRent); setMax(fromUrl.maxRent);
-      setFurnishing(fromUrl.furnishing); setFacility(fromUrl.facility); setVerifiedOnly(fromUrl.verifiedOnly); setNearby(fromUrl.nearby);
+      const next = searchFromUrl(window.location.search);
+      setSearch(next.search); setType(next.roomType); setMin(next.minRent); setMax(next.maxRent); setFurnishing(next.furnishing); setFacility(next.facility); setVerifiedOnly(next.verifiedOnly); setNearby(next.nearby); setTransactionType(next.transactionType || 'all');
     }
   }, []);
-
-  const filtered = useMemo(() => items.filter(item => matchesSearch(item, filters)).sort((a, b) => {
-    if (sort === 'rent-low') return a.rentPerMonth - b.rentPerMonth;
-    if (sort === 'rent-high') return b.rentPerMonth - a.rentPerMonth;
+  const searched = useMemo(() => items.filter(item => matchesSearch(item, filters)).sort((a, b) => {
+    if (sort === 'rent-low') return listingPrice(a) - listingPrice(b);
+    if (sort === 'rent-high') return listingPrice(b) - listingPrice(a);
     if (sort === 'newest') return listingCreatedAt(b) - listingCreatedAt(a);
     return Number(b.verificationStatus === 'verified') - Number(a.verificationStatus === 'verified') || listingCreatedAt(b) - listingCreatedAt(a);
-  }), [items, search, type, min, max, furnishing, facility, verifiedOnly, nearby, sort]);
-
-  useEffect(() => setVisibleCount(9), [search, type, min, max, furnishing, facility, verifiedOnly, nearby, sort]);
-
-  const featured = items.find(item => item.verificationStatus === 'verified') || items[0];
-  const availableSponsor = (ad: SponsorAd) => ad.linkType !== 'listing' || items.some(item => item.id === ad.listingId);
-  const landingSponsors = activeSponsors(ads, 'landing').filter(availableSponsor).slice(0, 2);
-  const listingSponsors = activeSponsors(ads, 'listings').filter(availableSponsor).slice(0, 1);
-  const inlineSponsor = listingSponsors[0] || landingSponsors[0] || null;
-  const remainingLandingSponsors = landingSponsors.filter(ad => ad.id !== inlineSponsor?.id);
-  const visibleListings = filtered.slice(0, visibleCount);
-  const filtersActive = Boolean(search || type || min || max || furnishing || facility || verifiedOnly || nearby);
-  const typeOptions = [
-    { value: '', label: ui.anyType },
-    ...propertyTypes.map(item => ({ value: item.value, label: locale === 'ne' ? item.ne : item.label })),
-  ];
-  const sortOptions = [
-    { value: 'recommended', label: ui.sortRecommended },
-    { value: 'newest', label: ui.sortNewest },
-    { value: 'rent-low', label: ui.sortLow },
-    { value: 'rent-high', label: ui.sortHigh },
-  ];
-
-  const jumpToListings = () => document.getElementById('rentals')?.scrollIntoView({ behavior: 'smooth' });
-  const toggleNearby = () => {
+  }), [items, search, type, min, max, furnishing, facility, verifiedOnly, nearby, sort, transactionType]);
+  const filtered = useMemo(() => searched.filter(item => !area || Boolean(item.geoPoint && item.geoPoint.latitude >= area.south && item.geoPoint.latitude <= area.north && item.geoPoint.longitude >= area.west && item.geoPoint.longitude <= area.east)), [searched, area]);
+  useEffect(() => setVisibleCount(12), [search, type, min, max, furnishing, facility, verifiedOnly, nearby, sort, area, transactionType]);
+  const availableAds = (ads: typeof landingAds) => ads.filter(ad => ad.linkType !== 'listing' || items.some(item => item.id === ad.listingId));
+  const heroAds = availableAds(landingAds);
+  const inlineAds = availableAds(feedAds);
+  const visible = filtered.slice(0, visibleCount);
+  const filtersActive = Boolean(search || type || min || max || furnishing || facility || verifiedOnly || nearby || area || transactionType === 'sale');
+  const jump = () => document.getElementById('rentals')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  const changeFilters = (next: SearchFilters) => { setSearch(next.search); setType(next.roomType); setMin(next.minRent); setMax(next.maxRent); setFurnishing(next.furnishing); setFacility(next.facility); setVerifiedOnly(next.verifiedOnly); setNearby(next.nearby); setTransactionType(next.transactionType || 'all'); };
+  const applyFilters = (next: SearchFilters) => { changeFilters(next); setArea(null); jump(); };
+  const locate = () => {
     if (nearby) { setNearby(null); return; }
-    navigator.geolocation.getCurrentPosition(
-      position => setNearby({ lat: position.coords.latitude, lng: position.coords.longitude }),
-      () => toast.error('Location is unavailable. Check your browser permission and try again.'),
-    );
+    if (!navigator.geolocation) { toast.error('Your browser does not support location. Search by address instead.'); return; }
+    navigator.geolocation.getCurrentPosition(position => { setNearby({ lat: position.coords.latitude, lng: position.coords.longitude }); setArea(null); setShowMap(true); }, () => toast.error('Location is unavailable. Search by address or move the map.'), { timeout: 10000 });
   };
-  const applyFilters = (next: SearchFilters) => { setSearch(next.search); setType(next.roomType); setMin(next.minRent); setMax(next.maxRent); setFurnishing(next.furnishing); setFacility(next.facility); setVerifiedOnly(next.verifiedOnly); setNearby(next.nearby); jumpToListings(); };
-  const clearFilters = () => applyFilters(emptySearch);
-
+  const selected = filtered.find(item => item.id === selectedId);
+  const mapPreviews = selected ? [selected, ...filtered.filter(item => item.id !== selected.id)].slice(0, 3) : filtered.slice(0, 3);
   return <>
-    <section className="relative isolate flex flex-col items-center justify-center pb-14 pt-10 sm:pt-14 lg:min-h-[500px] lg:pb-16">
-      <div className="absolute inset-0 z-0">
-        <Image src="/images/hero-bg.png" alt="" fill priority sizes="100vw" className="object-cover brightness-[0.8]" />
-        <div className="absolute inset-0 bg-gradient-to-r from-royal-950/95 via-royal-950/65 to-royal-950/30" />
-        <div className="absolute inset-0 bg-gradient-to-t from-royal-950/80 via-transparent to-royal-950/20" />
-      </div>
-      <div className="relative z-10 mx-auto grid w-full max-w-8xl items-center gap-2 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-5 lg:px-8">
-        <div className="relative z-10 flex flex-col items-start">
-          <p className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-white"><Bell aria-hidden className="size-4" />{ui.savedSearchesTitle}</p>
-          <h1 className={`max-w-2xl text-balance text-4xl font-bold tracking-tight text-white drop-shadow-md ${locale === 'ne' ? 'leading-[1.25] sm:text-5xl lg:text-[clamp(2.5rem,4vw,3.75rem)]' : 'sm:text-6xl lg:text-7xl'}`}>{ui.heroTitle}</h1>
-          <p className="mt-5 max-w-xl text-base font-medium text-white drop-shadow-md sm:mt-6 sm:text-lg">{ui.heroIntro}</p>
-          <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 sm:mt-8">
-            <Button asChild size="lg" className="h-13 px-7 text-base font-semibold sm:h-14 sm:px-8 sm:text-lg"><Link href="#saved-searches">{ui.seeMyMatches} <ArrowRight aria-hidden className="ml-2 size-5" /></Link></Button>
-            <Link href="#rentals" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white underline-offset-4 hover:underline">{ui.browseRentals} <ArrowRight aria-hidden className="size-4" /></Link>
+    <HomeMotion />
+    <section className="home-hero">
+      <div className="home-hero__inner">
+        <div className="home-hero__intro">
+        <div className="home-hero__copy">
+          <h1>{ui.heroTitle}</h1>
+          <p>{ui.heroIntro}</p>
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <Button asChild variant="secondary" className="min-h-11"><Link href="#saved-searches" onClick={() => { const panel = document.getElementById('saved-search-disclosure'); if (panel instanceof HTMLDetailsElement) panel.open = true; }}>{ui.seeMyMatches}<ArrowRight aria-hidden className="size-4" /></Link></Button>
+
           </div>
+          <div className="home-hero__rentals"><h2 className="text-base font-semibold">{locale === 'ne' ? 'सबै भाडाका घरजग्गा' : 'All rentals'}</h2><div className="rental-type-tabs" aria-label="Rental categories"><button type="button" className={!type && transactionType === 'rent' ? 'is-active' : ''} aria-pressed={!type && transactionType === 'rent'} onClick={() => { setType(''); setTransactionType('rent'); jump(); }}>{locale === 'ne' ? 'सबै' : 'All rentals'}</button>{propertyTypes.slice(0, 3).map(item => <button key={item.value} type="button" className={type === item.value ? 'is-active' : ''} aria-pressed={type === item.value} onClick={() => { setType(item.value); setTransactionType('rent'); jump(); }}><item.icon aria-hidden className="size-4" />{locale === 'ne' ? item.ne : item.label}</button>)}</div></div>
         </div>
-        <div className="relative mx-auto hidden w-full max-w-[520px] justify-center sm:my-0 sm:flex lg:translate-x-4"><HeroHomeScene /></div>
-      </div>
-    </section>
-
-    <section id="saved-searches" aria-label={ui.savedSearchesTitle} className="relative z-20 mx-auto -mt-6 max-w-8xl scroll-mt-28 px-4 sm:px-6 lg:px-8">
-      <SavedSearchPanel filters={filters} listings={items} listingsLoading={loading} listingsError={error} allowSave landing />
-    </section>
-
-    <section aria-labelledby="featured-heading" className="mx-auto hidden max-w-8xl px-4 pt-10 sm:block sm:px-6 lg:px-8">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3"><div><p className="label text-crimson-700">{ui.featured}</p><h2 id="featured-heading" className="mt-1 text-2xl font-semibold text-ink-900 sm:text-3xl">{ui.featuredTitle}</h2></div><Link href="#rentals" className="inline-flex items-center gap-1 text-sm font-semibold text-royal-700 hover:underline">{ui.seeAll} <ArrowRight aria-hidden className="size-4" /></Link></div>
-      {featured ? <Link href={`/listing/${featured.id}`} className="group grid overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-royal-700 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-        <div className="relative aspect-[16/10] max-h-[300px] overflow-hidden bg-ink-100 md:aspect-auto md:min-h-[270px]">{featured.photoUrls?.[0] ? <img src={featured.photoUrls[0]} alt={featured.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" /> : <div className="flex h-full items-center justify-center text-ink-500">{ui.noPhoto}</div>}</div>
-        <div className="flex min-w-0 flex-col justify-center p-5 sm:p-8"><span className="text-xs font-semibold uppercase tracking-wide text-crimson-700">{featured.verificationStatus === 'verified' ? ui.verifiedListing : ui.featuredListing} · {featured.roomType || ui.propertyType}</span><h3 className="mt-3 text-xl font-semibold text-ink-900 sm:text-2xl">{featured.title}</h3><p className="mt-2 flex items-center gap-1.5 text-sm text-ink-600"><MapPin aria-hidden className="size-4 shrink-0" />{featured.address || ui.locationOnMap}</p><p className="mt-4 text-2xl font-bold text-royal-700">{money(featured.rentPerMonth)} <span className="text-sm font-normal text-ink-500">{ui.month}</span></p><span className="mt-5 inline-flex items-center gap-2 self-start text-sm font-semibold text-crimson-700">{ui.viewDetails} <ArrowRight aria-hidden className="size-4" /></span></div>
-      </Link> : loading ? <Skeleton className="h-[260px] w-full rounded-2xl" /> : <div className="rounded-2xl border border-ink-100 bg-ink-50 p-8"><h3 className="text-lg font-semibold text-ink-900">{ui.featuredEmpty}</h3><p className="mt-2 text-sm text-ink-600">{ui.featuredEmptyText}</p><Link href="/dashboard?tab=post" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-royal-700 hover:underline">{ui.listPlace} <ArrowRight aria-hidden className="size-4" /></Link></div>}
-    </section>
-
-    {remainingLandingSponsors.length > 0 && <section aria-labelledby="landing-sponsors-heading" className="mx-auto hidden max-w-8xl px-4 pt-14 md:block sm:px-6 lg:px-8">
-      <div className="mb-5"><p className="label text-sand-700">{ui.sponsorEyebrow}</p><h2 id="landing-sponsors-heading" className="mt-1 text-2xl font-semibold text-ink-900">{ui.sponsorTitle}</h2></div>
-      <div className="grid gap-5 lg:grid-cols-2">{remainingLandingSponsors.map(ad => <SponsorCard key={ad.id} ad={ad} compact={remainingLandingSponsors.length > 1} />)}</div>
-    </section>}
-
-    <section id="rentals" aria-labelledby="listings-heading" className="mx-auto max-w-8xl scroll-mt-24 px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className="label text-ink-500">{ui.browseEyebrow}</p><h2 id="listings-heading" className="mt-2 text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">{ui.browseRentals}</h2><p className="mt-2 max-w-xl text-sm text-ink-500">{ui.browseIntro}</p></div><Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex"><Link href="/dashboard?tab=post">{ui.listPlace} <ArrowRight aria-hidden className="size-4" /></Link></Button></div>
-
-      <form role="search" aria-label={ui.browseRentals} onSubmit={event => { event.preventDefault(); jumpToListings(); }} className="mb-5 rounded-2xl border border-ink-200 bg-white p-4 sm:p-5">
-        <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2 lg:grid-cols-[2fr_1.25fr_1.25fr_1fr]">
-          <label htmlFor="home-search" className="block text-sm font-medium text-ink-700">{ui.locationTitle}<div className="relative mt-1"><Input id="home-search" value={search} onChange={event => setSearch(event.target.value)} placeholder={ui.locationHint} className="pr-10" /><MapPin aria-hidden className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ink-400" /></div></label>
-          <div><label htmlFor="home-property-type" className="block text-sm font-medium text-ink-700">{ui.propertyType}</label><SelectMenu id="home-property-type" value={type} onValueChange={setType} options={typeOptions} className="mt-1" /></div>
-          <label htmlFor="home-max-rent" className="block text-sm font-medium text-ink-700">{ui.maxRent}<Input id="home-max-rent" value={max} onChange={event => setMax(event.target.value)} type="number" min="0" placeholder={ui.rentHint} className="mt-1" /></label>
-          <Button type="submit" variant="royal" size="lg" className="h-12 w-full"><Search aria-hidden className="size-4" /> {ui.browseRentals}</Button>
+        <div className="home-hero__photo"><Image src="/images/hero-bg.png" alt="" fill priority sizes="(max-width: 767px) 100vw, 42vw" className="object-cover" /></div>
         </div>
+      <form role="search" aria-label={ui.browseRentals} onSubmit={event => { event.preventDefault(); setArea(null); jump(); }} className="rental-search-bar">
+        <label htmlFor="home-search" className="min-w-0 text-xs font-semibold text-ink-600">{ui.locationTitle}<div className="relative mt-1"><Input id="home-search" value={search} onChange={event => setSearch(event.target.value)} placeholder={ui.locationHint} className="pr-9" /><MapPin aria-hidden className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ink-500" /></div></label>
+        <div><label htmlFor="home-property-type" className="text-xs font-semibold text-ink-600">{ui.propertyType}</label><SelectMenu id="home-property-type" value={type} onValueChange={value => { setType(value); if (value === 'flat') setTransactionType('rent'); }} options={[{ value: '', label: ui.anyType }, ...propertyTypes.map(item => ({ value: item.value, label: locale === 'ne' ? item.ne : item.label }))]} className="mt-1" /></div>
+        <label htmlFor="home-max-rent" className="text-xs font-semibold text-ink-600">{transactionType === 'sale' ? 'Maximum price' : ui.maxRent}<Input id="home-max-rent" value={max} onChange={event => setMax(event.target.value)} type="number" min="0" placeholder={transactionType === 'sale' ? 'Rs. asking price' : ui.rentHint} className="mt-1" /></label>
+        <Button type="submit" variant="royal" className="h-11"><Search aria-hidden className="size-4" />{locale === 'ne' ? 'खोज्नुहोस्' : transactionType === 'rent' ? 'Search rentals' : 'Search properties'}</Button>
       </form>
-
-      <div className="mb-5 grid gap-3 rounded-2xl border border-ink-100 bg-ink-50/70 px-4 py-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:px-5">
-        <div className="flex flex-wrap items-center gap-3"><p className="text-sm font-semibold text-ink-800">{loading ? ui.loading : `${filtered.length} ${ui.found}`}</p>{filtersActive && <button type="button" onClick={clearFilters} className="text-xs font-semibold text-crimson-700 underline underline-offset-2 hover:text-crimson-900">{ui.clearFilters}</button>}</div>
-        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center"><div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-1 sm:w-52"><ArrowDownUp aria-hidden className="size-4 shrink-0 text-ink-500" /><SelectMenu value={sort} onValueChange={setSort} options={sortOptions} ariaLabel={ui.sortBy} className="h-10 min-w-0" /></div><Button type="button" variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => setShowMap(!showMap)}>{showMap ? ui.showCards : ui.showMap}</Button><Button type="button" variant="secondary" size="sm" className="w-full sm:w-auto" onClick={toggleNearby}>{nearby ? ui.showAll : ui.nearby}</Button></div>
       </div>
-
-      <details className="mb-5 rounded-xl border border-ink-100 bg-white p-4"><summary className="cursor-pointer text-sm font-semibold text-royal-800">{ui.moreFilters}</summary><div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><label className="text-sm font-medium text-ink-700">{ui.minRent}<Input value={min} onChange={event => setMin(event.target.value)} type="number" min="0" placeholder={ui.rentHint} className="mt-1" /></label><div><label className="text-sm font-medium text-ink-700" htmlFor="filter-furnishing">{ui.furnishing}</label><SelectMenu id="filter-furnishing" value={furnishing} onValueChange={setFurnishing} options={[{value:'',label:ui.anyFurnishing},{value:'furnished',label:ui.furnished},{value:'semiFurnished',label:ui.semiFurnished},{value:'unfurnished',label:ui.unfurnished}]} className="mt-1" /></div><label className="text-sm font-medium text-ink-700">{ui.facilityContains}<Input value={facility} onChange={event => setFacility(event.target.value)} placeholder={ui.facilityHint} className="mt-1" /></label><label className="flex items-center gap-2 self-end rounded-lg border border-ink-100 px-3 py-3 text-sm font-medium"><input type="checkbox" checked={verifiedOnly} onChange={event => setVerifiedOnly(event.target.checked)} /> {ui.verifiedOnly}</label></div></details>
-
-      {error && <div role="alert" className="mb-5 rounded-xl border border-clay-200 bg-clay-50 px-4 py-3 text-sm text-clay-700">Could not load listings: {error}</div>}
-      {loading ? <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3" aria-label={ui.loading}>{Array.from({ length: 6 }, (_, index) => <div key={index} className="overflow-hidden rounded-2xl border border-ink-100 bg-white"><Skeleton className="listing-card-media rounded-none" /><div className="space-y-3 p-5"><Skeleton className="h-5 w-3/4" /><Skeleton className="h-4 w-1/2" /><Skeleton className="h-6 w-1/3" /></div></div>)}</div>
-        : showMap ? <MapView listings={filtered} />
-        : filtered.length ? <>
-          <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">{listingFeed(visibleListings, inlineSponsor).map(slot => slot.kind === 'sponsor' ? <SponsorCard key={`ad-${slot.ad.id}`} ad={slot.ad} tile /> : <ListingCard key={`listing-${slot.listing.id}`} listing={slot.listing} />)}</div>
-          {visibleCount < filtered.length && <div className="mt-9 flex justify-center"><Button type="button" variant="secondary" size="lg" onClick={() => setVisibleCount(count => count + 9)}>{ui.showMore} <ArrowRight aria-hidden className="size-4" /></Button></div>}
-        </> : !error && <div className="rounded-2xl border border-ink-100 bg-ink-50 p-10 text-center"><h3 className="text-lg font-semibold text-ink-900">{ui.noMatches}</h3><p className="mt-2 text-sm text-ink-500">{ui.tryAgain}</p>{filtersActive && <Button type="button" variant="secondary" className="mt-5" onClick={clearFilters}>{ui.clearFilters}</Button>}</div>}
-      {inlineSponsor && (showMap || !filtered.length) && <section aria-label={ui.sponsorInListings} className="mt-8"><SponsorCard ad={inlineSponsor} compact /></section>}
     </section>
+    {heroAds.length > 0 && <div className="home-partners"><AdCarousel ads={heroAds} placement="landing" banner interval={settings.rotationSeconds} /></div>}
+    <section id="saved-searches" aria-label={ui.savedSearchesTitle} className="relative z-20 mx-auto max-w-8xl scroll-mt-24 px-4 pt-6 sm:px-6 lg:px-8"><details id="saved-search-disclosure" className="saved-search-disclosure"><summary>{ui.savedSearchesTitle}<span aria-hidden>+</span></summary><div className="pt-4"><SavedSearchPanel filters={filters} listings={items} listingsLoading={loading} listingsError={error} allowSave landing /></div></details></section>
+    <FeaturedListing listings={items} loading={loading} />
+    <section id="rentals" aria-labelledby="listings-heading" className="mx-auto max-w-8xl scroll-mt-24 px-4 pb-12 pt-6 sm:px-6 md:py-12 lg:px-8">
+      <div className="mb-6 hidden items-end justify-between gap-3 md:flex"><div><h2 id="listings-heading" className="text-3xl font-semibold tracking-tight text-ink-900">{locale === 'ne' ? 'उपलब्ध घरजग्गा' : 'Available properties'}</h2><p className="mt-2 text-sm text-ink-600">{ui.browseIntro}</p></div><Button asChild variant="ghost" size="sm"><Link href="/dashboard?tab=post">{ui.listPlace}<ArrowRight aria-hidden className="size-4" /></Link></Button></div>
+      <h2 className="sr-only md:hidden">{locale === 'ne' ? 'नक्सामा कोठा खोज्नुहोस्' : 'Explore rentals near you'}</h2>
+      <RentalFilters filters={filters} onChange={changeFilters} onReset={() => applyFilters(emptySearch)} canReset={filtersActive} sort={sort} onSortChange={setSort} showMap={showMap} onToggleMap={() => setShowMap(value => !value)} onToggleNearby={locate} count={filtered.length} loading={loading} />
+      {showMap && <section id="rental-map-filter" className="mb-7 space-y-4" aria-label="Filter rentals by map">
 
-    <section id="trust" className="border-y border-ink-100 bg-ink-50/70"><div className="mx-auto grid max-w-8xl gap-5 px-4 py-12 sm:px-6 md:grid-cols-3 lg:px-8">
-      <div className="rounded-2xl border border-ink-100 bg-white p-6"><span className="flex size-11 items-center justify-center rounded-full bg-royal-50 text-royal-600"><ShieldCheck aria-hidden className="size-5" /></span><h3 className="mt-4 font-semibold text-ink-900">{ui.reviewed}</h3><p className="mt-2 text-sm text-ink-500">{ui.reviewedText}</p></div>
-      <div className="rounded-2xl border border-ink-100 bg-white p-6"><span className="flex size-11 items-center justify-center rounded-full bg-royal-50 text-royal-600"><UserCheck aria-hidden className="size-5" /></span><h3 className="mt-4 font-semibold text-ink-900">{ui.agentChecks}</h3><p className="mt-2 text-sm text-ink-500">{ui.agentChecksText}</p><Link href="/agents" className="mt-4 inline-flex text-sm font-semibold text-royal-700 hover:underline">{ui.learnAgents} →</Link></div>
-      <div className="rounded-2xl border border-ink-100 bg-white p-6"><span className="flex size-11 items-center justify-center rounded-full bg-royal-50 text-royal-600"><MapPin aria-hidden className="size-5" /></span><h3 className="mt-4 font-semibold text-ink-900">{ui.searchArea}</h3><p className="mt-2 text-sm text-ink-500">{ui.searchAreaText}</p></div>
-    </div></section>
+        {area && <button type="button" className="inline-flex min-h-10 items-center gap-2 text-sm text-royal-700 underline underline-offset-4" onClick={() => setArea(null)}><X aria-hidden className="size-4" />Clear map boundary</button>}
+        <MapView listings={searched} selectedId={selectedId} onSelect={setSelectedId} onBoundsChange={setMapBounds} />
 
-    <section id="types" className="bg-white"><div className="mx-auto max-w-8xl px-4 py-16 sm:px-6 lg:px-8"><h2 className="text-3xl font-semibold tracking-tight text-ink-900">{ui.browseType}</h2><div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">{propertyTypes.map(item => <button key={item.value} type="button" onClick={() => { setType(item.value); jumpToListings(); }} className="group flex h-full flex-col items-center justify-center gap-3 rounded-2xl border border-ink-100 bg-white p-6 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"><span className={`flex size-14 items-center justify-center rounded-full ${item.color} transition-transform group-hover:scale-110`}><item.icon aria-hidden className="size-6" /></span><span><span className="block text-base font-bold text-ink-900 group-hover:text-crimson-700">{locale === 'ne' ? item.ne : item.label}</span>{locale === 'en' && <span className="mt-1 block text-xs font-medium text-ink-500">{item.note}</span>}</span></button>)}</div></div></section>
+        <Button type="button" variant="royal" disabled={!mapBounds} onClick={() => { setArea(mapBounds); setSelectedId(undefined); }}>Search this area</Button>
+        {!loading && searched.length > 0 && !searched.some(item => item.geoPoint) && <p className="text-sm text-ink-600">These rentals do not have map coordinates yet. Their details are available below.</p>}
+        {mapPreviews.length > 0 && <div className="map-preview-rail" aria-label="Rentals on the map">{mapPreviews.map(item => <article key={item.id} className={`map-preview-card ${item.id === selectedId ? 'is-selected' : ''}`}><button type="button" className="map-preview-card__image" aria-label={`Show ${item.title} on map`} onClick={() => setSelectedId(item.id)}>{item.photoUrls?.[0] ? <img src={item.photoUrls[0]} alt={item.title} loading="lazy" /> : <HomeIcon aria-hidden className="m-auto size-8 text-ink-400" />}</button><div className="min-w-0 p-3"><Link href={`/listing/${item.id}`} className="line-clamp-1 text-sm font-semibold text-ink-900 hover:text-royal-700">{item.title}</Link><p className="mt-1 text-xs font-semibold text-royal-700">{money(listingPrice(item))} {isForSale(item) ? 'asking price' : ui.month}</p></div></article>)}</div>}
+      </section>}
+      {error && <div role="alert" className="mb-5 rounded-xl bg-clay-50 px-4 py-3 text-sm text-clay-700">Could not load listings. Refresh the page to try again.</div>}
+      {loading ? <div className="rental-grid" aria-label={ui.loading}>{Array.from({ length: 8 }, (_, index) => <div key={index} className="overflow-hidden rounded-2xl border border-ink-100"><Skeleton className="listing-card-media rounded-none" /><div className="space-y-3 p-5"><Skeleton className="h-5 w-3/4" /><Skeleton className="h-4 w-1/2" /><Skeleton className="h-6 w-1/3" /></div></div>)}</div> : filtered.length ? <><div className="rental-grid">{listingFeed(visible, inlineAds.length ? inlineAds : null, settings.feedInterval).map((slot, index) => slot.kind === 'sponsor' ? <div key={`campaign-${index}`} className="rental-grid__ad"><AdCarousel ads={slot.ad} placement="listings" compact interval={settings.rotationSeconds} /></div> : <ListingCard key={slot.listing.id} listing={slot.listing} />)}</div>{visibleCount < filtered.length && <div className="mt-8 flex justify-center"><Button type="button" variant="secondary" onClick={() => setVisibleCount(count => count + 12)}>{ui.showMore}<ArrowRight aria-hidden className="size-4" /></Button></div>}</> : !error && <div className="rounded-2xl bg-ink-50 px-5 py-12 text-center"><h3 className="text-lg font-semibold">{ui.noMatches}</h3><p className="mt-2 text-sm text-ink-600">{ui.tryAgain}</p>{filtersActive && <Button type="button" variant="secondary" className="mt-5" onClick={() => applyFilters(emptySearch)}>{ui.clearFilters}</Button>}</div>}
+      {!filtered.length && inlineAds.length > 0 && <div className="mt-6"><AdCarousel ads={inlineAds} placement="listings" compact interval={settings.rotationSeconds} /></div>}
+    </section>
+    <section id="trust" className="border-t border-ink-100 bg-ink-50"><div className="mx-auto grid max-w-8xl gap-7 px-4 py-10 sm:px-6 md:grid-cols-3 lg:px-8">{[{ icon: ShieldCheck, title: ui.reviewed, text: ui.reviewedText }, { icon: UserCheck, title: ui.agentChecks, text: ui.agentChecksText }, { icon: MapPin, title: ui.searchArea, text: ui.searchAreaText }].map((item, index) => <div key={index}><item.icon aria-hidden className="size-6 text-royal-700" /><h3 className="mt-3 font-semibold">{item.title}</h3><p className="mt-2 text-sm leading-relaxed text-ink-600">{item.text}</p></div>)}</div></section>
   </>;
 }

@@ -1,9 +1,11 @@
 {
   "firestore": {
+    "predeploy": ["node scripts/firebase-contract.mjs"],
     "rules": "firebase/firestore.rules",
     "indexes": "firebase/firestore.indexes.json"
   },
   "storage": {
+    "predeploy": ["node scripts/firebase-contract.mjs"],
     "rules": "firebase/storage.rules"
   },
   "emulators": {

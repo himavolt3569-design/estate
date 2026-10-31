@@ -36,6 +36,12 @@ import { useSiteLanguage } from "@/components/merokotha/site-language";
 import { listingContact, whatsAppNumber } from "@/lib/contact";
 import { recordListingVisit } from "@/lib/firebase/property-features";
 import { ListingTour } from "@/components/merokotha/listing-tour";
+import { AdCarousel } from '@/components/merokotha/sponsor-card';
+import { useCampaigns } from '@/components/merokotha/ad-provider';
+import { ListingEngagement } from '@/components/merokotha/listing-engagement';
+import { ListingRecommendations } from '@/components/merokotha/listing-recommendations';
+import { isForSale, listingPrice } from '@/lib/listing-commerce';
+import { ListingGallery } from '@/components/merokotha/listing-gallery';
 import { ListingReportForm } from "@/components/merokotha/listing-report";
 
 export default function ListingPage() {
@@ -48,7 +54,7 @@ export default function ListingPage() {
   const [busy, setBusy] = useState(false);
   const [agentName, setAgentName] = useState("Agent");
   const [agentProfileAvailable, setAgentProfileAvailable] = useState(false);
-  const [activePhoto, setActivePhoto] = useState(0);
+  const { campaigns, settings } = useCampaigns('details');
 
   useEffect(() => {
     if (!configured || !id) {
@@ -57,7 +63,6 @@ export default function ListingPage() {
     }
     setLoading(true);
     setListing(null);
-    setActivePhoto(0);
     const stop = onSnapshot(
       doc(db(), "listings", id),
       (snapshot) => {
@@ -183,7 +188,7 @@ export default function ListingPage() {
       icon: CalendarDays,
     },
     { label: ui.views, value: String(listing.viewCount || 0), icon: Eye },
-  ];
+  ].filter(item => !isForSale(listing) || item.label !== ui.deposit);
 
   return (
     <div className="pb-12">
@@ -200,53 +205,13 @@ export default function ListingPage() {
         </span>
       </nav>
 
-      {photos.length ? (
-        <section
-          aria-label="Property photos"
-          className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_96px]"
-        >
-          <div className="relative flex h-[260px] items-center justify-center overflow-hidden rounded-2xl bg-ink-100 sm:h-[380px] lg:h-[440px]">
-            <img
-              src={photos[Math.min(activePhoto, photos.length - 1)]}
-              alt={`${listing.title}, photo ${Math.min(activePhoto, photos.length - 1) + 1} of ${photos.length}`}
-              className="h-full w-full object-cover"
-            />
-            <span className="absolute bottom-3 right-3 rounded-full bg-royal-950/80 px-3 py-1 text-xs font-medium text-white">
-              {Math.min(activePhoto, photos.length - 1) + 1} / {photos.length}
-            </span>
-          </div>
-          {photos.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1 lg:max-h-[440px] lg:flex-col lg:overflow-y-auto lg:pb-0">
-              {photos.map((url, index) => (
-                <button
-                  key={`${url}-${index}`}
-                  type="button"
-                  onClick={() => setActivePhoto(index)}
-                  aria-label={`Show photo ${index + 1}`}
-                  aria-pressed={activePhoto === index}
-                  className={`h-16 w-20 shrink-0 overflow-hidden rounded-lg border-2 sm:h-20 sm:w-24 ${activePhoto === index ? "border-crimson-600" : "border-transparent hover:border-ink-300"}`}
-                >
-                  <img
-                    src={url}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
-      ) : (
-        <div className="flex h-[240px] items-center justify-center rounded-2xl bg-ink-100 text-ink-400 sm:h-[360px]">
-          {ui.noPhoto}
-        </div>
-      )}
+      <ListingGallery key={listing.id} photos={photos} title={listing.title} />
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <div className="min-w-0 space-y-10">
           <header>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge tone="royal">{ui.forRent}</Badge>
+              <Badge tone="royal">{isForSale(listing) ? (locale === 'ne' ? 'बिक्रीमा' : 'For sale') : ui.forRent}</Badge>
               <Badge>{listing.roomType || ui.propertyType}</Badge>
               {listing.agentId && <Badge tone="royal">{ui.agentListing}</Badge>}
               {listing.verificationStatus === "verified" && (
@@ -268,11 +233,12 @@ export default function ListingPage() {
               <MapPin aria-hidden className="size-4" />
               {listing.address || ui.locationOnMap}
             </p>
+            <div className="mt-4"><ListingEngagement listing={listing} /></div>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
               <p className="text-4xl font-semibold tracking-tight text-ink-900">
-                {money(listing.rentPerMonth)}{" "}
+                {money(listingPrice(listing))}{" "}
                 <span className="text-base font-normal text-ink-500">
-                  {ui.month}
+                  {isForSale(listing) ? (locale === 'ne' ? 'माग गरिएको मूल्य' : 'asking price') : ui.month}
                 </span>
               </p>
               {user && user.uid !== listing.ownerId && (
@@ -311,7 +277,6 @@ export default function ListingPage() {
           </dl>
 
           <section className="rounded-2xl border border-ink-100 bg-white p-5 sm:p-7">
-            <p className="label text-crimson-700">{ui.fromLister}</p>
             <h2 className="mt-2 text-2xl font-semibold text-ink-900">
               {ui.about}
             </h2>
@@ -320,9 +285,10 @@ export default function ListingPage() {
             </p>
           </section>
 
+          <AdCarousel ads={campaigns.filter(ad => ad.linkType !== 'listing' || ad.listingId !== listing.id)} placement="details" compact interval={settings.rotationSeconds} />
+
           {Boolean(listing.facilities?.length) && (
             <section>
-              <p className="label text-crimson-700">{ui.whatItHas}</p>
               <h2 className="mt-2 text-2xl font-semibold text-ink-900">
                 {ui.facilities}
               </h2>
@@ -340,7 +306,6 @@ export default function ListingPage() {
           )}
 
           <section>
-            <p className="label text-crimson-700">{ui.findIt}</p>
             <h2 className="mt-2 text-2xl font-semibold text-ink-900">
               {ui.location}
             </h2>
@@ -365,9 +330,9 @@ export default function ListingPage() {
 
         <aside className="space-y-5 lg:sticky lg:top-24">
           <Surface className="p-6">
-            <p className="label">{ui.monthlyRent}</p>
+            <p className="label">{isForSale(listing) ? (locale === 'ne' ? 'बिक्री मूल्य' : 'Asking price') : ui.monthlyRent}</p>
             <p className="mt-2 text-3xl font-semibold text-royal-700">
-              {money(listing.rentPerMonth)}
+              {money(listingPrice(listing))}
             </p>
             <p className="mt-4 border-t border-ink-100 pt-4 text-sm text-ink-600">
               {ui.listedBy}{" "}
@@ -477,7 +442,7 @@ export default function ListingPage() {
                       maxLength={1000}
                     />
                   </Field>
-                  <Field label={ui.moveInDate} htmlFor="moveInDate">
+                  <Field label={isForSale(listing) ? (locale === 'ne' ? 'हेर्न चाहेको मिति' : 'Preferred viewing date') : ui.moveInDate} htmlFor="moveInDate">
                     <Input
                       id="moveInDate"
                       name="moveInDate"
@@ -498,6 +463,7 @@ export default function ListingPage() {
           <ListingReportForm key={listing.id} listing={listing} />
         </aside>
       </div>
+      <ListingRecommendations listing={listing} />
     </div>
   );
 }

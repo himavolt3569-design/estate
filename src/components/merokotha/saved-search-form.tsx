@@ -23,11 +23,11 @@ export function SavedSearchForm({ initialFilters, initialName = '', listings, lo
   const [keyword, setKeyword] = useState(initialFilters.search);
   const [name, setName] = useState(initialName);
   const [criteria, setCriteria] = useState(initialFilters);
-  const { search, roomType, minRent, maxRent, furnishing, facility, verifiedOnly, nearby } = initialFilters;
+  const { search, roomType, minRent, maxRent, furnishing, facility, verifiedOnly, nearby, transactionType } = initialFilters;
   useEffect(() => {
     setKeyword(search);
-    setCriteria({ search, roomType, minRent, maxRent, furnishing, facility, verifiedOnly, nearby });
-  }, [search, roomType, minRent, maxRent, furnishing, facility, verifiedOnly, nearby]);
+    setCriteria({ search, roomType, minRent, maxRent, furnishing, facility, verifiedOnly, nearby, transactionType });
+  }, [search, roomType, minRent, maxRent, furnishing, facility, verifiedOnly, nearby, transactionType]);
   const next = { ...criteria, search: keyword.trim(), facility: criteria.facility.trim() };
   const invalidBudget = Boolean(next.minRent && next.maxRent && Number(next.minRent) > Number(next.maxRent));
   const count = listings.filter(listing => matchesSearch(listing, next)).length;
@@ -45,7 +45,7 @@ export function SavedSearchForm({ initialFilters, initialName = '', listings, lo
     <details className="rounded-lg border border-ink-200 bg-white p-3">
       <summary className="cursor-pointer text-sm font-medium text-royal-700">{tr('Refine search criteria')}</summary>
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <label className="text-sm font-medium">{tr('Property type')}<Select value={criteria.roomType} onChange={event => setCriteria({ ...criteria, roomType: event.target.value })} className="mt-1"><option value="">{tr('Any type')}</option>{['room', 'flat', 'apartment', 'house', 'office', 'shop', 'land'].map(type => <option key={type} value={type}>{tr(type)}</option>)}</Select></label>
+        <label className="text-sm font-medium">{tr('Rent or buy')}<Select value={criteria.transactionType || 'all'} onChange={event => setCriteria({ ...criteria, transactionType: event.target.value as 'all' | 'rent' | 'sale' })} className="mt-1"><option value="all">{tr('All properties')}</option><option value="rent">{tr('Rent')}</option><option value="sale">{tr('Buy')}</option></Select></label><label className="text-sm font-medium">{tr('Property type')}<Select value={criteria.roomType} onChange={event => setCriteria({ ...criteria, roomType: event.target.value })} className="mt-1"><option value="">{tr('Any type')}</option>{['room', 'flat', 'apartment', 'house', 'office', 'shop', 'land'].map(type => <option key={type} value={type}>{tr(type)}</option>)}</Select></label>
         <label className="text-sm font-medium">{tr('Minimum rent (Rs.)')}<Input type="number" min="0" value={criteria.minRent} onChange={event => setCriteria({ ...criteria, minRent: event.target.value })} className="mt-1" /></label>
         <label className="text-sm font-medium">{tr('Maximum rent (Rs.)')}<Input type="number" min="0" value={criteria.maxRent} onChange={event => setCriteria({ ...criteria, maxRent: event.target.value })} className="mt-1" /></label>
         <label className="text-sm font-medium">{tr('Furnishing')}<Select value={criteria.furnishing} onChange={event => setCriteria({ ...criteria, furnishing: event.target.value })} className="mt-1"><option value="">{tr('Any furnishing')}</option><option value="furnished">{tr('furnished')}</option><option value="semiFurnished">{tr('Semi furnished')}</option><option value="unfurnished">{tr('unfurnished')}</option></Select></label>

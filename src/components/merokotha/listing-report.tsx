@@ -6,6 +6,7 @@ import { Flag } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, Select, Surface, Textarea } from "@/components/ui/primitives";
+import { isForSale } from '@/lib/listing-commerce';
 import type { Listing, ListingReport } from "@/lib/firebase/types";
 import {
   submitListingReport,
@@ -59,7 +60,7 @@ export function ListingReportForm({ listing }: { listing: Listing }) {
     <Surface className="p-5">
       <h2 className="flex items-center gap-2 text-base font-semibold">
         <Flag aria-hidden className="size-4 text-clay-700" />
-        {t("Something wrong with this rental?", "यो विज्ञापनमा केही गलत छ?")}
+        {t(isForSale(listing) ? 'Something wrong with this property?' : 'Something wrong with this rental?', 'यो विज्ञापनमा केही गलत छ?')}
       </h2>
       <p className="mt-2 text-xs text-ink-500">
         {t(

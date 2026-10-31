@@ -1,0 +1,9 @@
+{
+  "version": "2026-10-31.2",
+  "source": "Android canonical files; website mirror",
+  "files": {
+    "firestore.rules": "aeda6c5e9a45e45723784b1e7d046b14b3e1ab60f067f21bd744b6dd55bb8d6c",
+    "firestore.indexes.json": "43106e4ff8183bdabe7e475faba8ed0d9c56904609b02a3e2fcc2234cd454045",
+    "storage.rules": "9470b3e5dac627de0e2f6bd59e9273e6abc498b3b28c7d8caf4ac5fc2b9351da"
+  }
+}

@@ -22,6 +22,8 @@ export type Listing = RecordDoc & {
   title: string;
   roomType: string;
   rentPerMonth: number;
+  transactionType?: 'rent' | 'sale';
+  salePrice?: number | null;
   depositAmount?: number;
   floor?: number;
   totalFloors?: number;
@@ -36,6 +38,8 @@ export type Listing = RecordDoc & {
   availableFrom?: Timestamp | Date;
   status: string;
   viewCount?: number;
+  saveCount?: number;
+  createdAt?: Timestamp | Date;
   agentId?: string | null;
   verificationStatus?: string;
   verificationReason?: string;

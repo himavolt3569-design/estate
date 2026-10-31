@@ -1,4 +1,5 @@
 'use client';
+import { listingPrice } from '@/lib/listing-commerce';
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -28,8 +29,8 @@ export function SavedSearchResults({ search, uid, listings, loading, error }: { 
   const matches = listings.filter(listing => matchesSearch(listing, criteria));
   const fresh = matches.filter(listing => listingCreatedAt(listing) > seenAt);
   const results = (newOnly ? fresh : matches).sort((a, b) => {
-    if (sort === 'rent-low') return a.rentPerMonth - b.rentPerMonth;
-    if (sort === 'rent-high') return b.rentPerMonth - a.rentPerMonth;
+    if (sort === 'rent-low') return listingPrice(a) - listingPrice(b);
+    if (sort === 'rent-high') return listingPrice(b) - listingPrice(a);
     return listingCreatedAt(b) - listingCreatedAt(a) || a.id.localeCompare(b.id);
   });
   const signature = JSON.stringify(criteria);

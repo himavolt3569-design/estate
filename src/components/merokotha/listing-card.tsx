@@ -12,6 +12,8 @@ import { db } from '@/lib/firebase/client';
 import type { Listing } from '@/lib/firebase/types';
 import { useAuth } from './auth-provider';
 import { useSiteLanguage } from './site-language';
+import { ListingEngagement } from './listing-engagement';
+import { isForSale, listingPrice } from '@/lib/listing-commerce';
 
 export const money = (value: number) => `Rs. ${new Intl.NumberFormat('en-NP').format(value)}`;
 
@@ -51,7 +53,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
         {listing.photoUrls?.[0] ? (
           <img src={listing.photoUrls[0]} alt={listing.title} className="h-full w-full object-cover transition-transform duration-[600ms] group-hover:scale-[1.04]" />
         ) : <div className="flex h-full items-center justify-center text-sm text-ink-400">{ui.noPhoto}</div>}
-        <span className="absolute left-3 top-3 z-10 rounded bg-royal-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">{ui.listingLabel}</span>
+        <span className="absolute left-3 top-3 z-10 rounded bg-royal-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">{isForSale(listing) ? 'For sale' : ui.forRent}</span>
         <button type="button" aria-label={`${saved ? ui.removeSave : ui.save}: ${listing.title}`} aria-pressed={saved} disabled={saving} onClick={() => void onSave()} className={`absolute right-4 top-4 z-20 flex size-9 items-center justify-center rounded-full bg-white shadow-sm transition-colors hover:text-crimson-600 ${saved ? 'text-crimson-600' : 'text-ink-600'}`}>
           <Heart aria-hidden className={`size-4.5 ${saved ? 'fill-current' : ''}`} />
         </button>
@@ -66,7 +68,8 @@ export function ListingCard({ listing }: { listing: Listing }) {
           <Link href={`/listing/${listing.id}`} className="after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-royal-700">{listing.title}</Link>
         </h3>
         <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-500"><MapPin aria-hidden className="size-4 shrink-0" /><span className="truncate">{listing.address || 'See rental details'}</span></p>
-        <p className="mt-3 text-lg font-bold text-royal-600 sm:text-xl">{money(listing.rentPerMonth)} <span className="text-sm font-normal text-ink-500">{ui.month}</span></p>
+        <p className="mt-3 text-lg font-bold text-royal-600 sm:text-xl">{money(listingPrice(listing))} <span className="text-sm font-normal text-ink-500">{isForSale(listing) ? 'asking price' : ui.month}</span></p>
+        <div className="mb-4 mt-4"><ListingEngagement listing={listing} compact /></div>
         <div className="mt-auto flex flex-wrap items-center gap-4 border-t border-ink-100 pt-4 text-sm text-ink-600">
           {listing.floor != null && <span className="flex items-center gap-1.5"><Layers3 aria-hidden className="size-4 text-ink-400" /><span className="font-medium text-ink-900">{listing.floor}</span> {ui.floor}</span>}
           {listing.depositAmount != null && <span className="flex items-center gap-1.5"><Wallet aria-hidden className="size-4 text-ink-400" /><span className="font-medium text-ink-900">{money(listing.depositAmount)}</span> {ui.deposit}</span>}

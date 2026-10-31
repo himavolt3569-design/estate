@@ -33,6 +33,7 @@ import {
   validContactNumber,
 } from "@/lib/contact";
 import { ListingTourEditor } from "@/components/merokotha/listing-tour-editor";
+import { canSell, isForSale, listingPrice, validListingPrice, type TransactionType } from '@/lib/listing-commerce';
 import type { Listing } from "@/lib/firebase/types";
 
 export default function EditListingPage() {
@@ -88,6 +89,8 @@ function EditForm({
   const tr = useSignedInText();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [transactionType, setTransactionType] = useState<TransactionType>(isForSale(listing) ? 'sale' : 'rent');
+  const [propertyType, setPropertyType] = useState(listing.roomType);
   const [photos, setPhotos] = useState<EditablePhoto[]>(() =>
     (listing.photoUrls || []).map((url) => ({ id: url, url })),
   );
@@ -105,6 +108,7 @@ function EditForm({
       toast.error("Enter a valid call or WhatsApp number.");
       return;
     }
+    if (!validListingPrice(propertyType, transactionType, Number(form.get('rentPerMonth')))) { toast.error('Enter a valid price. Flats are rental-only.'); return; }
     setBusy(true);
     try {
       const added = photos.filter((photo) => photo.file);
@@ -124,8 +128,10 @@ function EditForm({
       await updateDoc(doc(db(), "listings", listing.id), {
         title: String(form.get("title") || "").trim(),
         roomType: String(form.get("roomType")),
-        rentPerMonth: Number(form.get("rentPerMonth")),
-        depositAmount: Number(form.get("depositAmount")),
+        transactionType,
+        rentPerMonth: transactionType === 'sale' ? 0 : Number(form.get('rentPerMonth')),
+        salePrice: transactionType === 'sale' ? Number(form.get('rentPerMonth')) : null,
+        depositAmount: transactionType === 'sale' ? 0 : Number(form.get("depositAmount")),
         floor: Number(form.get("floor")),
         totalFloors: Number(form.get("totalFloors")),
         furnishing: String(form.get("furnishing")),
@@ -146,6 +152,9 @@ function EditForm({
         verifiedAt: deleteField(),
         verifiedBy: deleteField(),
         verificationReason: deleteField(),
+        reviewedAt: deleteField(),
+        reviewedBy: deleteField(),
+        reviewReason: deleteField(),
         updatedAt: serverTimestamp(),
       });
       const removed = (listing.photoUrls || []).filter(
@@ -199,7 +208,7 @@ function EditForm({
               <Select
                 id="edit-type"
                 name="roomType"
-                defaultValue={listing.roomType}
+                value={propertyType} onChange={event => { setPropertyType(event.target.value); if (!canSell(event.target.value)) setTransactionType('rent'); }}
               >
                 {[
                   "room",
@@ -216,17 +225,18 @@ function EditForm({
                 ))}
               </Select>
             </Field>
-            <Field label={tr("Monthly rent (Rs.)")} htmlFor="edit-rent">
+            <Field label={tr('Listing purpose')} htmlFor="edit-purpose"><Select id="edit-purpose" value={transactionType} onChange={event => setTransactionType(event.target.value as TransactionType)}><option value="rent">{tr('Rent')}</option>{canSell(propertyType) && <option value="sale">{tr('Sell')}</option>}</Select></Field>
+            <Field label={tr(transactionType === 'sale' ? 'Asking price (Rs.)' : 'Monthly rent (Rs.)')} htmlFor="edit-rent">
               <Input
                 id="edit-rent"
                 name="rentPerMonth"
                 type="number"
                 min="1"
-                defaultValue={listing.rentPerMonth}
+                defaultValue={listingPrice(listing)}
                 required
               />
             </Field>
-            <Field label={tr("Deposit (Rs.)")} htmlFor="edit-deposit">
+            {transactionType === 'rent' && <>            <Field label={tr("Deposit (Rs.)")} htmlFor="edit-deposit">
               <Input
                 id="edit-deposit"
                 name="depositAmount"
@@ -235,6 +245,7 @@ function EditForm({
                 defaultValue={listing.depositAmount || 0}
               />
             </Field>
+</>}
             <Field label={tr("Floor")} htmlFor="edit-floor">
               <Input
                 id="edit-floor"

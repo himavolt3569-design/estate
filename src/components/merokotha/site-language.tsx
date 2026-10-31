@@ -7,7 +7,7 @@ export const SiteLanguageContext = createContext<Locale>('en');
 
 export const ui = {
   en: {
-    explore: 'Explore', saved: 'Saved', messages: 'Messages', signIn: 'Sign in', signOut: 'Sign out', post: 'Post your property', account: 'My account',
+    explore: 'Home', saved: 'Saved', messages: 'Messages', signIn: 'Sign in', signOut: 'Sign out', post: 'Post your property', account: 'My account',
     heroTitle: 'Find your next home', heroIntro: 'Save what you’re looking for. Come back to matching rentals and see what’s new since your last visit.', exploreListings: 'Explore listings',
     savedSearchesTitle: 'Saved searches & new matches', seeMyMatches: 'See my matches', browseRentals: 'Browse rentals', browseEyebrow: 'Want to explore first?', browseIntro: 'Explore available rentals below. Save your criteria above to keep track of new matches.',
     locationTitle: 'Location or title', locationHint: 'Where would you like to live?', propertyType: 'Property type', anyType: 'Any type', maxRent: 'Maximum rent', rentHint: 'Rs. per month', search: 'Search', moreFilters: 'More filters', minRent: 'Minimum rent', anyFurnishing: 'Any furnishing', furnished: 'Furnished', semiFurnished: 'Semi furnished', unfurnished: 'Unfurnished', facilityContains: 'Facility contains', facilityHint: 'Parking, water, Wi-Fi…', verifiedOnly: 'Verified listings only',
@@ -19,7 +19,7 @@ export const ui = {
     furnishing: 'Furnishing', views: 'Views', available: 'Available from', fromLister: 'From the lister', about: 'About this property', noDescription: 'No description was provided.', facilities: 'Facilities', whatItHas: 'What it has', findIt: 'Find it', location: 'Location', addressMissing: 'Address not stated', near: 'Near', openMap: 'Open location on map', monthlyRent: 'Monthly rent', listedBy: 'Listed by', contact: 'Get in touch', ask: 'Ask about this property', signInInquire: 'Sign in to inquire', completeProfile: 'Complete your profile', message: 'Message', moveInDate: 'Move in date', sendInquiry: 'Send inquiry', privateLister: 'Private lister', call: 'Call', whatsapp: 'WhatsApp', noDirectNumber: 'This lister accepts inquiries through MeroKotha.', notProvided: 'Not provided', propertyTypeLabel: 'Property type',
   },
   ne: {
-    explore: 'खोज्नुहोस्', saved: 'सेभ गरिएका', messages: 'सन्देश', signIn: 'साइन इन', signOut: 'साइन आउट', post: 'घरजग्गा राख्नुहोस्', account: 'मेरो खाता',
+    explore: 'गृहपृष्ठ', saved: 'सेभ गरिएका', messages: 'सन्देश', signIn: 'साइन इन', signOut: 'साइन आउट', post: 'घरजग्गा राख्नुहोस्', account: 'मेरो खाता',
     heroTitle: 'आफ्नो नयाँ घर खोज्नुहोस्', heroIntro: 'आफूलाई चाहिएको घरजग्गाको खोज सेभ गर्नुहोस्। फर्कँदा मिल्ने विज्ञापन र पछिल्लो भ्रमणपछि थपिएका नयाँ विज्ञापन हेर्नुहोस्।', exploreListings: 'घरजग्गा हेर्नुहोस्',
     savedSearchesTitle: 'सेभ गरिएका खोज र नयाँ मिलान', seeMyMatches: 'मेरा मिलान हेर्नुहोस्', browseRentals: 'भाडाका घरजग्गा हेर्नुहोस्', browseEyebrow: 'पहिले हेर्न चाहनुहुन्छ?', browseIntro: 'तल उपलब्ध घरजग्गा हेर्नुहोस्। नयाँ मिलान हेर्न आफ्ना मापदण्ड माथि सेभ गर्नुहोस्।',
     locationTitle: 'ठाउँ वा शीर्षक', locationHint: 'कहाँ बस्न चाहनुहुन्छ?', propertyType: 'घरजग्गाको प्रकार', anyType: 'सबै प्रकार', maxRent: 'अधिकतम भाडा', rentHint: 'रु. प्रति महिना', search: 'खोज्नुहोस्', moreFilters: 'थप फिल्टर', minRent: 'न्यूनतम भाडा', anyFurnishing: 'सबै फर्निसिङ', furnished: 'फर्निसिङ भएको', semiFurnished: 'आंशिक फर्निसिङ', unfurnished: 'फर्निसिङ नभएको', facilityContains: 'सुविधा खोज्नुहोस्', facilityHint: 'पार्किङ, पानी, वाइफाइ…', verifiedOnly: 'प्रमाणित विज्ञापन मात्र',

@@ -2,6 +2,10 @@
 
 This is a copy of `estate/` using its Poppins typography, colors, buttons, inputs, surfaces, hero image, floating search panel, listing cards, and dashboard navigation. The visible pages are adapted for MeroKotha rentals while the active Next.js routes use the **same Firebase Auth, Firestore, and Storage project as the Android app**. The earlier Supabase routes are preserved in `src/legacy-app/` for reference.
 
+## Current work — October 31, 2026
+
+The website now includes the requested ad campaigns, revised navigation and collapsed matches, responsive map browsing, public property engagement, photo zoom, content-based recommendations, and Rent/Sell offers (flats remain rental-only). See [the implementation and release handoff](docs/advertising-and-discovery-handoff.md) for the exact schema, verification and remaining deployment steps. No Flutter source content or production Firebase data/rules was changed.
+
 ## Set up locally
 
 1. Sign in to [Firebase Console for `mero-kotha-1f4f3`](https://console.firebase.google.com/project/mero-kotha-1f4f3/settings/general) and verify it is the Android app's live project. In Project settings > Your apps, register a Web App (or use an existing Web App for this site). Name it `estate-merokotha-website`, then copy the generated public config into `.env.local` using `.env.example` as the field list. You can do this yourself if your account can manage the project. The existing `.env.example` does not need to come from the Android developer. Do not use a service account key here.
@@ -9,7 +13,7 @@ This is a copy of `estate/` using its Poppins typography, colors, buttons, input
 3. If App Check is enforced, register a web reCAPTCHA v3 provider and set `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY`. If using browser push, set the Web Push VAPID public key and use HTTPS in production.
 4. Run `pnpm install`, `pnpm typecheck`, `pnpm build`, then `pnpm dev`. The `pnpm-workspace.yaml` file records explicit build-script decisions so pnpm 12 does not stop at its approval prompt. If this checkout was installed before those decisions were added, rerun `pnpm install` so the allowed package setup scripts can run.
 
-The lockfile includes the Firebase Web SDK. Typecheck, production build, existing unit tests, and local HTTP smoke checks passed on 2026-10-13. Browser sign-in and live Firestore/Storage flows still need testing against Firebase. The Android source in this workspace currently signs in through Google only; its onboarding phone field is profile data. To preserve an existing Android account's UID and data, sign in with the same Google account on web, then add an email/password method from the web profile if desired. Poppins is loaded by the browser from Google Fonts, keeping the copied design while allowing offline production builds; system fonts are the fallback if that font request fails.
+The lockfile includes the Firebase Web SDK. Typecheck, production build, existing unit tests, and local HTTP smoke checks passed on 2026-10-13. Browser sign-in and live Firestore/Storage flows still need testing against Firebase. The Android source in this workspace currently signs in through Google only; its onboarding phone field is profile data. To preserve an existing Android account's UID and data, sign in with the same Google account on web, then add an email/password method from the web profile if desired. Poppins is now served locally from public/fonts/poppins.css, including Latin and Devanagari subsets and the bundled open font license.
 
 The design adaptation was checked at desktop width and at an actual 390px browser viewport. The listing cards and signed-in dashboard still need a visual review with real Firebase data. Temporary local screenshots and Chrome preview profiles are excluded by `.gitignore`.
 
@@ -28,45 +32,17 @@ Email/password registration asks for a name, location, optional phone and option
 
 ## Rules and production
 
-The `firebase/` folder is a **review candidate**, copied from Android and extended for listing verification, private saved searches, public agent profiles, and append-only admin decisions. Only the saved-search rule was deployed on 2026-10-14; the full candidate has not been deployed. Compare it with the live Firebase rules before deploying. Older verified agents need an admin to publish their directory profile after the rule update. The live Android app must be tested against the proposed rule change, especially editing a verified listing. The website should not be published until its auth, Firestore, Storage, and chat flows pass cross-device tests. Saved-search counts are in-app only; background alerts require a separate notification service.
+The `firebase/` folder is a **local review candidate**, mirrored from Android's canonical rules and indexes under contract `2026-10-31.2`. On 2026-10-17 a read-only CLI audit found that the deployed Firestore rules differ from both previous local files, while Storage matches. The current candidate preserves all 31 live composite indexes, adds the collection-group favourites index for save totals, and includes the approved compatibility changes plus campaign and pricing permissions. It has **not been deployed**. See [the rules review](./FIREBASE_RULES_REVIEW.md) and [the integration handoff](./FIREBASE_INTEGRATION.md) for exact findings, remaining schema differences, rollout order, and validation limits.
 
-### Saved searches: missing or insufficient permissions
+Run `node scripts/firebase-contract.mjs` before deployment; Firebase predeploy hooks run it automatically. Reviewed changes belong in Android's canonical files, followed by `node scripts/firebase-contract.mjs --sync --version=<new-version>` with both folders present. The versioned hash manifest also validates a standalone checkout. Use one release owner for the shared backend: deploying from separate stale copies replaces the same project's active rules. `node scripts/audit-live-firebase-rules.mjs --project=mero-kotha-1f4f3` reads the live rules/index metadata using the Firebase CLI login and saves comparison artifacts without changing production.
 
-Saved searches load from `users/{uid}/savedSearches`. Firestore permissions on the parent `users/{uid}` document do not apply to this subcollection, including for an account with the `superAdmin` role. Both local rule sources now explicitly allow users to read their own saved searches and non-banned users to save, view, and delete them. The Android deployment source previously omitted this match and reproduced the reported error even for an admin.
+With the demo emulators below running, use `node scripts/test-integration-rules.mjs`, `node scripts/test-feature-rules.mjs`, and `node scripts/test-saved-search-rules.mjs` sequentially. Integration tests can also load the Android source using `MEROKOTHA_RULES_SOURCE=../merokotha/firestore.rules`. These are SDK permission tests, not a compiled Android device test. Saved-search counts remain in-app only; background alerts require a separate notification service.
 
-To fix the live project, open [Firestore Rules for mero-kotha-1f4f3](https://console.firebase.google.com/project/mero-kotha-1f4f3/firestore/rules), compare the deployed rules, and add the following inside the existing `match /users/{userId}` block if it is missing, alongside `favourites`. This snippet uses the existing `isMe` and `notBanned` helpers. Publish the rule update and reload the website. An application ADMIN role does not grant Firebase Console or CLI deployment permissions.
+### Saved-search compatibility
 
-```text
-match /savedSearches/{searchId} {
-  allow get, list: if isMe(userId);
-  allow create: if isMe(userId) && notBanned()
-    && request.resource.data.keys().hasAll(['name', 'filters', 'createdAt', 'lastViewedAt'])
-    && request.resource.data.name is string
-    && request.resource.data.name.size() > 0
-    && request.resource.data.name.size() <= 80;
-  allow update, delete: if isMe(userId) && notBanned();
-}
-```
+The October 30 read-only audit found that production already allows account owners and super admins to read/write saved searches. The user approved preserving this current policy on October 31. The synchronized local candidate keeps older payloads working and preserves that owner/admin access. Ordinary accounts and guests cannot access another account's searches. See [the compatibility decision](docs/firebase-compatibility-review.md). Historical October 14 repair details remain in the audit artifacts; do not copy an obsolete snippet over current production rules.
 
-The saved-search-only patch was published to `mero-kotha-1f4f3` on 2026-10-14 after confirming the live rule was missing. Firebase compiled the rules successfully, and a read-back verified the active rules exactly match the tested Android rules. Previous and current release details and rule content are saved in `../.feature-tests/artifacts/firebase-saved-search-fix-20261014/before.json` and `after.json`. Reload the website to restart any listener that already failed. Deploying the entire website rule candidate also introduces unrelated feature and verification policies and requires their separate review.
-
-With the test tools installed as described below, start the isolated Firestore emulator and run `pnpm test:rules:saved-searches` in a second terminal:
-
-```powershell
-../.feature-tests/node_modules/.bin/firebase.cmd emulators:start --only firestore --project demo-merokotha-saved-search-tests --config firebase.json
-```
-
-The regression checks exercise both local deployment sources: admin and customer access to empty and populated collections, saving, marking viewed, deletion, cross-account privacy, guest denial, and banned-user write denial. They never access production.
-
-### Saved-search matching and results
-
-Search criteria are separate from the optional display name. Location/keyword, type, rent range, furnishing, facility, verification, and an existing nearby location are combined using the same matching function as the public feed. Every keyword must appear in the rental's title, address, landmarks, or description; case, word order, and repeated whitespace are ignored. Only active rentals count. Counts remain unavailable while loading or when a listing read fails.
-
-Older saves with entirely empty filters interpret their saved name as the intended keyword at read time. This recovers entries such as “janakpur,” “bhaktapur,” and “kapan” without changing stored records. Existing searches with actual filters retain them. New saves and edits set `criteriaVersion: 1`, so an explicitly created all-active-rentals search may use any display name.
-
-Clicking a search opens Dashboard → Saved searches, selects it, and scrolls/focuses its results section. Results support editing criteria, newest/price ordering, nine-at-a-time pagination, and an unseen-only view. New means a matching rental was posted after that search's `lastViewedAt` (or its creation time); opening successfully loaded results records a visit while keeping that visit's original unseen badges visible. Reloading shows only subsequent arrivals as new. Counts update through the live listing subscription while the website is open; background notifications are not provided.
-
-After starting the demo emulators and development server described below, run `pnpm test:browser:saved-searches`. It checks distinct counts across 13 active fixtures, legacy recovery, exact results, persisted visit state, live updates, sorting, zero results, editing, saving with a budget and separate label, mobile layout, reload/back navigation, deletion, and listing-read failures. Run it sequentially with the other integration scripts because it resets the demo Firestore fixtures.
+Run the saved-search regression suite against the local emulators with `pnpm test:rules:saved-searches`. It tests both mirrored rule sources and never targets production.
 
 ## Posting autofill and location search
 

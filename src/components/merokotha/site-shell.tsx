@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Heart, Home, LogOut, MapPin, MessageSquare, Plus, Ruler, UserRound, Wallet } from 'lucide-react';
+import { Heart, Home, LogOut, MapPin, MessageSquare, Plus, UserRound } from 'lucide-react';
 import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { ParcelMark } from '@/components/brand/Seal';
@@ -15,11 +15,10 @@ import { Button } from '@/components/ui/button';
 import { configured, db, firebaseApp } from '@/lib/firebase/client';
 import { useAuth } from './auth-provider';
 import { SiteLanguageContext, ui as siteUi } from './site-language';
+import { HeaderSearch, HeaderTools } from './header-tools';
 
 const browseLinks = [
   { href: '/', label: 'Explore', icon: Home },
-  { href: '/emi', label: 'EMI', icon: Wallet },
-  { href: '/land-size', label: 'Land size', icon: Ruler },
   { href: '/dashboard?tab=favorites', label: 'Saved', icon: Heart },
   { href: '/dashboard?tab=chats', label: 'Messages', icon: MessageSquare },
 ] as const;
@@ -86,14 +85,13 @@ export function SiteShell({ children, locale: initialLocale }: { children: React
         <div className="mx-auto flex h-16 max-w-8xl items-center gap-3 px-4 sm:h-[68px] sm:gap-6 sm:px-6 lg:px-8">
           <Link href="/" aria-label="MeroKotha home" className="shrink-0"><Brand /></Link>
           <nav aria-label="Main navigation" className="hidden min-w-0 items-center gap-1 lg:flex">
-            {browseLinks.slice(0, 4).filter(item => user || !item.href.startsWith('/dashboard')).map(item => (
-              <Link key={item.href} href={item.href} className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${pathname === item.href ? 'bg-crimson-50 text-crimson-700' : 'text-ink-700 hover:bg-crimson-50 hover:text-crimson-700'}`}>
-                <item.icon aria-hidden className="size-4 text-ink-400" />{item.href === '/emi' ? t.headerNav.emi : item.href === '/land-size' ? t.headerNav.landSize : item.href === '/' ? copy.explore : copy.saved}
-              </Link>
-            ))}
-            {user && <Link href="/dashboard?tab=chats" className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-crimson-50 hover:text-crimson-700"><MessageSquare aria-hidden className="size-4 text-ink-400" />{copy.messages}</Link>}
+            <Link href="/" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-crimson-50 px-3 text-sm font-medium text-crimson-700"><Home aria-hidden className="size-4" />{copy.explore}</Link>
+            <HeaderTools />
+            <Link href="/dashboard?tab=favorites" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-ink-700 hover:bg-royal-50"><Heart aria-hidden className="size-4" />{copy.saved}</Link>
+            <Link href="/dashboard?tab=chats" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-ink-700 hover:bg-royal-50"><MessageSquare aria-hidden className="size-4" />{copy.messages}</Link>
           </nav>
-          <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-3">
+          <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
+            <HeaderSearch />
             <LanguageSwitcher current={locale} onChange={setLocale} compact className="shrink-0 md:hidden" />
             <LanguageSwitcher current={locale} onChange={setLocale} className="hidden md:flex" />
             {user && profile && process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY && <Button variant="ghost" size="sm" className="hidden xl:inline-flex" onClick={() => void enableNotifications()}>Enable alerts</Button>}
@@ -110,12 +108,13 @@ export function SiteShell({ children, locale: initialLocale }: { children: React
           </div>
         </div>
       </header>
-      <nav aria-label="Browse" className="flex gap-2 overflow-x-auto border-b border-ink-100 bg-white px-4 py-2.5 [scrollbar-width:none] sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden">
-        {user && <Link href="/dashboard?tab=post" className="flex min-w-[4.5rem] shrink-0 flex-col items-center gap-1 rounded-xl px-2 py-2 text-ink-800 transition-colors active:bg-crimson-50"><span className="flex size-9 items-center justify-center rounded-full bg-crimson-50 text-crimson-600"><Plus aria-hidden className="size-4.5" /></span><span className="text-[11px] font-medium leading-tight">{locale === 'ne' ? 'राख्नुहोस्' : 'Post'}</span></Link>}
-        {browseLinks.filter(item => user || !item.href.startsWith('/dashboard')).map(item => (
-          <Link key={item.href} href={item.href} className="flex min-w-[4.5rem] shrink-0 flex-col items-center gap-1 rounded-xl px-2 py-2 text-ink-800 transition-colors active:bg-crimson-50">
+      <nav aria-label="Browse" className="browse-nav grid gap-1 border-b border-ink-100 bg-white px-4 py-2 sm:px-6 lg:hidden" style={{ gridTemplateColumns: `repeat(${user ? 5 : 4}, minmax(0, 1fr))` }}>
+        {user && <Link href="/dashboard?tab=post" className="browse-nav__link"><span className="flex size-9 items-center justify-center rounded-full bg-crimson-50 text-crimson-600"><Plus aria-hidden className="size-4.5" /></span><span className="text-[11px] font-medium leading-tight">{locale === 'ne' ? 'राख्नुहोस्' : 'Post'}</span></Link>}
+        <HeaderTools compact />
+        {browseLinks.map(item => (
+          <Link key={item.href} href={item.href} className="browse-nav__link">
             <span className="flex size-9 items-center justify-center rounded-full bg-crimson-50 text-crimson-600"><item.icon aria-hidden className="size-4.5" /></span>
-            <span className="text-[11px] font-medium leading-tight">{item.href === '/emi' ? t.headerNav.emi : item.href === '/land-size' ? t.headerNav.landSize : item.href === '/' ? copy.explore : item.href.includes('favorites') ? copy.saved : copy.messages}</span>
+            <span className="text-[11px] font-medium leading-tight">{item.href === '/' ? copy.explore : item.href.includes('favorites') ? copy.saved : copy.messages}</span>
           </Link>
         ))}
       </nav>

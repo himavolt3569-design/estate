@@ -18,7 +18,7 @@ export const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'in
       type={type}
       className={cn(
         'h-12 w-full rounded-md border border-ink-200 bg-white px-4 text-sm text-ink-900 shadow-sm',
-        'transition-all duration-200 placeholder:text-ink-300 hover:border-royal-400',
+        'transition-all duration-200 placeholder:text-ink-500 hover:border-royal-400',
         'focus-visible:border-royal-500 focus-visible:ring-2 focus-visible:ring-royal-500/20 focus-visible:outline-none',
         'disabled:cursor-not-allowed disabled:bg-ink-50 disabled:opacity-60',
         'aria-[invalid=true]:border-clay-500 aria-[invalid=true]:focus-visible:ring-clay-500/20',
@@ -36,7 +36,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentPro
       ref={ref}
       className={cn(
         'min-h-24 w-full rounded-md border border-ink-200 bg-white px-4 py-3 text-sm text-ink-900 shadow-sm',
-        'transition-all duration-200 placeholder:text-ink-300 hover:border-royal-400',
+        'transition-all duration-200 placeholder:text-ink-500 hover:border-royal-400',
         'focus-visible:border-royal-500 focus-visible:ring-2 focus-visible:ring-royal-500/20 focus-visible:outline-none',
         'aria-[invalid=true]:border-clay-500 aria-[invalid=true]:focus-visible:ring-clay-500/20',
         className,
@@ -158,7 +158,7 @@ export function Field({
           )}
         </Label>
         {hint && (
-          <span id={hintId} className="text-xs text-ink-400">
+          <span id={hintId} className="text-xs text-ink-500">
             {hint}
           </span>
         )}

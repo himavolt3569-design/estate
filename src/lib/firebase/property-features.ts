@@ -144,6 +144,9 @@ export async function saveListingTour(listing: Listing, scenes: TourScene[]) {
     verificationReason: deleteField(),
     verifiedAt: deleteField(),
     verifiedBy: deleteField(),
+    reviewedAt: deleteField(),
+    reviewedBy: deleteField(),
+    reviewReason: deleteField(),
     updatedAt: serverTimestamp(),
   });
   const retained = new Set([

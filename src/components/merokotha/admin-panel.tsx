@@ -21,7 +21,7 @@ import type {
   PublicAgent,
 } from "@/lib/firebase/types";
 import { useAuth } from "./auth-provider";
-import { AdminAds } from "./admin-ads";
+
 import { AdminReports } from "./admin-reports";
 import { ListingAnalytics } from "./listing-analytics";
 import { useSignedInText } from "./signed-in-copy";
@@ -413,7 +413,7 @@ export function AdminPanel() {
           </Surface>
         ))}
       </section>
-      <AdminAds />
+      <a href="/dashboard?tab=ads" className="inline-flex min-h-11 items-center rounded-lg bg-royal-700 px-4 text-sm font-semibold text-white">Manage advertisements ?</a>
     </div>
   );
 }

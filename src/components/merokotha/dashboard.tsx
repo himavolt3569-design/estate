@@ -16,6 +16,7 @@ import {
   Plus,
   Settings,
   ShieldCheck,
+  Megaphone,
 } from "lucide-react";
 import {
   deleteDoc,
@@ -53,8 +54,10 @@ import type {
   RecordDoc,
 } from "@/lib/firebase/types";
 import { ListingCard, money } from "./listing-card";
+import { listingPrice } from "@/lib/listing-commerce";
 import { ListingForm } from "./listing-form";
 import { AdminPanel } from "./admin-panel";
+import { AdminAds } from "./admin-ads";
 import { ListingAnalytics } from "./listing-analytics";
 import { MyListingReports } from "./listing-report";
 import { SavedSearchPanel } from "./saved-search-panel";
@@ -76,6 +79,7 @@ const dashboardItems = [
   { key: "agent", label: "Agent verification", icon: BadgeCheck },
   { key: "profile", label: "Profile", icon: Settings },
   { key: "admin", label: "Administration", icon: ShieldCheck },
+  { key: "ads", label: "Advertising", icon: Megaphone },
 ] as const;
 const dashboardCopy = {
   en: {
@@ -91,6 +95,7 @@ const dashboardCopy = {
     agent: "Agent verification",
     profile: "Profile",
     admin: "Administration",
+    ads: "Advertising",
     account: "Your account",
     hello: "Hello",
     agentStatus: "Agent status",
@@ -108,6 +113,7 @@ const dashboardCopy = {
     agent: "एजेन्ट प्रमाणीकरण",
     profile: "प्रोफाइल",
     admin: "प्रशासन",
+    ads: "विज्ञापन",
     account: "तपाईंको खाता",
     hello: "नमस्कार",
     agentStatus: "एजेन्टको अवस्था",
@@ -126,7 +132,7 @@ function DashboardTabs({
   return (
     <nav className="dashboard-nav" aria-label="Dashboard">
       {dashboardItems
-        .filter((item) => item.key !== "admin" || role === "superAdmin")
+        .filter((item) => !["admin", "ads"].includes(item.key) || role === "superAdmin")
         .map((item) => (
           <Link
             key={item.key}
@@ -240,7 +246,7 @@ export function Dashboard() {
                   {listing.title}
                 </Link>
                 <p className="text-sm text-ink-500">
-                  {money(listing.rentPerMonth)} · {listing.status} · Review:{" "}
+                  {money(listingPrice(listing))} · {listing.status} · Review:{" "}
                   {listing.verificationStatus || "unreviewed"}
                 </p>
               </div>
@@ -319,6 +325,8 @@ export function Dashboard() {
         />
       ) : tab === "profile" ? (
         <ProfilePanel uid={uid} profile={profile} />
+      ) : tab === "ads" && profile.role === "superAdmin" ? (
+        <AdminAds />
       ) : tab === "admin" && profile.role === "superAdmin" ? (
         <AdminPanel />
       ) : (
@@ -451,7 +459,7 @@ function Overview({
                   <div className="min-w-0">
                     <p className="truncate font-medium">{item.title}</p>
                     <p className="text-xs text-ink-500">
-                      {money(item.rentPerMonth)} · {item.status} ·{" "}
+                      {money(listingPrice(item))} · {item.status} ·{" "}
                       {item.verificationStatus || "unreviewed"}
                     </p>
                   </div>

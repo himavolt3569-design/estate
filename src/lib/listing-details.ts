@@ -23,6 +23,7 @@ export const PROPERTY_LABELS: Record<PropertyType, { en: string; ne: string }> =
 
 export type ListingDetailsDraft = {
   type: PropertyType;
+  transactionType?: 'rent' | 'sale';
   rent: string;
   deposit: string;
   floor: string;
@@ -196,7 +197,8 @@ export function generateListingDetails(
       template.type === draft.type &&
       template.id === `${draft.type}-${index + 1}`,
   )!;
-  const opening = template[locale]
+  const sale = draft.transactionType === 'sale' && draft.type !== 'flat';
+  const opening = sale ? (ne ? `${label}${location} बिक्रीमा उपलब्ध छ।` : `A ${label.toLowerCase()} is available for sale${location}.`) : template[locale]
     .replace("{type}", ne ? label : label.toLowerCase())
     .replace("{location}", location);
   const facts: string[] = [];
@@ -207,8 +209,8 @@ export function generateListingDetails(
       ne ? `नजिकको चिनारी: ${landmark}।` : `Nearby landmark: ${landmark}.`,
     );
   if (rent && Number(draft.rent) > 0)
-    facts.push(ne ? `मासिक भाडा: रु. ${rent}।` : `Monthly rent: Rs. ${rent}.`);
-  if (deposit)
+    facts.push(sale ? (ne ? `बिक्री मूल्य: रु. ${rent}।` : `Asking price: Rs. ${rent}.`) : (ne ? `मासिक भाडा: रु. ${rent}।` : `Monthly rent: Rs. ${rent}.`));
+  if (deposit && !sale)
     facts.push(ne ? `धरौटी: रु. ${deposit}।` : `Deposit: Rs. ${deposit}.`);
   if (draft.type !== "land") {
     if (draft.floor.trim() !== "" && Number.isFinite(Number(draft.floor))) {
@@ -250,7 +252,7 @@ export function generateListingDetails(
         : `Available from: ${draft.availableFrom}.`,
     );
   const titleLocation = address.split(",").slice(0, 3).join(",").trim();
-  const title = ne
+  const title = sale ? (ne ? `${label} बिक्रीमा${titleLocation ? ` — ${titleLocation}` : ''}` : `${label} for sale${titleLocation ? ` in ${titleLocation}` : ''}`) : ne
     ? `${label} भाडामा${titleLocation ? ` — ${titleLocation}` : ""}`
     : `${label} for rent${titleLocation ? ` in ${titleLocation}` : landmark ? ` near ${landmark}` : ""}`;
   return {

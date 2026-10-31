@@ -14,6 +14,10 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "check:firebase-contract": "node scripts/firebase-contract.mjs",
+    "test:rules:integration": "node scripts/test-integration-rules.mjs",
+    "test:rules:features": "node scripts/test-feature-rules.mjs",
+    "audit:firebase-rules": "node scripts/audit-live-firebase-rules.mjs",
     "test:rules:saved-searches": "node scripts/test-saved-search-rules.mjs",
     "test:browser:saved-searches": "node scripts/test-saved-search-browser.mjs",
     "test:browser:listing-duplicates": "node scripts/test-listing-duplicates-browser.mjs",
@@ -31,7 +35,10 @@
     "db:migrate": "npm run db:sync && dotenv -e .env.local -- prisma migrate deploy",
     "db:migrate:remote": "npm run db:sync && dotenv -e .env.production -- prisma migrate deploy",
     "db:baseline:remote": "npm run db:sync && dotenv -e .env.production -- node scripts/db-baseline.mjs",
-    "db:pull:remote": "dotenv -e .env.production -- prisma db pull"
+    "db:pull:remote": "dotenv -e .env.production -- prisma db pull",
+    "test:rules:campaigns": "node scripts/test-campaign-rules.mjs",
+    "test:browser:campaigns": "node scripts/test-campaign-browser.mjs",
+    "backfill:saves": "node scripts/backfill-save-counts.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

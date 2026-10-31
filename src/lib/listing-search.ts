@@ -1,4 +1,5 @@
 import type { Listing } from './firebase/types';
+import { isForSale, listingPrice } from './listing-commerce';
 
 export type SearchFilters = {
   search: string;
@@ -9,10 +10,11 @@ export type SearchFilters = {
   facility: string;
   verifiedOnly: boolean;
   nearby: { lat: number; lng: number } | null;
+  transactionType?: 'all' | 'rent' | 'sale';
 };
 
 export const emptySearch: SearchFilters = {
-  search: '', roomType: '', minRent: '', maxRent: '', furnishing: '', facility: '', verifiedOnly: false, nearby: null,
+  search: '', roomType: '', minRent: '', maxRent: '', furnishing: '', facility: '', verifiedOnly: false, nearby: null, transactionType: 'all',
 };
 
 export function listingCreatedAt(listing: Listing): number {
@@ -27,7 +29,7 @@ export function timestampMillis(value: unknown): number {
 
 export function hasSearchFilters(filters: SearchFilters): boolean {
   return Boolean(filters.search.trim() || filters.roomType || filters.minRent || filters.maxRent
-    || filters.furnishing || filters.facility.trim() || filters.verifiedOnly || filters.nearby);
+    || filters.furnishing || filters.facility.trim() || filters.verifiedOnly || filters.nearby || filters.transactionType && filters.transactionType !== 'all');
 }
 
 // Older saves stored the input as a name and accidentally kept empty criteria.
@@ -46,10 +48,12 @@ export function searchFilterLabels(filters: SearchFilters): string[] {
   const labels: string[] = [];
   if (filters.search.trim()) labels.push(`“${filters.search.trim()}”`);
   if (filters.roomType) labels.push(filters.roomType);
+  if (filters.transactionType && filters.transactionType !== 'all') labels.push(filters.transactionType === 'sale' ? 'For sale' : 'For rent');
+  const period = filters.transactionType === 'sale' ? '' : ' / month';
   const money = (value: string) => `Rs. ${Number(value).toLocaleString('en-NP')}`;
-  if (filters.minRent && filters.maxRent) labels.push(`${money(filters.minRent)} – ${money(filters.maxRent)} / month`);
-  else if (filters.minRent) labels.push(`From ${money(filters.minRent)} / month`);
-  else if (filters.maxRent) labels.push(`Up to ${money(filters.maxRent)} / month`);
+  if (filters.minRent && filters.maxRent) labels.push(`${money(filters.minRent)} – ${money(filters.maxRent)}${period}`);
+  else if (filters.minRent) labels.push(`From ${money(filters.minRent)}${period}`);
+  else if (filters.maxRent) labels.push(`Up to ${money(filters.maxRent)}${period}`);
   if (filters.furnishing) labels.push(filters.furnishing === 'semiFurnished' ? 'Semi furnished' : filters.furnishing);
   if (filters.facility.trim()) labels.push(filters.facility.trim());
   if (filters.verifiedOnly) labels.push('Verified only');
@@ -70,8 +74,9 @@ export function matchesSearch(listing: Listing, filters: SearchFilters) {
   const keywords = normalize(filters.search).split(' ').filter(Boolean);
   return keywords.every(keyword => text.includes(keyword))
     && (!filters.roomType || listing.roomType === filters.roomType)
-    && (!filters.minRent || listing.rentPerMonth >= Number(filters.minRent))
-    && (!filters.maxRent || listing.rentPerMonth <= Number(filters.maxRent))
+    && (!filters.transactionType || filters.transactionType === 'all' || (isForSale(listing) ? 'sale' : 'rent') === filters.transactionType)
+    && (!filters.minRent || listingPrice(listing) >= Number(filters.minRent))
+    && (!filters.maxRent || listingPrice(listing) <= Number(filters.maxRent))
     && (!filters.furnishing || listing.furnishing === filters.furnishing)
     && (!filters.facility || (listing.facilities || []).some(value => value.toLowerCase().includes(filters.facility.trim().toLowerCase())))
     && (!filters.verifiedOnly || listing.verificationStatus === 'verified')
@@ -97,6 +102,7 @@ export function searchFromUrl(search: string): SearchFilters {
     minRent: params.get('minRent') || '', maxRent: params.get('maxRent') || '',
     furnishing: params.get('furnishing') || '', facility: params.get('facility') || '',
     verifiedOnly: params.get('verifiedOnly') === 'true',
+    transactionType: params.get('transactionType') === 'sale' ? 'sale' : params.get('transactionType') === 'rent' ? 'rent' : 'all',
     nearby: params.has('lat') && params.has('lng') && Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null,
   };
 }

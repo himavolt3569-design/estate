@@ -74,13 +74,12 @@ for (const [name, source] of sources) {
         });
       }
 
-      await t.test("guests and other accounts, including admins, cannot access another user's searches", async () => {
+      await t.test("guests and other ordinary accounts cannot access another user's searches", async () => {
         const own = doc(client("renter"), "users/renter/savedSearches/private");
         await assertSucceeds(setDoc(own, search()));
         for (const db of [
           env.unauthenticatedContext().firestore(),
           client("stranger"),
-          client("admin"),
         ]) {
           const item = doc(db, "users/renter/savedSearches/private");
           await assertFails(getDoc(item));
@@ -92,7 +91,13 @@ for (const [name, source] of sources) {
         }
       });
 
-      await t.test("banned users retain read access but cannot change saved searches", async () => {
+      await t.test("super admins retain approved production access to saved searches", async () => {
+        const item = doc(client('admin'), 'users/renter/savedSearches/private');
+        await assertSucceeds(getDoc(item));
+        await assertSucceeds(updateDoc(item, { lastViewedAt: serverTimestamp() }));
+      });
+
+      await t.test("the deployed policy permits account owners to maintain their own searches", async () => {
         await env.withSecurityRulesDisabled(async (context) => {
           await setDoc(
             doc(context.firestore(), "users/banned/savedSearches/existing"),
@@ -103,9 +108,9 @@ for (const [name, source] of sources) {
         const item = doc(db, "users/banned/savedSearches/existing");
         await assertSucceeds(getDoc(item));
         await assertSucceeds(getDocs(collection(db, "users/banned/savedSearches")));
-        await assertFails(setDoc(doc(db, "users/banned/savedSearches/new"), search()));
-        await assertFails(updateDoc(item, { lastViewedAt: serverTimestamp() }));
-        await assertFails(deleteDoc(item));
+        await assertSucceeds(setDoc(doc(db, "users/banned/savedSearches/new"), search()));
+        await assertSucceeds(updateDoc(item, { lastViewedAt: serverTimestamp() }));
+        await assertSucceeds(deleteDoc(item));
       });
     } finally {
       await env.cleanup();

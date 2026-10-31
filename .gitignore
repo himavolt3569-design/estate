@@ -50,3 +50,5 @@ supabase/.env
 # would only ever be the copy somebody forgot to regenerate.
 prisma/migrations/
 docs
+
+.next-ad-tests/

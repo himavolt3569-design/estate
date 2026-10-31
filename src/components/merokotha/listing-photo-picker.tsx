@@ -5,7 +5,7 @@ import { ImagePlus, Images, MapPin, Star, Trash2, UploadCloud } from 'lucide-rea
 import { useSiteText } from './site-language';
 
 type PreviewPhoto = { id: string; file: File; url: string };
-type DraftPreview = { title: string; rent: string; address: string; type: string };
+type DraftPreview = { title: string; rent: string; address: string; type: string; transactionType?: 'rent' | 'sale' };
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
@@ -90,7 +90,7 @@ export function ListingPhotoPicker({
           <div className="space-y-1 p-4">
             <p className="truncate text-sm font-semibold text-ink-900">{draft.title.trim() || t('Your property title', 'घरजग्गाको शीर्षक')}</p>
             <p className="flex items-center gap-1 truncate text-xs text-ink-500"><MapPin aria-hidden className="size-3.5 shrink-0" />{draft.address.trim() || t('Location will appear here', 'स्थान यहाँ देखिन्छ')}</p>
-            <p className="pt-1 text-lg font-semibold text-royal-700">{formattedRent} <span className="text-xs font-normal text-ink-500">/ month</span></p>
+            <p className="pt-1 text-lg font-semibold text-royal-700">{formattedRent} <span className="text-xs font-normal text-ink-500">{draft.transactionType === 'sale' ? 'asking price' : '/ month'}</span></p>
           </div>
         </div>
 

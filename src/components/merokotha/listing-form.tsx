@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Surface, Textarea } from "@/components/ui/primitives";
 import { SelectMenu } from "@/components/ui/select-menu";
+import { canSell, validListingPrice, type TransactionType } from '@/lib/listing-commerce';
 import { createListing } from "@/lib/firebase/actions";
 import { cleanContactNumber, validContactNumber } from "@/lib/contact";
 import { FACILITY_GROUPS } from "@/lib/listing-facilities";
@@ -37,6 +38,7 @@ export function ListingForm() {
   const { user, profile } = useAuth();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [transactionType, setTransactionType] = useState<TransactionType>('rent');
   const submitting = useRef(false);
   const submissionId = useRef<string | null>(null);
   const [agent, setAgent] = useState(false);
@@ -61,7 +63,7 @@ export function ListingForm() {
   const [customDescription, setCustomDescription] = useState<string | null>(
     null,
   );
-  const generated = generateListingDetails(draft, templateIndex, locale);
+  const generated = generateListingDetails({ ...draft, transactionType }, templateIndex, locale);
   const titleValue = customTitle ?? generated.title;
   const descriptionValue = customDescription ?? generated.description;
   const setDetail = <K extends keyof ListingDetailsDraft>(
@@ -99,8 +101,8 @@ export function ListingForm() {
       const number = (key: string) => Number(form.get(key) || 0);
       const title = String(form.get("title") || "").trim();
       const rent = number("rentPerMonth");
-      if (!title || rent <= 0)
-        throw new Error("Enter a title and monthly rent greater than zero.");
+      if (!title || !validListingPrice(draft.type, transactionType, rent))
+        throw new Error("Enter a title and a price greater than zero. Flats are rental-only.");
       if (
         files.some(
           (file) =>
@@ -141,8 +143,10 @@ export function ListingForm() {
         {
           title,
           roomType: String(form.get("roomType")),
-          rentPerMonth: rent,
-          depositAmount: number("depositAmount"),
+          rentPerMonth: transactionType === 'sale' ? 0 : rent,
+          salePrice: transactionType === 'sale' ? rent : null,
+          transactionType,
+          depositAmount: transactionType === 'sale' ? 0 : number("depositAmount"),
           floor: number("floor"),
           totalFloors: number("totalFloors"),
           furnishing: String(form.get("furnishing")),
@@ -171,7 +175,7 @@ export function ListingForm() {
             }
           : undefined,
       );
-      toast.success(t("Rental posted", "घरजग्गा राखियो"));
+      toast.success(transactionType === 'sale' ? t('Property posted', 'घरजग्गा राखियो') : t("Rental posted", "घरजग्गा राखियो"));
       router.push(`/listing/${id}`);
     } catch (error) {
       submitting.current = false;
@@ -191,7 +195,7 @@ export function ListingForm() {
         </span>
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
-            {t("Post a rental", "घरजग्गा राख्नुहोस्")}
+            {transactionType === 'sale' ? t('Post a property', 'घरजग्गा राख्नुहोस्') : t("Post a rental", "घरजग्गा राख्नुहोस्")}
           </h2>
           <p className="mt-1 text-sm text-ink-500">
             {t(
@@ -274,7 +278,7 @@ export function ListingForm() {
                   name="roomType"
                   value={draft.type}
                   onValueChange={(value) =>
-                    setDetail("type", value as PropertyType)
+                    { setDetail("type", value as PropertyType); if (!canSell(value)) setTransactionType('rent'); }
                   }
                   options={PROPERTY_TYPES.map((type) => ({
                     value: type,
@@ -282,8 +286,9 @@ export function ListingForm() {
                   }))}
                 />
               </Field>
+              <Field label={t('Listing purpose', 'विज्ञापनको उद्देश्य')} htmlFor="listing-purpose"><SelectMenu id="listing-purpose" value={transactionType} onValueChange={value => setTransactionType(value as TransactionType)} options={[{ value: 'rent', label: t('Rent', 'भाडा') }, ...(canSell(draft.type) ? [{ value: 'sale', label: t('Sell', 'बिक्री') }] : [])]} />{draft.type === 'flat' && <p className="mt-1 text-xs text-ink-500">{t('Flats are available for rent only.', 'फ्ल्याट भाडाका लागि मात्र राख्न मिल्छ।')}</p>}</Field>
               <Field
-                label={t("Monthly rent (Rs.)", "मासिक भाडा (रु.)")}
+                label={transactionType === 'sale' ? t('Asking price (Rs.)', 'बिक्री मूल्य (रु.)') : t("Monthly rent (Rs.)", "मासिक भाडा (रु.)")}
                 htmlFor="rentPerMonth"
                 required
               >
@@ -298,7 +303,7 @@ export function ListingForm() {
                   onChange={(event) => setDetail("rent", event.target.value)}
                 />
               </Field>
-              <Field
+              {transactionType === 'rent' && <>              <Field
                 label={t("Deposit (Rs.)", "धरौटी (रु.)")}
                 htmlFor="depositAmount"
               >
@@ -311,6 +316,7 @@ export function ListingForm() {
                   onChange={(event) => setDetail("deposit", event.target.value)}
                 />
               </Field>
+</>}
               <Field label={t("Furnishing", "फर्निसिङ")} htmlFor="furnishing">
                 <SelectMenu
                   id="furnishing"
@@ -660,14 +666,14 @@ export function ListingForm() {
           <Button disabled={busy} className="w-full sm:w-auto">
             {busy
               ? t("Posting…", "राखिँदैछ…")
-              : t("Publish rental", "घरजग्गा प्रकाशित गर्नुहोस्")}
+              : transactionType === 'sale' ? t('Publish property', 'घरजग्गा प्रकाशित गर्नुहोस्') : t("Publish rental", "घरजग्गा प्रकाशित गर्नुहोस्")}
           </Button>
         </div>
 
         <div className="order-1 min-w-0 xl:order-2">
           <ListingPhotoPicker
             onChange={setFiles}
-            draft={{ ...draft, title: titleValue }}
+            draft={{ transactionType, ...draft, title: titleValue }}
             disabled={busy}
           />
         </div>
