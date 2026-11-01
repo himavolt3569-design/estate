@@ -990,3 +990,19 @@ button:disabled { cursor: not-allowed; }
 .landing-promo--custom > .sponsor-panel.sponsor-panel--property .sponsor-panel__copy h3 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: .9375rem; line-height: 1.4; }
 .landing-promo--custom > .sponsor-panel.sponsor-panel--property .sponsor-panel__copy p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; font-size: .75rem; line-height: 1.5; }
 .landing-promo--custom > .sponsor-panel.sponsor-panel--property .sponsor-panel__cta { min-height: 40px; padding: .5rem .75rem; font-size: .75rem; }
+
+/* Middle ads scroll natively; each placement begins with its assigned campaign. */
+.feed-ad-rail { position: relative; display: flex; min-width: 0; gap: 1rem; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x mandatory; scrollbar-width: none; border-radius: 12px; }
+.feed-ad-rail::-webkit-scrollbar { display: none; }
+.feed-ad-rail__slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+.feed-ad-rail__slide > .sponsor-panel { height: 100%; }
+.feed-ad-rail--scrollable { cursor: grab; }
+.feed-ad-rail--scrollable .sponsor-panel { cursor: inherit; }
+.feed-ad-rail--scrollable .feed-ad-rail__slide { flex-basis: calc(100% - 2rem); }
+.feed-ad-rail[data-dragging] { cursor: grabbing; scroll-snap-type: none; user-select: none; }
+.feed-ad-rail:focus-visible { outline: 2px solid var(--color-royal-700); outline-offset: 3px; }
+.feed-ad-rail .sponsor-panel:focus-visible { outline: 2px solid var(--color-royal-700); outline-offset: -3px; }
+@media (max-width: 767px) {
+  .feed-ad-rail { gap: .75rem; }
+  .feed-ad-rail--scrollable .feed-ad-rail__slide { flex-basis: calc(100% - 1.5rem); }
+}
