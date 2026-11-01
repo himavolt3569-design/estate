@@ -12,6 +12,8 @@ describe('rent and sale offers', () => {
     expect(listingPrice(rental)).toBe(25000);
     expect(isForSale(sale)).toBe(true);
     expect(listingPrice(sale)).toBe(25000000);
+    expect(listingPrice({ ...rental, transactionType: undefined, purpose: 'sale', salePrice: 7000000 })).toBe(7000000);
+    expect(isForSale({ purpose: 'rent', transactionType: 'sale' })).toBe(false);
   });
   it('allows every requested sale type except flats and rejects invalid prices', () => {
     for (const type of ['room', 'apartment', 'house', 'office', 'shop', 'land']) expect(validListingPrice(type, 'sale', 100)).toBe(true);

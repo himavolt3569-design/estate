@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Surface, Textarea } from "@/components/ui/primitives";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { canSell, validListingPrice, type TransactionType } from '@/lib/listing-commerce';
+import { LandFields } from './land-fields';
+import { landFromForm } from '@/lib/land';
 import { createListing } from "@/lib/firebase/actions";
 import { cleanContactNumber, validContactNumber } from "@/lib/contact";
-import { FACILITY_GROUPS } from "@/lib/listing-facilities";
+import { FACILITY_GROUPS, LAND_FACILITIES } from "@/lib/listing-facilities";
 import {
   DETAIL_TEMPLATES,
   generateListingDetails,
@@ -147,9 +149,7 @@ export function ListingForm() {
           salePrice: transactionType === 'sale' ? rent : null,
           transactionType,
           depositAmount: transactionType === 'sale' ? 0 : number("depositAmount"),
-          floor: number("floor"),
-          totalFloors: number("totalFloors"),
-          furnishing: String(form.get("furnishing")),
+          ...(draft.type === "land" ? { land: landFromForm(form) } : { floor: number("floor"), totalFloors: number("totalFloors"), furnishing: String(form.get("furnishing")) }),
           facilities: draft.facilities,
           description: String(form.get("description") || ""),
           address: String(form.get("address") || ""),
@@ -278,7 +278,7 @@ export function ListingForm() {
                   name="roomType"
                   value={draft.type}
                   onValueChange={(value) =>
-                    { setDetail("type", value as PropertyType); if (!canSell(value)) setTransactionType('rent'); }
+                    { setDraft(current => ({ ...current, type: value as PropertyType, facilities: value === 'land' ? current.facilities.filter(item => LAND_FACILITIES.includes(item)) : current.facilities })); if (!canSell(value)) setTransactionType('rent'); }
                   }
                   options={PROPERTY_TYPES.map((type) => ({
                     value: type,
@@ -288,7 +288,7 @@ export function ListingForm() {
               </Field>
               <Field label={t('Listing purpose', 'विज्ञापनको उद्देश्य')} htmlFor="listing-purpose"><SelectMenu id="listing-purpose" value={transactionType} onValueChange={value => setTransactionType(value as TransactionType)} options={[{ value: 'rent', label: t('Rent', 'भाडा') }, ...(canSell(draft.type) ? [{ value: 'sale', label: t('Sell', 'बिक्री') }] : [])]} />{draft.type === 'flat' && <p className="mt-1 text-xs text-ink-500">{t('Flats are available for rent only.', 'फ्ल्याट भाडाका लागि मात्र राख्न मिल्छ।')}</p>}</Field>
               <Field
-                label={transactionType === 'sale' ? t('Asking price (Rs.)', 'बिक्री मूल्य (रु.)') : t("Monthly rent (Rs.)", "मासिक भाडा (रु.)")}
+                label={transactionType === 'sale' ? t(draft.type === 'land' ? 'Total asking price (Rs.)' : 'Asking price (Rs.)', 'बिक्री मूल्य (रु.)') : t("Monthly rent (Rs.)", "मासिक भाडा (रु.)")}
                 htmlFor="rentPerMonth"
                 required
               >
@@ -317,6 +317,7 @@ export function ListingForm() {
                 />
               </Field>
 </>}
+              {draft.type === 'land' ? <LandFields value={draft.land} onChange={form => { try { setDetail('land', landFromForm(form, false)); } catch { setDetail('land', null); } }} /> : <>
               <Field label={t("Furnishing", "फर्निसिङ")} htmlFor="furnishing">
                 <SelectMenu
                   id="furnishing"
@@ -363,6 +364,7 @@ export function ListingForm() {
                   }
                 />
               </Field>
+              </>}
               <Field
                 label={t("Available from", "उपलब्ध हुने मिति")}
                 htmlFor="availableFrom"
@@ -470,7 +472,7 @@ export function ListingForm() {
                   )}
                 </p>
                 <div className="mt-4 space-y-4">
-                  {FACILITY_GROUPS.map((group) => (
+                  {FACILITY_GROUPS.map(group => ({ ...group, options: group.options.filter(option => draft.type !== 'land' || LAND_FACILITIES.includes(option.value)) })).filter(group => group.options.length).map((group) => (
                     <div key={group.label}>
                       <p className="mb-2 text-xs font-semibold text-ink-500">
                         {t(group.label, group.ne)}

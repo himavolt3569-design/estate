@@ -13,12 +13,13 @@ import type { Listing } from '@/lib/firebase/types';
 import { useAuth } from './auth-provider';
 import { useSiteLanguage } from './site-language';
 import { ListingEngagement } from './listing-engagement';
+import { landArea, landLabel } from '@/lib/land';
 import { isForSale, listingPrice } from '@/lib/listing-commerce';
 
 export const money = (value: number) => `Rs. ${new Intl.NumberFormat('en-NP').format(value)}`;
 
 export function ListingCard({ listing }: { listing: Listing }) {
-  const { ui } = useSiteLanguage();
+  const { ui, locale } = useSiteLanguage();
   const { user } = useAuth();
   const router = useRouter();
   const [saved, setSaved] = useState(false);
@@ -71,9 +72,11 @@ export function ListingCard({ listing }: { listing: Listing }) {
         <p className="mt-3 text-lg font-bold text-royal-600 sm:text-xl">{money(listingPrice(listing))} <span className="text-sm font-normal text-ink-500">{isForSale(listing) ? 'asking price' : ui.month}</span></p>
         <div className="mb-4 mt-4"><ListingEngagement listing={listing} compact /></div>
         <div className="mt-auto flex flex-wrap items-center gap-4 border-t border-ink-100 pt-4 text-sm text-ink-600">
+          {listing.roomType === 'land' ? <><span className="font-medium text-ink-900">{landArea(listing.land, locale) || (locale === 'ne' ? 'जग्गाको विवरण हेर्नुहोस्' : 'View land details')}</span>{listing.land?.roadAccess && <span>{landLabel(listing.land.roadAccess, locale)}</span>}</> : <>
           {listing.floor != null && <span className="flex items-center gap-1.5"><Layers3 aria-hidden className="size-4 text-ink-400" /><span className="font-medium text-ink-900">{listing.floor}</span> {ui.floor}</span>}
           {listing.depositAmount != null && <span className="flex items-center gap-1.5"><Wallet aria-hidden className="size-4 text-ink-400" /><span className="font-medium text-ink-900">{money(listing.depositAmount)}</span> {ui.deposit}</span>}
-          {listing.floor == null && listing.depositAmount == null && <span className="capitalize">{listing.furnishing || listing.roomType || 'Rental home'}</span>}
+          {listing.floor == null && listing.depositAmount == null && <span className="capitalize">{listing.furnishing || listing.roomType || 'Rental home'}</span>}</>}
+
         </div>
       </div>
     </article>

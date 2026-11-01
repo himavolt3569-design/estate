@@ -33,6 +33,8 @@ export async function uploadImages(path: string, files: File[]) {
   }));
 }
 export async function createListing(listingId: string, uid: string, ownerName: string, input: Omit<Listing, 'id' | 'ownerId' | 'ownerName' | 'photoUrls' | 'status' | 'viewCount'>, files: File[], contact?: { name: string; phone: string }) {
+  const purpose = input.transactionType || input.purpose || 'rent';
+  const compatibleInput = { ...input, purpose, transactionType: purpose, salePrice: purpose === 'sale' ? input.salePrice : 0 };
   // A form retains this ID through retries, including a failed photo/contact step.
   // The transaction also handles two simultaneous requests for the same ID.
   const listingRef = doc(db(), 'listings', listingId);
@@ -42,7 +44,7 @@ export async function createListing(listingId: string, uid: string, ownerName: s
       if (existing.data().ownerId !== uid) throw new Error('This rental belongs to another account.');
       return (existing.data().photoUrls || []) as string[];
     }
-    transaction.set(listingRef, { ...input, ownerId: uid, ownerName, photoUrls: [], status: 'active', verificationStatus: 'pending', viewCount: 0, saveCount: 0, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    transaction.set(listingRef, { ...compatibleInput, ownerId: uid, ownerName, photoUrls: [], status: 'active', verificationStatus: 'pending', viewCount: 0, saveCount: 0, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     return [] as string[];
   });
   if (contact) await setDoc(doc(db(), 'listings', listingRef.id, 'ownerContact', 'info'), contact);

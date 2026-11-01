@@ -36,7 +36,7 @@ export default function MapView({ listings, selectedId, onSelect, onBoundsChange
       (item.photoUrls || []).slice(0, 3).forEach(url => { const image = document.createElement('img'); image.src = url; image.alt = ''; image.loading = 'lazy'; photos.append(image); });
       const title = document.createElement('strong'); title.textContent = item.title;
       const price = document.createElement('p'); price.textContent = `${money(listingPrice(item))} ${isForSale(item) ? 'asking price' : '/ month'}`;
-      const link = document.createElement('a'); link.href = `/listing/${encodeURIComponent(item.id)}`; link.textContent = 'View rental →';
+      const link = document.createElement('a'); link.href = `/listing/${encodeURIComponent(item.id)}`; link.textContent = 'View property →';
       wrapper.append(photos, title, price, link); marker.bindPopup(wrapper, { minWidth: 220, maxWidth: 270 });
       marker.on('click', () => callbacks.current.onSelect?.(item.id)); markers.current.set(item.id, marker); return marker;
     });

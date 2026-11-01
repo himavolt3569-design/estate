@@ -1,8 +1,9 @@
+import { landFacts } from './land';
 import type { Listing } from './firebase/types';
 import { listingCreatedAt } from './listing-search';
 import { isForSale, listingPrice } from './listing-commerce';
 
-const tokens = (listing: Listing) => new Set([listing.title, listing.description, listing.address, ...(listing.facilities || [])].join(' ').normalize('NFKC').toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) || []);
+const tokens = (listing: Listing) => new Set([listing.title, listing.description, listing.address, ...(listing.facilities || []), ...(listing.roomType === 'land' ? landFacts(listing.land).map(fact => fact.value) : [])].join(' ').normalize('NFKC').toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) || []);
 const distance = (a: NonNullable<Listing['geoPoint']>, b: NonNullable<Listing['geoPoint']>) => {
   const radians = (n: number) => n * Math.PI / 180;
   const h = Math.sin(radians(b.latitude - a.latitude) / 2) ** 2 + Math.cos(radians(a.latitude)) * Math.cos(radians(b.latitude)) * Math.sin(radians(b.longitude - a.longitude) / 2) ** 2;

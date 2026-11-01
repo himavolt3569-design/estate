@@ -5,6 +5,7 @@ import { ArrowDownUp, BriefcaseBusiness, Building, Building2, DoorOpen, House, L
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/primitives';
 import { SelectMenu } from '@/components/ui/select-menu';
+import { LAND_USES, ROAD_ACCESS, landLabel } from '@/lib/land';
 import type { SearchFilters } from '@/lib/listing-search';
 import { useSiteLanguage } from './site-language';
 
@@ -39,10 +40,12 @@ export function RentalFilters({ filters, onChange, onReset, canReset, sort, onSo
   const change = (patch: Partial<SearchFilters>) => onChange({ ...filters, ...patch });
   const rentalBudget = filters.transactionType === 'rent';
   const invalidBudget = Boolean(filters.minRent && filters.maxRent && Number(filters.minRent) > Number(filters.maxRent));
-  const extraCount = [filters.minRent, filters.maxRent, filters.furnishing, filters.facility.trim(), filters.verifiedOnly, filters.nearby].filter(Boolean).length;
+  const extraCount = [filters.minRent, filters.maxRent, filters.landUse, filters.roadAccess, filters.furnishing, filters.facility.trim(), filters.verifiedOnly, filters.nearby].filter(Boolean).length;
   const furnishingOptions = [{ value: '', label: ui.anyFurnishing }, { value: 'furnished', label: ui.furnished }, { value: 'semiFurnished', label: ui.semiFurnished }, { value: 'unfurnished', label: ui.unfurnished }];
   const price = (value: string) => `Rs. ${Number(value).toLocaleString(ne ? 'ne-NP' : 'en-NP')}`;
   const chips = [
+    ...(filters.landUse ? [{ key: 'land-use', label: landLabel(filters.landUse, locale), remove: () => change({ landUse: '' }) }] : []),
+    ...(filters.roadAccess ? [{ key: 'road-access', label: landLabel(filters.roadAccess, locale), remove: () => change({ roadAccess: '' }) }] : []),
     ...(filters.minRent ? [{ key: 'min', label: `${ne ? 'न्यूनतम' : 'Min'}: ${price(filters.minRent)}`, remove: () => change({ minRent: '' }) }] : []),
     ...(filters.maxRent ? [{ key: 'max', label: `${ne ? 'अधिकतम' : 'Max'}: ${price(filters.maxRent)}`, remove: () => change({ maxRent: '' }) }] : []),
     ...(filters.furnishing ? [{ key: 'furnishing', label: furnishingOptions.find(item => item.value === filters.furnishing)?.label || filters.furnishing, remove: () => change({ furnishing: '' }) }] : []),
@@ -65,7 +68,7 @@ export function RentalFilters({ filters, onChange, onReset, canReset, sort, onSo
         <div className="discovery-filter-fields">
           <div><label htmlFor="filter-min-price">{ne ? 'न्यूनतम रकम' : rentalBudget ? 'Minimum rent' : 'Minimum price'}</label><Input id="filter-min-price" type="number" min="0" inputMode="numeric" value={filters.minRent} onChange={event => change({ minRent: event.target.value })} placeholder="Rs. 0" /></div>
           <div><label htmlFor="filter-max-price">{ne ? 'अधिकतम रकम' : rentalBudget ? 'Maximum rent' : 'Maximum price'}</label><Input id="filter-max-price" type="number" min="0" inputMode="numeric" value={filters.maxRent} onChange={event => change({ maxRent: event.target.value })} placeholder={ne ? 'सीमा छैन' : 'No limit'} aria-invalid={invalidBudget || undefined} aria-describedby={invalidBudget ? 'filter-budget-error' : undefined} /></div>
-          <div><label htmlFor="filter-furnishing">{ui.furnishing}</label><SelectMenu id="filter-furnishing" value={filters.furnishing} onValueChange={value => change({ furnishing: value })} options={furnishingOptions} /></div>
+          {filters.roomType === 'land' ? <><div><label htmlFor="filter-land-use">{ne ? 'जग्गाको प्रयोग' : 'Land use'}</label><SelectMenu id="filter-land-use" value={filters.landUse || ''} onValueChange={value => change({ landUse: value })} options={[{ value: '', label: ne ? 'सबै प्रयोग' : 'Any use' }, ...LAND_USES.map(value => ({ value, label: landLabel(value, locale) }))]} /></div><div><label htmlFor="filter-road-access">{ne ? 'बाटोको पहुँच' : 'Road access'}</label><SelectMenu id="filter-road-access" value={filters.roadAccess || ''} onValueChange={value => change({ roadAccess: value })} options={[{ value: '', label: ne ? 'सबै पहुँच' : 'Any access' }, ...ROAD_ACCESS.map(value => ({ value, label: landLabel(value, locale) }))]} /></div></> : <div><label htmlFor="filter-furnishing">{ui.furnishing}</label><SelectMenu id="filter-furnishing" value={filters.furnishing} onValueChange={value => change({ furnishing: value })} options={furnishingOptions} /></div>}
           <div><label htmlFor="filter-facility">{ui.facilityContains}</label><Input id="filter-facility" value={filters.facility} onChange={event => change({ facility: event.target.value })} placeholder={ui.facilityHint} /></div>
         </div>
         {invalidBudget && <p id="filter-budget-error" className="rental-filters__error" role="alert">{ne ? 'न्यूनतम रकम अधिकतम रकमभन्दा बढी हुन सक्दैन।' : 'The minimum amount must not exceed the maximum.'}</p>}

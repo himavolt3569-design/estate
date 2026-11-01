@@ -54,17 +54,37 @@ service cloud.firestore {
     // Missing transactionType means a legacy rental. Never interpret an
     // asking price as monthly rent, and keep flats rental-only.
     function validListingPricing(data) {
-      return (data.get('transactionType', 'rent') == 'rent'
+      return (data.get('purpose', data.get('transactionType', 'rent')) == 'rent'
           && data.rentPerMonth is number && data.rentPerMonth > 0
-          && data.get('salePrice', null) == null)
-        || (data.get('transactionType', 'rent') == 'sale'
+          && data.get('salePrice', null) in [null, 0])
+        || (data.get('purpose', data.get('transactionType', 'rent')) == 'sale'
           && data.roomType in ['room', 'apartment', 'house', 'office', 'shop', 'land']
           && data.get('salePrice', 0) is number && data.salePrice > 0
           && data.rentPerMonth == 0);
     }
+    // Optional on legacy/native records. New land maps keep measurements typed.
+    function validLandDetails(data) {
+      let land = data.get('land', null);
+      return land == null || (data.get('roomType', '') == 'land'
+        && land is map
+        && land.keys().hasOnly(['area', 'areaUnit', 'landUse', 'roadAccess', 'roadWidth', 'frontage', 'lengthUnit', 'facing'])
+        && land.keys().hasAll(['area', 'areaUnit'])
+        && land.area is number && land.area > 0
+        && land.areaUnit in ['aana', 'ropani', 'paisa', 'daam', 'kattha', 'bigha', 'dhur', 'sqft', 'sqm']
+        && land.get('landUse', '') in ['', 'residential', 'commercial', 'agricultural', 'mixed', 'other']
+        && land.get('roadAccess', '') in ['', 'motorable', 'footpath', 'none']
+        && (!('roadWidth' in land) || (land.roadWidth is number && land.roadWidth > 0 && land.get('roadAccess', '') != 'none'))
+        && (!('frontage' in land) || (land.frontage is number && land.frontage > 0))
+        && land.get('lengthUnit', 'ft') in ['ft', 'm']
+        && land.get('facing', '') in ['', 'north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west']);
+    }
+    function validLandUpdate() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['land', 'roomType'])
+        || validLandDetails(request.resource.data);
+    }
     function validPricingUpdate() {
       return !request.resource.data.diff(resource.data).affectedKeys()
-          .hasAny(['transactionType', 'salePrice', 'rentPerMonth', 'roomType'])
+          .hasAny(['transactionType', 'purpose', 'salePrice', 'rentPerMonth', 'roomType'])
         || validListingPricing(request.resource.data);
     }
 
@@ -294,6 +314,7 @@ service cloud.firestore {
         && request.resource.data.get('reviewedBy', null) == null
         && request.resource.data.get('reviewReason', null) == null
         && validListingPricing(request.resource.data)
+        && validLandDetails(request.resource.data)
         && request.resource.data.get('saveCount', 0) == 0
         && validTour(request.resource.data.get('tourScenes', []), listingId);
 
@@ -322,6 +343,7 @@ service cloud.firestore {
         && request.resource.data.get('reviewedBy', null) == null
         && request.resource.data.get('reviewReason', null) == null
         && validListingPricing(request.resource.data)
+        && validLandDetails(request.resource.data)
         && request.resource.data.get('saveCount', 0) == 0
         && validTour(request.resource.data.get('tourScenes', []), listingId);
 
@@ -332,9 +354,10 @@ service cloud.firestore {
       // The listing owner OR superAdmin can update a listing.
       // (For agent listings, ownerId is the agent's uid, so the agent
       // who posted it can update it.)
-      allow update: if (isAdmin() && validPricingUpdate()) ||
+      allow update: if (isAdmin() && validPricingUpdate() && validLandUpdate()) ||
         (isAuth() && notBanned() && resource.data.ownerId == request.auth.uid
           && validPricingUpdate()
+          && validLandUpdate()
           && request.resource.data.ownerId == resource.data.ownerId
           && request.resource.data.get('agentId', null) == resource.data.get('agentId', null)
           && request.resource.data.createdAt == resource.data.createdAt

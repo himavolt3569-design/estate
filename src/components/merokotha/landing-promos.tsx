@@ -17,7 +17,7 @@ export function LandingPromos({ ads, interval = 6, mobile = false }: { ads: Spon
   const [interacting, setInteracting] = useState(false);
   const [reduced, setReduced] = useState(true);
   const [canSlide, setCanSlide] = useState(false);
-  const slides = ads.flatMap(ad => Array.from({ length: Math.max(1, ad.imageUrls?.length || 0) }, (_, imageIndex) => ({ ad, imageIndex })));
+  const slides = ads.map(ad => ({ ad, imageIndex: 0 }));
   const move = (next: number, cycling = false) => {
     const element = rail.current;
     if (!element || !slides.length) return;
@@ -28,7 +28,7 @@ export function LandingPromos({ ads, interval = 6, mobile = false }: { ads: Spon
     if (child) {
       requestedIndex.current = target;
       setIndex(target);
-      element.scrollTo({ left: child.offsetLeft - element.offsetLeft, behavior: reduced ? 'instant' : 'smooth' });
+      element.scrollTo({ left: child.offsetLeft, behavior: reduced ? 'instant' : 'smooth' });
     }
   };
 
@@ -36,7 +36,13 @@ export function LandingPromos({ ads, interval = 6, mobile = false }: { ads: Spon
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
     const update = () => setReduced(query.matches);
     update(); query.addEventListener('change', update);
-    const observer = new ResizeObserver(() => { if (rail.current) setCanSlide(rail.current.scrollWidth > rail.current.clientWidth + 2); });
+    const observer = new ResizeObserver(() => {
+      const element = rail.current;
+      if (!element) return;
+      setCanSlide(element.scrollWidth > element.clientWidth + 2);
+      const child = requestedIndex.current == null ? null : element.children[requestedIndex.current] as HTMLElement | undefined;
+      if (child) element.scrollTo({ left: child.offsetLeft, behavior: 'instant' });
+    });
     if (rail.current) observer.observe(rail.current);
     return () => { query.removeEventListener('change', update); observer.disconnect(); };
   }, [slides.length]);

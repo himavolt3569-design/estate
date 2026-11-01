@@ -40,6 +40,7 @@ import { AdCarousel } from '@/components/merokotha/sponsor-card';
 import { useCampaigns } from '@/components/merokotha/ad-provider';
 import { ListingEngagement } from '@/components/merokotha/listing-engagement';
 import { ListingRecommendations } from '@/components/merokotha/listing-recommendations';
+import { landFacts } from '@/lib/land';
 import { isForSale, listingPrice } from '@/lib/listing-commerce';
 import { ListingGallery } from '@/components/merokotha/listing-gallery';
 import { ListingReportForm } from "@/components/merokotha/listing-report";
@@ -188,7 +189,8 @@ export default function ListingPage() {
       icon: CalendarDays,
     },
     { label: ui.views, value: String(listing.viewCount || 0), icon: Eye },
-  ].filter(item => !isForSale(listing) || item.label !== ui.deposit);
+  ].filter(item => (!isForSale(listing) || item.label !== ui.deposit) && (listing.roomType !== 'land' || ![ui.floor, ui.furnishing].includes(item.label)));
+  if (listing.roomType === 'land') details.splice(1, 0, ...landFacts(listing.land, locale).map(fact => ({ ...fact, icon: MapPin })));
 
   return (
     <div className="pb-12">

@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { ImagePlus, Images, MapPin, Star, Trash2, UploadCloud } from 'lucide-react';
 import { useSiteText } from './site-language';
+import { landArea, type LandDetails } from '@/lib/land';
 
 type PreviewPhoto = { id: string; file: File; url: string };
-type DraftPreview = { title: string; rent: string; address: string; type: string; transactionType?: 'rent' | 'sale' };
+type DraftPreview = { title: string; rent: string; address: string; type: string; transactionType?: 'rent' | 'sale'; land?: LandDetails | null };
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
@@ -91,6 +92,7 @@ export function ListingPhotoPicker({
             <p className="truncate text-sm font-semibold text-ink-900">{draft.title.trim() || t('Your property title', 'घरजग्गाको शीर्षक')}</p>
             <p className="flex items-center gap-1 truncate text-xs text-ink-500"><MapPin aria-hidden className="size-3.5 shrink-0" />{draft.address.trim() || t('Location will appear here', 'स्थान यहाँ देखिन्छ')}</p>
             <p className="pt-1 text-lg font-semibold text-royal-700">{formattedRent} <span className="text-xs font-normal text-ink-500">{draft.transactionType === 'sale' ? 'asking price' : '/ month'}</span></p>
+            {draft.type === 'land' && landArea(draft.land) && <p className="text-sm font-medium text-ink-700">{landArea(draft.land)}</p>}
           </div>
         </div>
 

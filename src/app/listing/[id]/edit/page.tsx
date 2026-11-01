@@ -32,6 +32,8 @@ import {
   listingContact,
   validContactNumber,
 } from "@/lib/contact";
+import { LandFields } from '@/components/merokotha/land-fields';
+import { landFromForm } from '@/lib/land';
 import { ListingTourEditor } from "@/components/merokotha/listing-tour-editor";
 import { canSell, isForSale, listingPrice, validListingPrice, type TransactionType } from '@/lib/listing-commerce';
 import type { Listing } from "@/lib/firebase/types";
@@ -111,6 +113,7 @@ function EditForm({
     if (!validListingPrice(propertyType, transactionType, Number(form.get('rentPerMonth')))) { toast.error('Enter a valid price. Flats are rental-only.'); return; }
     setBusy(true);
     try {
+      const land = propertyType === "land" ? landFromForm(form, listing.roomType !== "land" || Boolean(listing.land)) : null;
       const added = photos.filter((photo) => photo.file);
       const uploaded = added.length
         ? await uploadImages(
@@ -129,12 +132,14 @@ function EditForm({
         title: String(form.get("title") || "").trim(),
         roomType: String(form.get("roomType")),
         transactionType,
+        purpose: transactionType,
         rentPerMonth: transactionType === 'sale' ? 0 : Number(form.get('rentPerMonth')),
-        salePrice: transactionType === 'sale' ? Number(form.get('rentPerMonth')) : null,
+        salePrice: transactionType === 'sale' ? Number(form.get('rentPerMonth')) : 0,
         depositAmount: transactionType === 'sale' ? 0 : Number(form.get("depositAmount")),
-        floor: Number(form.get("floor")),
-        totalFloors: Number(form.get("totalFloors")),
-        furnishing: String(form.get("furnishing")),
+        land,
+        floor: propertyType === "land" ? deleteField() : Number(form.get("floor")),
+        totalFloors: propertyType === "land" ? deleteField() : Number(form.get("totalFloors")),
+        furnishing: propertyType === "land" ? deleteField() : String(form.get("furnishing")),
         address: String(form.get("address") || "").trim(),
         nearbyLandmarks: String(form.get("nearbyLandmarks") || "").trim(),
         description: String(form.get("description") || "").trim(),
@@ -226,7 +231,7 @@ function EditForm({
               </Select>
             </Field>
             <Field label={tr('Listing purpose')} htmlFor="edit-purpose"><Select id="edit-purpose" value={transactionType} onChange={event => setTransactionType(event.target.value as TransactionType)}><option value="rent">{tr('Rent')}</option>{canSell(propertyType) && <option value="sale">{tr('Sell')}</option>}</Select></Field>
-            <Field label={tr(transactionType === 'sale' ? 'Asking price (Rs.)' : 'Monthly rent (Rs.)')} htmlFor="edit-rent">
+            <Field label={tr(transactionType === 'sale' ? propertyType === 'land' ? 'Total asking price (Rs.)' : 'Asking price (Rs.)' : 'Monthly rent (Rs.)')} htmlFor="edit-rent">
               <Input
                 id="edit-rent"
                 name="rentPerMonth"
@@ -246,6 +251,7 @@ function EditForm({
               />
             </Field>
 </>}
+            {propertyType === 'land' ? <LandFields value={listing.land} required={listing.roomType !== 'land' || Boolean(listing.land)} /> : <>
             <Field label={tr("Floor")} htmlFor="edit-floor">
               <Input
                 id="edit-floor"
@@ -263,6 +269,7 @@ function EditForm({
                 defaultValue={listing.totalFloors || 1}
               />
             </Field>
+            </>}
             <Field label={tr("Address")} htmlFor="edit-address">
               <Input
                 id="edit-address"
@@ -277,6 +284,7 @@ function EditForm({
                 defaultValue={listing.nearbyLandmarks || ""}
               />
             </Field>
+            {propertyType !== 'land' && <>
             <Field label={tr("Furnishing")} htmlFor="edit-furnishing">
               <Select
                 id="edit-furnishing"
@@ -288,6 +296,7 @@ function EditForm({
                 <option value="furnished">Furnished</option>
               </Select>
             </Field>
+            </>}
             <Field
               label={tr("Facilities, separated by commas")}
               htmlFor="edit-facilities"

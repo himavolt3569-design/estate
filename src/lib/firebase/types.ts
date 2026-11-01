@@ -1,5 +1,6 @@
 import type { GeoPoint, Timestamp } from "firebase/firestore";
 import type { SearchFilters } from "@/lib/listing-search";
+import type { LandDetails } from '@/lib/land';
 import type { TourScene } from "@/lib/virtual-tour";
 import type { ReportReason, ReportStatus } from "@/lib/listing-reports";
 
@@ -21,8 +22,10 @@ export type Listing = RecordDoc & {
   ownerName: string;
   title: string;
   roomType: string;
+  land?: LandDetails | null;
   rentPerMonth: number;
   transactionType?: 'rent' | 'sale';
+  purpose?: 'rent' | 'sale';
   salePrice?: number | null;
   depositAmount?: number;
   floor?: number;

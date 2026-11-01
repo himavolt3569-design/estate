@@ -1,4 +1,5 @@
 // Keep the saved values compatible with the shared Android facilities array.
+export const LAND_FACILITIES: readonly string[] = ['Water', 'Electricity', 'Parking', 'CCTV', 'Security', 'Waste collection'];
 export const FACILITY_GROUPS = [
   {
     label: "Essentials",

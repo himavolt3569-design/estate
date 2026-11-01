@@ -5,8 +5,10 @@ import { doc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import { activeSponsors, campaignAds, defaultAdSettings, normalizeAdSettings, type AdPlacement, type AdSettings, type SponsorAd } from '@/lib/ads';
 import { configured, db } from '@/lib/firebase/client';
 import { useDocs } from '@/lib/firebase/hooks';
+import type { Listing } from '@/lib/firebase/types';
+import { resolveListingCampaigns } from '@/lib/sponsored-listings';
 
-const AdContext = createContext({ ads: [] as SponsorAd[], settings: defaultAdSettings, loading: true, error: '', now: 0, mobile: false });
+const AdContext = createContext({ ads: [] as SponsorAd[], resolvedAds: [] as SponsorAd[], settings: defaultAdSettings, loading: true, error: '', now: 0, mobile: false });
 
 export function AdProvider({ children }: { children: React.ReactNode }) {
   const { items, loading, error } = useDocs<SponsorAd>('ads');
@@ -28,8 +30,11 @@ export function AdProvider({ children }: { children: React.ReactNode }) {
       setSettings(normalizeAdSettings(snapshot.data())); setSettingsError(''); setSettingsLoading(false);
     }, () => { setSettingsError('Ad settings could not be loaded. Check the Firebase campaign rules.'); setSettingsLoading(false); });
   }, []);
-  const ads = useMemo(() => campaignAds(items, settings), [items, settings]);
-  return <AdContext.Provider value={{ ads, settings, loading: loading || settingsLoading, error: error || settingsError, now, mobile }}>{children}</AdContext.Provider>;
+  const storedAds = useMemo(() => campaignAds(items, settings), [items, settings]);
+  const { items: listings } = useDocs<Listing>(storedAds.some(ad => ad.linkType === 'listing') ? 'listings' : '', 'status', 'active');
+  const ads = useMemo(() => resolveListingCampaigns(storedAds, listings), [storedAds, listings]);
+  // Admins retain unavailable campaigns so they can pause, retarget or repair them.
+  return <AdContext.Provider value={{ ads: storedAds, resolvedAds: ads, settings, loading: loading || settingsLoading, error: error || settingsError, now, mobile }}>{children}</AdContext.Provider>;
 }
 
 export function useCampaigns(area: AdPlacement) {
@@ -37,7 +42,7 @@ export function useCampaigns(area: AdPlacement) {
   // A denied settings read must not suppress public campaigns and bundled partners.
   // Defaults apply until settings load; a previously loaded off switch stays off.
   const enabled = !context.loading && context.settings.enabled && (area === 'landing' ? context.settings.heroEnabled : area === 'listings' ? context.settings.feedEnabled : context.settings.detailsEnabled);
-  const ads = useMemo(() => enabled && context.now ? activeSponsors(context.ads, area, context.mobile ? 'mobile' : 'desktop', context.now) : [], [context.ads, area, context.mobile, context.now, enabled]);
+  const ads = useMemo(() => enabled && context.now ? activeSponsors(context.resolvedAds, area, context.mobile ? 'mobile' : 'desktop', context.now) : [], [context.resolvedAds, area, context.mobile, context.now, enabled]);
   return { ...context, campaigns: ads };
 }
 

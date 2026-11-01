@@ -1,3 +1,4 @@
+import { landFacts, type LandDetails } from './land';
 import { facilityLabel } from "./listing-facilities";
 
 export const PROPERTY_TYPES = [
@@ -23,6 +24,7 @@ export const PROPERTY_LABELS: Record<PropertyType, { en: string; ne: string }> =
 
 export type ListingDetailsDraft = {
   type: PropertyType;
+  land?: LandDetails | null;
   transactionType?: 'rent' | 'sale';
   rent: string;
   deposit: string;
@@ -198,7 +200,7 @@ export function generateListingDetails(
       template.id === `${draft.type}-${index + 1}`,
   )!;
   const sale = draft.transactionType === 'sale' && draft.type !== 'flat';
-  const opening = sale ? (ne ? `${label}${location} बिक्रीमा उपलब्ध छ।` : `A ${label.toLowerCase()} is available for sale${location}.`) : template[locale]
+  const opening = sale ? (ne ? `${label}${location} बिक्रीमा उपलब्ध छ।` : `${draft.type === "land" ? "Land" : `A ${label.toLowerCase()}`} is available for sale${location}.`) : template[locale]
     .replace("{type}", ne ? label : label.toLowerCase())
     .replace("{location}", location);
   const facts: string[] = [];
@@ -212,6 +214,7 @@ export function generateListingDetails(
     facts.push(sale ? (ne ? `बिक्री मूल्य: रु. ${rent}।` : `Asking price: Rs. ${rent}.`) : (ne ? `मासिक भाडा: रु. ${rent}।` : `Monthly rent: Rs. ${rent}.`));
   if (deposit && !sale)
     facts.push(ne ? `धरौटी: रु. ${deposit}।` : `Deposit: Rs. ${deposit}.`);
+  if (draft.type === "land") facts.push(...landFacts(draft.land, locale).map(fact => `${fact.label}: ${fact.value}${ne ? "।" : "."}`));
   if (draft.type !== "land") {
     if (draft.floor.trim() !== "" && Number.isFinite(Number(draft.floor))) {
       facts.push(

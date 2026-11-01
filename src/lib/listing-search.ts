@@ -1,4 +1,5 @@
 import type { Listing } from './firebase/types';
+import { landFacts, landLabel } from './land';
 import { isForSale, listingPrice } from './listing-commerce';
 
 export type SearchFilters = {
@@ -10,11 +11,13 @@ export type SearchFilters = {
   facility: string;
   verifiedOnly: boolean;
   nearby: { lat: number; lng: number } | null;
+  landUse?: string;
+  roadAccess?: string;
   transactionType?: 'all' | 'rent' | 'sale';
 };
 
 export const emptySearch: SearchFilters = {
-  search: '', roomType: '', minRent: '', maxRent: '', furnishing: '', facility: '', verifiedOnly: false, nearby: null, transactionType: 'all',
+  search: '', roomType: '', minRent: '', maxRent: '', furnishing: '', facility: '', verifiedOnly: false, nearby: null, transactionType: 'all', landUse: '', roadAccess: '',
 };
 
 export function listingCreatedAt(listing: Listing): number {
@@ -29,7 +32,7 @@ export function timestampMillis(value: unknown): number {
 
 export function hasSearchFilters(filters: SearchFilters): boolean {
   return Boolean(filters.search.trim() || filters.roomType || filters.minRent || filters.maxRent
-    || filters.furnishing || filters.facility.trim() || filters.verifiedOnly || filters.nearby || filters.transactionType && filters.transactionType !== 'all');
+    || filters.landUse || filters.roadAccess || filters.furnishing || filters.facility.trim() || filters.verifiedOnly || filters.nearby || filters.transactionType && filters.transactionType !== 'all');
 }
 
 // Older saves stored the input as a name and accidentally kept empty criteria.
@@ -54,6 +57,8 @@ export function searchFilterLabels(filters: SearchFilters): string[] {
   if (filters.minRent && filters.maxRent) labels.push(`${money(filters.minRent)} – ${money(filters.maxRent)}${period}`);
   else if (filters.minRent) labels.push(`From ${money(filters.minRent)}${period}`);
   else if (filters.maxRent) labels.push(`Up to ${money(filters.maxRent)}${period}`);
+  if (filters.landUse) labels.push(landLabel(filters.landUse));
+  if (filters.roadAccess) labels.push(landLabel(filters.roadAccess));
   if (filters.furnishing) labels.push(filters.furnishing === 'semiFurnished' ? 'Semi furnished' : filters.furnishing);
   if (filters.facility.trim()) labels.push(filters.facility.trim());
   if (filters.verifiedOnly) labels.push('Verified only');
@@ -70,7 +75,7 @@ function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
 export function matchesSearch(listing: Listing, filters: SearchFilters) {
   if (listing.status !== 'active') return false;
   const normalize = (value: string) => value.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
-  const text = normalize([listing.title, listing.address, listing.nearbyLandmarks, listing.description].filter(Boolean).join(' '));
+  const text = normalize([listing.title, listing.address, listing.nearbyLandmarks, listing.description, ...(listing.roomType === 'land' ? landFacts(listing.land).map(fact => fact.value) : [])].filter(Boolean).join(' '));
   const keywords = normalize(filters.search).split(' ').filter(Boolean);
   return keywords.every(keyword => text.includes(keyword))
     && (!filters.roomType || listing.roomType === filters.roomType)
@@ -78,6 +83,7 @@ export function matchesSearch(listing: Listing, filters: SearchFilters) {
     && (!filters.minRent || listingPrice(listing) >= Number(filters.minRent))
     && (!filters.maxRent || listingPrice(listing) <= Number(filters.maxRent))
     && (!filters.furnishing || listing.furnishing === filters.furnishing)
+    && (filters.roomType !== 'land' || ((!filters.landUse || listing.land?.landUse === filters.landUse) && (!filters.roadAccess || listing.land?.roadAccess === filters.roadAccess)))
     && (!filters.facility || (listing.facilities || []).some(value => value.toLowerCase().includes(filters.facility.trim().toLowerCase())))
     && (!filters.verifiedOnly || listing.verificationStatus === 'verified')
     && (!filters.nearby || Boolean(listing.geoPoint && distanceKm(filters.nearby.lat, filters.nearby.lng, listing.geoPoint.latitude, listing.geoPoint.longitude) <= 10));
@@ -100,6 +106,7 @@ export function searchFromUrl(search: string): SearchFilters {
   return {
     search: params.get('search') || '', roomType: params.get('roomType') || '',
     minRent: params.get('minRent') || '', maxRent: params.get('maxRent') || '',
+    landUse: params.get('landUse') || '', roadAccess: params.get('roadAccess') || '',
     furnishing: params.get('furnishing') || '', facility: params.get('facility') || '',
     verifiedOnly: params.get('verifiedOnly') === 'true',
     transactionType: params.get('transactionType') === 'sale' ? 'sale' : params.get('transactionType') === 'rent' ? 'rent' : 'all',

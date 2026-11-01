@@ -26,13 +26,13 @@ export function SponsorCard({ ad, compact = false, tile = false, banner = false,
   const brand = ad.id.includes('pitambari') ? 'pitambari' : ad.id.includes('floor-cleaner') ? 'cleaner' : 'default';
   return <a ref={element} href={href} target={external ? '_blank' : undefined} rel={external ? 'sponsored noopener noreferrer' : 'sponsored'}
     onClick={() => { if (track) void recordAdEvent(ad.id, 'click', placement); }}
-    className={`sponsor-panel sponsor-panel--${brand} ${compact ? 'sponsor-panel--compact' : ''} ${tile ? 'sponsor-panel--tile' : ''} ${banner ? 'sponsor-panel--banner' : ''} ${mobilePreview ? 'sponsor-panel--mobile-preview' : ''}`}>
+    className={`sponsor-panel sponsor-panel--${brand} ${!external ? 'sponsor-panel--property' : ''} ${compact ? 'sponsor-panel--compact' : ''} ${tile ? 'sponsor-panel--tile' : ''} ${banner ? 'sponsor-panel--banner' : ''} ${mobilePreview ? 'sponsor-panel--mobile-preview' : ''}`}>
     {image && <picture className="sponsor-panel__art">{ad.mobileImageUrl && <source media="(max-width: 767px)" srcSet={ad.mobileImageUrl} />}<img src={image} alt="" loading={placement === 'landing' ? 'eager' : 'lazy'} /></picture>}
     <div className="sponsor-panel__copy">
-      <span className="sponsor-panel__disclosure">Advertisement{ad.sponsorName ? ` · ${ad.sponsorName}` : ''}</span>
+      <span className="sponsor-panel__disclosure">{external ? 'Advertisement' : 'Sponsored property'}{ad.sponsorName ? ` · ${ad.sponsorName}` : ''}</span>
       <h3>{ad.title}</h3>
       {ad.subtitle && <p>{ad.subtitle}</p>}
-      <span className="sponsor-panel__cta">{ad.ctaLabel || (external ? 'Visit website' : 'View rental')} <ArrowUpRight aria-hidden className="size-4" /></span>
+      <span className="sponsor-panel__cta">{ad.ctaLabel || (external ? 'Visit website' : 'View property')} <ArrowUpRight aria-hidden className="size-4" /></span>
     </div>
   </a>;
 }
