@@ -1,5 +1,16 @@
 # Advertising and property discovery handoff
 
+## November 1, 2026 - live ad administration permission
+
+`himavolt3569@gmail.com` was verified read-only as the existing enabled, email-verified `superAdmin`. No role or credential change was needed. The website's Advertising dashboard at `/dashboard?tab=ads` uses that protected role for access.
+
+The deployed rules allowed superadmins to manage campaigns but had no `adSettings` match. Only the existing versioned `adSettings/public` rule block was added to a fresh live rules snapshot. Public clients may read the non-secret display flags; only existing superadmins may save validated settings. All other live rules, account roles, campaign documents, Storage rules, indexes and functions remain unchanged. The settings document does not exist yet; its first save is available to the superadmin.
+
+Twelve permission checks pass against the live snapshot plus that exact addition, covering master controls, existing campaign management, ordinary-account/guest denial, same-email-without-role denial, self-promotion denial, invalid values and private profile access. The remote compiler and exact deployed-source verification pass. Public access now returns document-not-found rather than permission-denied. The scoped source addition, verification, previous ruleset and rollback pointer are in [the release record](ad-administration-release-2026-11-01.md). The homepage/UI edits and remaining broader backend release are still pending.
+
+The October 31 notes below describe the earlier local implementation.
+
+
 Updated October 31, 2026. This is a local implementation. No website, Firebase rules, functions, indexes, or production records were deployed or changed during this work. Flutter source content is unchanged.
 
 ## Website changes
@@ -8,6 +19,7 @@ Updated October 31, 2026. This is a local implementation. No website, Firebase r
 - See my matches followed by All Rentals, Rooms, Flats and Apartments. Saved searches/new matches are a disclosure that starts closed on every page load.
 - Four desktop listing columns, responsive tablet/phone layouts, a zoomable map with price markers and boundary filtering, and fixed property-preview grids (three cards on desktop, two on phones).
 - A consolidated filter panel groups location, property type, rent/buy purpose and minimum/maximum prices. Property preferences expand for furnishing, facilities and verification, independent of map visibility. Applied criteria have individually removable chips and invalid budgets have inline feedback. Navigation, categories and map previews fit without horizontal scrolling.
+- Opening dropdowns keeps the sticky navigation and page geometry stable. Radix scroll locking is applied to the document viewport while the body remains clipped rather than becoming a scrolling ancestor. A stable scrollbar gutter prevents width changes, and the existing keyboard/focus/dismissal behavior remains intact.
 - A light homepage hero prioritizes property search, with contained photography on desktop. The labeled homepage sponsor carousel is a compact strip below the hero. Other carousels appear after every configured 3–5 listings and between the property description and facilities. This replaces the integrated hero advertisement rejected by the user on October 31, 2026; campaign settings and placement identifiers remain compatible.
 - Taller property gallery, full-photo viewer with zoom, public posting date/views/save totals, existing contact/inquiry/report flows, and up to five content-based recommendations.
 - Rent/Sell posting for rooms, apartments, houses, offices, shops and land. Flats stay rental-only. Browsing uses Rent/Buy; sale cards/details show the asking price without a monthly suffix.
@@ -56,6 +68,7 @@ Browser impressions require at least one second at 50% visibility. Campaign inte
 - 68 unit tests passed, including ad schedules/URLs, feed spacing, sale pricing/search/template behavior, and recommendations.
 - 41 Firebase emulator checks passed across campaign/aggregate, existing integration, property-feature and mirrored saved-search suites. They cover approved production compatibility, private records, flat-sale denial, legacy rentals, real aggregate transactions, repeated event delivery, chat/inquiries/moderation and Storage ownership.
 - 38 browser checks passed using only disposable `demo-merokotha-feature-tests` fixtures and temporary profiles, including filter preferences, removable criteria, invalid budgets, sorting, flat rental-only browsing, the hero search and existing ad controls. The report is `.impeccable/review/browser-checks.json`. Filter captures and `.impeccable/review/filter-layout-checks.json` cover 320, 390, 800 and 1440px, open/closed preferences, Nepali layouts and signed-in narrow navigation with no horizontal scroll containers. These are sample records, not production listings. See `.impeccable/review/final-review.md` for the scoped design review.
+- 35 focused dropdown regression checks passed at 1440/800/390/320px and with an explicit desktop scrollbar gutter. They compare open/closed header geometry, page width and scroll position, and verify background scroll locking, keyboard selection, Escape focus restoration and outside-click dismissal. The report is `.impeccable/review/dropdown-stability-checks.json`.
 
 Commands:
 
@@ -69,6 +82,8 @@ pnpm test:rules:integration
 pnpm test:rules:features
 pnpm test:rules:saved-searches
 pnpm test:browser:campaigns
+node scripts/test-campaign-browser.mjs --seed-only
+node scripts/test-dropdown-stability-browser.mjs
 ```
 
 The permission/browser suites need the local demo emulators. Run suites sequentially because they reset shared demo fixtures. The browser suite expects the development server on `localhost:3016` with the emulator environment described in the README and existing scripts. Use the matching localhost origin for Next.js development resources. Production builds ignore the emulator switch.

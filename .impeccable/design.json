@@ -1,0 +1,681 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-01T06:36:26.659296+00:00",
+  "title": "Design System: MeroKotha",
+  "extensions": {
+    "colorMeta": {
+      "royal-50": {
+        "role": "primary",
+        "displayName": "Royal Blue 50",
+        "tonalRamp": [
+          "#172554",
+          "#1e3a8a",
+          "#1e40af",
+          "#1d4ed8",
+          "#2563eb",
+          "#60a5fa",
+          "#bfdbfe",
+          "#eff6ff"
+        ]
+      },
+      "royal-100": {
+        "role": "primary",
+        "displayName": "Royal Blue 100",
+        "tonalRamp": [
+          "#172554",
+          "#1e3a8a",
+          "#1e40af",
+          "#1d4ed8",
+          "#2563eb",
+          "#60a5fa",
+          "#bfdbfe",
+          "#eff6ff"
+        ]
+      },
+      "royal-200": {
+        "role": "primary",
+        "displayName": "Royal Blue 200",
+        "tonalRamp": [
+          "#172554",
+          "#1e3a8a",
+          "#1e40af",
+          "#1d4ed8",
+          "#2563eb",
+          "#60a5fa",
+          "#bfdbfe",
+          "#eff6ff"
+        ]
+      },
+      "royal-400": {
+        "role": "primary",
+        "displayName": "Royal Blue 400",
+        "tonalRamp": [
+          "#172554",
+          "#1e3a8a",
+          "#1e40af",
+          "#1d4ed8",
+          "#2563eb",
+          "#60a5fa",
+          "#bfdbfe",
+          "#eff6ff"
+        ]
+      },
+      "royal-500": {
+        "role": "primary",
+        "displayName": "Royal Blue 500",
+        "tonalRamp": [
+          "#172554",
+          "#1e3a8a",
+          "#1e40af",
+          "#1d4ed8",
+          "#2563eb",
+          "#60a5fa",
+          "#bfdbfe",
+          "#eff6ff"
+        ]
+      },
+      "royal-600": {
+        "role": "primary",
+        "displayName": "Royal Blue 600",
+        "tonalRamp": [
+          "#172554",
+          "#1e3a8a",
+          "#1e40af",
+          "#1d4ed8",
+          "#2563eb",
+          "#60a5fa",
+          "#bfdbfe",
+          "#eff6ff"
+        ]
+      },
+      "royal-700": {
+        "role": "primary",
+        "displayName": "Royal Blue 700",
+        "tonalRamp": [
+          "#172554",
+          "#1e3a8a",
+          "#1e40af",
+          "#1d4ed8",
+          "#2563eb",
+          "#60a5fa",
+          "#bfdbfe",
+          "#eff6ff"
+        ]
+      },
+      "royal-800": {
+        "role": "primary",
+        "displayName": "Royal Blue 800",
+        "tonalRamp": [
+          "#172554",
+          "#1e3a8a",
+          "#1e40af",
+          "#1d4ed8",
+          "#2563eb",
+          "#60a5fa",
+          "#bfdbfe",
+          "#eff6ff"
+        ]
+      },
+      "royal-950": {
+        "role": "primary",
+        "displayName": "Royal Blue 950",
+        "tonalRamp": [
+          "#172554",
+          "#1e3a8a",
+          "#1e40af",
+          "#1d4ed8",
+          "#2563eb",
+          "#60a5fa",
+          "#bfdbfe",
+          "#eff6ff"
+        ]
+      },
+      "crimson-50": {
+        "role": "secondary",
+        "displayName": "Crimson 50",
+        "tonalRamp": [
+          "#831233",
+          "#991136",
+          "#b6113a",
+          "#d81b45",
+          "#ef3358",
+          "#fa6280",
+          "#ffc6cf",
+          "#fff1f3"
+        ]
+      },
+      "crimson-500": {
+        "role": "secondary",
+        "displayName": "Crimson 500",
+        "tonalRamp": [
+          "#831233",
+          "#991136",
+          "#b6113a",
+          "#d81b45",
+          "#ef3358",
+          "#fa6280",
+          "#ffc6cf",
+          "#fff1f3"
+        ]
+      },
+      "crimson-600": {
+        "role": "secondary",
+        "displayName": "Crimson 600",
+        "tonalRamp": [
+          "#831233",
+          "#991136",
+          "#b6113a",
+          "#d81b45",
+          "#ef3358",
+          "#fa6280",
+          "#ffc6cf",
+          "#fff1f3"
+        ]
+      },
+      "crimson-700": {
+        "role": "secondary",
+        "displayName": "Crimson 700",
+        "tonalRamp": [
+          "#831233",
+          "#991136",
+          "#b6113a",
+          "#d81b45",
+          "#ef3358",
+          "#fa6280",
+          "#ffc6cf",
+          "#fff1f3"
+        ]
+      },
+      "emerald-50": {
+        "role": "tertiary",
+        "displayName": "Emerald 50",
+        "tonalRamp": [
+          "#104933",
+          "#11593c",
+          "#11714a",
+          "#148e5a",
+          "#22b173",
+          "#4ad190",
+          "#bbf7d4",
+          "#f0fdf6"
+        ]
+      },
+      "emerald-200": {
+        "role": "tertiary",
+        "displayName": "Emerald 200",
+        "tonalRamp": [
+          "#104933",
+          "#11593c",
+          "#11714a",
+          "#148e5a",
+          "#22b173",
+          "#4ad190",
+          "#bbf7d4",
+          "#f0fdf6"
+        ]
+      },
+      "emerald-800": {
+        "role": "tertiary",
+        "displayName": "Emerald 800",
+        "tonalRamp": [
+          "#104933",
+          "#11593c",
+          "#11714a",
+          "#148e5a",
+          "#22b173",
+          "#4ad190",
+          "#bbf7d4",
+          "#f0fdf6"
+        ]
+      },
+      "clay-500": {
+        "role": "tertiary",
+        "displayName": "Clay 500",
+        "tonalRamp": [
+          "#8b3028",
+          "#a9372d",
+          "#cc493d",
+          "#e05a48",
+          "#f5806f",
+          "#ffb5ac",
+          "#ffd8d3",
+          "#fff6f5"
+        ]
+      },
+      "clay-700": {
+        "role": "tertiary",
+        "displayName": "Clay 700",
+        "tonalRamp": [
+          "#8b3028",
+          "#a9372d",
+          "#cc493d",
+          "#e05a48",
+          "#f5806f",
+          "#ffb5ac",
+          "#ffd8d3",
+          "#fff6f5"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ]
+      },
+      "ink-50": {
+        "role": "neutral",
+        "displayName": "Ink 50",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ]
+      },
+      "ink-100": {
+        "role": "neutral",
+        "displayName": "Ink 100",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ]
+      },
+      "ink-200": {
+        "role": "neutral",
+        "displayName": "Ink 200",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ]
+      },
+      "ink-300": {
+        "role": "neutral",
+        "displayName": "Ink 300",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ]
+      },
+      "ink-500": {
+        "role": "neutral",
+        "displayName": "Ink 500",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ]
+      },
+      "ink-600": {
+        "role": "neutral",
+        "displayName": "Ink 600",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ]
+      },
+      "ink-700": {
+        "role": "neutral",
+        "displayName": "Ink 700",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ]
+      },
+      "ink-800": {
+        "role": "neutral",
+        "displayName": "Ink 800",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ]
+      },
+      "ink-900": {
+        "role": "neutral",
+        "displayName": "Ink 900",
+        "tonalRamp": [
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8",
+          "#e2e8f0",
+          "#f8fafc"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Incumbent Display",
+        "purpose": "Existing shared display scale. The compact homepage headline uses a local responsive override documented in DESIGN.md."
+      },
+      "headline": {
+        "displayName": "Section Headline",
+        "purpose": "Shared responsive section headings."
+      },
+      "title": {
+        "displayName": "Panel Title",
+        "purpose": "Semibold compact panel headings; listing titles have their own bold variant."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Base text and longer copy."
+      },
+      "body-small": {
+        "displayName": "Compact Body",
+        "purpose": "Listing facts, form fields and supporting copy."
+      },
+      "label": {
+        "displayName": "Control Label",
+        "purpose": "Medium weight form and action labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "hairline",
+        "value": "0 1px 3px rgba(15, 23, 42, 0.08)",
+        "purpose": "Source minimal-lift token."
+      },
+      {
+        "name": "soft",
+        "value": "0 4px 12px rgba(15, 23, 42, 0.06)",
+        "purpose": "Shared Surface and button hover."
+      },
+      {
+        "name": "raised",
+        "value": "0 12px 32px -8px rgba(15, 23, 42, 0.12)",
+        "purpose": "Source raised-elevation token."
+      },
+      {
+        "name": "floating",
+        "value": "0 24px 48px -12px rgba(15, 23, 42, 0.18)",
+        "purpose": "Source floating-elevation token."
+      },
+      {
+        "name": "campaign",
+        "value": "0 12px 30px rgb(15 23 42 / .12)",
+        "purpose": "Generic carousel shadow; feed rows remove it. Homepage partner cards use flat tonal surfaces."
+      },
+      {
+        "name": "map-price",
+        "value": "0 3px 8px rgb(15 23 42 / .12)",
+        "purpose": "Map marker legibility."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Shared interactive easing token."
+      },
+      {
+        "name": "ease-spring",
+        "value": "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+        "purpose": "Existing stylesheet spring token."
+      },
+      {
+        "name": "button-transition",
+        "value": "200ms",
+        "purpose": "Shared button state changes."
+      },
+      {
+        "name": "campaign-enter",
+        "value": "400ms ease-out; opacity .8 to 1; translateX(8px) to 0",
+        "purpose": "Generic carousel slide entry; disabled for reduced motion. The homepage uses native scroll snapping instead."
+      },
+      {
+        "name": "discovery-intro",
+        "value": "650ms expo.out; y 10px to 0; opacity .85 to 1; blur 1px to 0",
+        "purpose": "Single GSAP compact homepage title/supporting-copy entrance; skipped for reduced motion. Partner cards and filters have no GSAP entrance."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "Skip GSAP entrance; suppress CSS animation/transitions and smooth scrolling; no carousel auto-rotation."
+      },
+      {
+        "name": "partner-symbol-hover",
+        "value": "400ms cubic-bezier(.16,1,.3,1); rotate(-12deg) to 0",
+        "purpose": "Homepage partner medallion hover; disabled for reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "feed-phone-max",
+        "value": "539px"
+      },
+      {
+        "name": "media-sm-min",
+        "value": "640px"
+      },
+      {
+        "name": "discovery-phone-max",
+        "value": "767px"
+      },
+      {
+        "name": "feed-tablet-max",
+        "value": "900px"
+      },
+      {
+        "name": "partner-two-cards-max",
+        "value": "900px"
+      },
+      {
+        "name": "desktop-nav-min",
+        "value": "1024px"
+      },
+      {
+        "name": "feed-middle-max",
+        "value": "1199px"
+      },
+      {
+        "name": "feed-four-columns-min",
+        "value": "1200px"
+      },
+      {
+        "name": "header-inline-search-min",
+        "value": "1280px"
+      },
+      {
+        "name": "filters-tablet-max",
+        "value": "900px"
+      },
+      {
+        "name": "filters-phone-max",
+        "value": "767px"
+      },
+      {
+        "name": "browse-label-narrow-max",
+        "value": "359px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary Button from the shared button component, default medium size.",
+      "html": "<button class=\"ds-button-primary\" type=\"button\">See my matches</button>",
+      "css": ".ds-button-primary{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border:1px solid transparent;border-radius:var(--radius-lg,16px);font-size:14px;font-weight:500;cursor:pointer;transition:background-color .2s,transform .2s,box-shadow .2s;transition-timing-function:var(--ease-out-expo,cubic-bezier(.16,1,.3,1));background:var(--color-crimson-600,#d81b45);color:white;}.ds-button-primary:hover{background:var(--color-crimson-500,#ef3358);transform:translateY(-2px);box-shadow:var(--shadow-soft,0 4px 12px rgba(15,23,42,.06));}.ds-button-primary:focus-visible{outline:2px solid var(--color-royal-700,#1d4ed8);outline-offset:3px;}.ds-button-primary:active{transform:scale(.95);box-shadow:none;}.ds-button-primary:disabled{opacity:.5;pointer-events:none;}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none;}}"
+    },
+    {
+      "name": "Royal Button",
+      "kind": "button",
+      "refersTo": "button-royal",
+      "description": "Royal Button from the shared button component, default medium size.",
+      "html": "<button class=\"ds-button-royal\" type=\"button\">Continue</button>",
+      "css": ".ds-button-royal{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border:1px solid transparent;border-radius:var(--radius-lg,16px);font-size:14px;font-weight:500;cursor:pointer;transition:background-color .2s,transform .2s,box-shadow .2s;transition-timing-function:var(--ease-out-expo,cubic-bezier(.16,1,.3,1));background:var(--color-royal-700,#1d4ed8);color:white;}.ds-button-royal:hover{background:var(--color-royal-600,#2563eb);transform:translateY(-2px);box-shadow:var(--shadow-soft,0 4px 12px rgba(15,23,42,.06));}.ds-button-royal:focus-visible{outline:2px solid var(--color-royal-700,#1d4ed8);outline-offset:3px;}.ds-button-royal:active{transform:scale(.95);box-shadow:none;}.ds-button-royal:disabled{opacity:.5;pointer-events:none;}@media(prefers-reduced-motion:reduce){.ds-button-royal{transition:none;}}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary Button from the shared button component, default medium size.",
+      "html": "<button class=\"ds-button-secondary\" type=\"button\">Show more</button>",
+      "css": ".ds-button-secondary{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border:1px solid transparent;border-radius:var(--radius-lg,16px);font-size:14px;font-weight:500;cursor:pointer;transition:background-color .2s,transform .2s,box-shadow .2s;transition-timing-function:var(--ease-out-expo,cubic-bezier(.16,1,.3,1));background:white;color:var(--color-ink-800,#1e293b);border-color:var(--color-ink-200,#e2e8f0);}.ds-button-secondary:hover{background:var(--color-ink-50,#f8fafc);border-color:var(--color-ink-300,#cbd5e1);transform:translateY(-2px);box-shadow:var(--shadow-soft,0 4px 12px rgba(15,23,42,.06));}.ds-button-secondary:focus-visible{outline:2px solid var(--color-royal-700,#1d4ed8);outline-offset:3px;}.ds-button-secondary:active{transform:scale(.95);box-shadow:none;}.ds-button-secondary:disabled{opacity:.5;pointer-events:none;}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none;}}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ghost Button from the shared button component, default medium size.",
+      "html": "<button class=\"ds-button-ghost\" type=\"button\">Cancel</button>",
+      "css": ".ds-button-ghost{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border:1px solid transparent;border-radius:var(--radius-lg,16px);font-size:14px;font-weight:500;cursor:pointer;transition:background-color .2s,transform .2s,box-shadow .2s;transition-timing-function:var(--ease-out-expo,cubic-bezier(.16,1,.3,1));background:transparent;color:var(--color-ink-600,#475569);}.ds-button-ghost:hover{background:var(--color-ink-100,#f1f5f9);color:var(--color-ink-900,#0f172a);transform:translateY(-2px);box-shadow:var(--shadow-soft,0 4px 12px rgba(15,23,42,.06));}.ds-button-ghost:focus-visible{outline:2px solid var(--color-royal-700,#1d4ed8);outline-offset:3px;}.ds-button-ghost:active{transform:scale(.95);box-shadow:none;}.ds-button-ghost:disabled{opacity:.5;pointer-events:none;}@media(prefers-reduced-motion:reduce){.ds-button-ghost{transition:none;}}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "White rounded field with ink placeholder and royal keyboard focus.",
+      "html": "<label class=\"ds-field-label\" for=\"ds-location\">Location</label><input class=\"ds-field\" id=\"ds-location\" placeholder=\"Search location\" />",
+      "css": ".ds-field-label{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);display:block;margin-bottom:6px;color:var(--color-ink-800,#1e293b);font-size:14px;font-weight:500;}.ds-field{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);width:100%;height:48px;padding:0 16px;border:1px solid var(--color-ink-200,#e2e8f0);border-radius:var(--radius-md,12px);background:white;color:var(--color-ink-900,#0f172a);font-size:14px;box-shadow:0 1px 3px rgba(15,23,42,.08);transition:border-color .2s,box-shadow .2s;}.ds-field::placeholder{color:var(--color-ink-500,#64748b);}.ds-field:hover{border-color:var(--color-royal-400,#60a5fa);}.ds-field:focus-visible{border-color:var(--color-royal-500,#3b82f6);box-shadow:0 0 0 2px rgb(59 130 246 / .2);outline:none;}.ds-field[aria-invalid=true]{border-color:var(--color-clay-500,#e05a48);}.ds-field:disabled{background:var(--color-ink-50,#f8fafc);opacity:.6;cursor:not-allowed;}"
+    },
+    {
+      "name": "Verified Badge",
+      "kind": "chip",
+      "refersTo": "badge-verified",
+      "description": "Compact status badge for verified property or agent facts.",
+      "html": "<span class=\"ds-verified\">Verified</span>",
+      "css": ".ds-verified{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--color-emerald-200,#bbf7d4);border-radius:9999px;background:var(--color-emerald-50,#f0fdf6);color:var(--color-emerald-800,#11593c);font-size:11px;line-height:16px;font-weight:600;letter-spacing:.025em;text-transform:uppercase;box-shadow:0 1px 3px rgba(15,23,42,.08);}"
+    },
+    {
+      "name": "Surface Panel",
+      "kind": "card",
+      "refersTo": "surface",
+      "description": "Shared white Surface; padding is supplied by each caller.",
+      "html": "<section class=\"ds-surface\"><h3>Property details</h3><p>Photos, price and information from the lister.</p></section>",
+      "css": ".ds-surface{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);padding:24px;border:1px solid var(--color-ink-100,#f1f5f9);border-radius:var(--radius-xl,24px);background:white;color:var(--color-ink-700,#334155);box-shadow:var(--shadow-soft,0 4px 12px rgba(15,23,42,.06));}.ds-surface h3{margin:0;color:var(--color-ink-900,#0f172a);font-size:18px;line-height:1.7rem;font-weight:600;}.ds-surface p{margin:8px 0 0;font-size:14px;line-height:1.4rem;}"
+    },
+    {
+      "name": "Desktop Navigation",
+      "kind": "nav",
+      "refersTo": "navigation-current",
+      "description": "Pale-crimson Home state and quiet neighboring navigation controls.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main navigation\"><a href=\"#home\" aria-current=\"page\">Home</a><a href=\"#saved\">Saved</a><a href=\"#messages\">Messages</a></nav>",
+      "css": ".ds-nav{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);display:flex;flex-wrap:wrap;gap:4px;background:white;}.ds-nav a{display:inline-flex;min-height:40px;align-items:center;padding:0 12px;border-radius:var(--radius-lg,16px);color:var(--color-ink-700,#334155);font-size:14px;font-weight:500;text-decoration:none;}.ds-nav a:hover{background:var(--color-royal-50,#eff6ff);}.ds-nav a[aria-current=page]{background:var(--color-crimson-50,#fff1f3);color:var(--color-crimson-700,#b6113a);}.ds-nav a:focus-visible{outline:2px solid var(--color-royal-700,#1d4ed8);outline-offset:3px;}"
+    },
+    {
+      "name": "Text Partner Panel",
+      "kind": "custom",
+      "refersTo": "campaign-panel",
+      "description": "Existing image-free partner treatment with mandatory disclosure; sample carries no product claim.",
+      "html": "<a class=\"ds-partner\" href=\"#partner\"><span class=\"ds-partner-label\">Advertisement ? Pitambari</span><h3>Discover Pitambari</h3><span class=\"ds-partner-cta\">Visit website <svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M7 17 17 7M7 7h10v10\"/></svg></span></a>",
+      "css": ".ds-partner{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:156px;padding:20px 28px;overflow:hidden;border-radius:var(--radius-md,12px);background:#e8f3ed;color:#154630;text-decoration:none;}.ds-partner-label{color:#2f5e47;font-size:10px;font-weight:500;line-height:1.6;}.ds-partner h3{margin:10px 0 0;font-size:20px;font-weight:650;line-height:1.25;letter-spacing:-.025em;}.ds-partner-cta{display:inline-flex;align-items:center;gap:6px;min-height:40px;margin-top:8px;padding:8px 14px;border-radius:8px;background:#1c6341;color:white;font-size:12px;font-weight:600;}.ds-partner:hover .ds-partner-cta{background:#1e40af;}.ds-partner:focus-visible{outline:2px solid var(--color-royal-700,#1d4ed8);outline-offset:3px;}"
+    },
+    {
+      "name": "Map Price Marker",
+      "kind": "custom",
+      "description": "A neutral white map price marker becomes royal when selected.",
+      "html": "<button type=\"button\" class=\"ds-map-price\" aria-pressed=\"false\">Rs. ?</button><button type=\"button\" class=\"ds-map-price\" aria-pressed=\"true\">Rs. ?</button>",
+      "css": ".ds-map-price{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);padding:7px 9px;border:1px solid var(--color-ink-300,#cbd5e1);border-radius:8px;background:white;color:var(--color-royal-950,#172554);font-size:12px;line-height:18px;font-weight:600;box-shadow:0 3px 8px rgb(15 23 42 / .12);white-space:nowrap;cursor:pointer;}.ds-map-price[aria-pressed=true]{background:var(--color-royal-700,#1d4ed8);border-color:var(--color-royal-700,#1d4ed8);color:white;}.ds-map-price:hover{border-color:var(--color-royal-700,#1d4ed8);}.ds-map-price:focus-visible{outline:2px solid var(--color-royal-700,#1d4ed8);outline-offset:3px;}"
+    },
+    {
+      "name": "Homepage Partner Cards",
+      "kind": "custom",
+      "refersTo": "landing-promo",
+      "description": "Prominent From our partners heading and Advertisement disclosure above peach/lavender/mint cards with 16px brands, h3 ad titles, actual domains and filled 40px CTAs. Three desktop, two tablet, one plus peek on phones. Scrolling layouts expose named partner choices (up to four), dots (five-eight) or a counter, arrows and controllable autoplay; cycling wraps at the rail boundary. Runtime respects reduced motion and failed-settings fallback without overriding known off switches.",
+      "html": "<section class=\"ds-promos\" aria-label=\"Partner advertisements\"><div class=\"ds-promos-heading\"><h2>From our partners</h2><span>Advertisement</span></div><div class=\"ds-promos-rail\"><article class=\"ds-promo ds-promo--himavolt\"><a href=\"https://himavolt.com/\" target=\"_blank\" rel=\"sponsored noopener noreferrer\"><div class=\"ds-promo-text\"><span class=\"ds-promo-brand\">HimaVolt</span><h3>Find nearby. One search, one tap.</h3><span class=\"ds-promo-domain\">himavolt.com</span><span class=\"ds-promo-link\">Visit website <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.35\" aria-hidden=\"true\"><path d=\"M7 7h10v10M7 17 17 7\"/></svg></span></div><span class=\"ds-promo-symbol\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.35\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8\"/><path d=\"M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7\"/><path d=\"m2.1 21.8 6.4-6.3\"/><path d=\"m19 5-7 7\"/></svg></span></a></article><article class=\"ds-promo ds-promo--pitambari\"><a href=\"https://pitambari.vercel.app/\" target=\"_blank\" rel=\"sponsored noopener noreferrer\"><div class=\"ds-promo-text\"><span class=\"ds-promo-brand\">Pitambari</span><h3>Discover Pitambari</h3><span class=\"ds-promo-domain\">pitambari.vercel.app</span><span class=\"ds-promo-link\">Visit website <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.35\" aria-hidden=\"true\"><path d=\"M7 7h10v10M7 17 17 7\"/></svg></span></div><span class=\"ds-promo-symbol\"><svg width=\"43\" height=\"43\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.35\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z\"/><path d=\"M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12\"/></svg></span></a></article><article class=\"ds-promo ds-promo--cleaner\"><a href=\"https://floor-clearner.vercel.app/\" target=\"_blank\" rel=\"sponsored noopener noreferrer\"><div class=\"ds-promo-text\"><span class=\"ds-promo-brand\">Floor Cleaner</span><h3>A fresh start for your space</h3><span class=\"ds-promo-domain\">floor-clearner.vercel.app</span><span class=\"ds-promo-link\">Visit website <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.35\" aria-hidden=\"true\"><path d=\"M7 7h10v10M7 17 17 7\"/></svg></span></div><span class=\"ds-promo-symbol\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.35\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z\"/><path d=\"M20 2v4\"/><path d=\"M22 4h-4\"/><circle cx=\"4\" cy=\"20\" r=\"2\"/></svg></span></a></article></div><div class=\"ds-promos-footer\"><div class=\"ds-promos-choices\" role=\"group\" aria-label=\"Choose partner\"><button type=\"button\" aria-pressed=\"true\">HimaVolt</button><button type=\"button\" aria-pressed=\"false\">Pitambari</button><button type=\"button\" aria-pressed=\"false\">Floor Cleaner</button></div><div class=\"ds-promos-navigation\"><button type=\"button\" aria-label=\"Previous advertisement\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.35\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m15 18-6-6 6-6\"/></svg></button><button type=\"button\" class=\"ds-promos-pause\" aria-label=\"Pause advertisements\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.35\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"14\" y=\"3\" width=\"5\" height=\"18\" rx=\"1\"/><rect x=\"5\" y=\"3\" width=\"5\" height=\"18\" rx=\"1\"/></svg></button><button type=\"button\" aria-label=\"Next advertisement\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.35\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button></div></div></section>",
+      "css": ".ds-promos{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);min-width:0;}.ds-promos-rail{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-inline:contain;border-radius:16px;}.ds-promos-rail::-webkit-scrollbar{display:none;}.ds-promo{flex:0 0 calc((100% - 32px)/3);min-width:0;overflow:hidden;scroll-snap-align:start;border-radius:16px;background:#fff0df;color:#59341c;}.ds-promo>a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:224px;padding:24px;color:inherit;text-decoration:none;}.ds-promo-text{min-width:0;flex:1;}.ds-promo-brand{font-size:16px;font-weight:600;}.ds-promo-text h3{max-width:20ch;margin:8px 0 0;font-size:clamp(18px,1.6vw,22px);font-weight:600;line-height:1.35;letter-spacing:-.025em;text-wrap:balance;}.ds-promo-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;margin-top:14px;padding:8px 12px;border-radius:8px;background:#59341c;color:white;font-size:12px;font-weight:500;}.ds-promo-link svg{width:15px;height:15px;}.ds-promo-symbol{display:flex;flex:none;align-items:center;justify-content:center;width:80px;height:80px;border-radius:50%;background:#ffddb7;color:#965329;transform:rotate(-12deg);transition:transform .4s cubic-bezier(.16,1,.3,1);}.ds-promo-symbol svg{width:43px;height:43px;}.ds-promo>a:hover .ds-promo-symbol{transform:rotate(0);}.ds-promo>a:hover .ds-promo-link{text-decoration:underline;text-underline-offset:4px;}.ds-promo>a:focus-visible{outline:2px solid var(--color-royal-700,#1d4ed8);outline-offset:-3px;}.ds-promo>a:active .ds-promo-link{opacity:.75;}.ds-promo--pitambari{background:#efedfc;color:#44366d;}.ds-promo--pitambari .ds-promo-symbol{background:#e0daf9;color:#63508d;}.ds-promo--cleaner{background:#e5f3ee;color:#254f42;}.ds-promo--cleaner .ds-promo-symbol{background:#cce8dc;color:#39765f;}@media(max-width:1100px){.ds-promo>a{padding:20px;}.ds-promo-symbol{width:60px;height:60px;}.ds-promo-symbol svg{width:32px;height:32px;}}@media(max-width:900px){.ds-promo{flex-basis:calc((100% - 16px)/2);}}@media(max-width:767px){.ds-promos-rail{gap:12px;border-radius:14px;}.ds-promo{flex-basis:calc(100% - 20px);border-radius:14px;}.ds-promo>a{min-height:196px;padding:20px;}.ds-promo-text h3{font-size:20px;max-width:18ch;}.ds-promo-symbol{width:64px;height:64px;}.ds-promo-symbol svg{width:35px;height:35px;}.ds-promo-link{min-height:40px;margin-top:12px;}}@media(max-width:359px){.ds-promo>a{padding:16px;gap:8px;}.ds-promo-text h3{font-size:18px;}.ds-promo-symbol{width:52px;height:52px;}.ds-promo-symbol svg{width:28px;height:28px;}}@media(prefers-reduced-motion:reduce){.ds-promo-symbol{transition:none;}}.ds-promos-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;}.ds-promos-heading h2{margin:0;color:var(--color-ink-900,#0f172a);font-size:17px;line-height:1.5;font-weight:600;letter-spacing:-.02em;}.ds-promos-heading>span{padding:4px 8px;border:1px solid var(--color-ink-200,#e2e8f0);border-radius:5px;color:var(--color-ink-600,#475569);font-size:10px;}.ds-promo-domain{display:block;margin-top:8px;font-size:11px;overflow-wrap:anywhere;}.ds-promo--pitambari .ds-promo-link{background:#44366d;}.ds-promo--cleaner .ds-promo-link{background:#254f42;}.ds-promos-footer{display:none;align-items:center;justify-content:space-between;min-height:40px;gap:8px;margin-top:6px;color:var(--color-ink-500,#64748b);font-size:10px;}.ds-promos-choices{display:flex;flex-wrap:wrap;align-items:center;gap:12px;min-width:0;}.ds-promos-choices>button{font-family:inherit;position:relative;min-height:44px;padding:0;border:0;background:transparent;color:var(--color-ink-500,#64748b);font-size:11px;font-weight:500;cursor:pointer;}.ds-promos-choices>button[aria-pressed=true]{color:var(--color-royal-700,#1d4ed8);}.ds-promos-choices>button[aria-pressed=true]::after{content:'';position:absolute;bottom:3px;left:0;right:0;height:2px;border-radius:2px;background:currentColor;}.ds-promos-navigation{display:flex;align-items:center;}.ds-promos-navigation button{display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:40px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--color-ink-600,#475569);cursor:pointer;}.ds-promos-navigation button:hover{background:var(--color-ink-50,#f8fafc);}.ds-promos-choices>button:hover{color:var(--color-royal-700,#1d4ed8);}.ds-promos-navigation button:focus-visible,.ds-promos-choices>button:focus-visible{outline:2px solid var(--color-royal-700,#1d4ed8);outline-offset:3px;}@media(max-width:900px){.ds-promos-footer{display:flex;}}@media(max-width:767px){.ds-promos-heading{margin-bottom:12px;}.ds-promos-heading h2{font-size:15px;}.ds-promos-navigation button{min-width:32px;}.ds-promos-choices{gap:10px;}.ds-promos-choices>button{font-size:10px;}}@media(prefers-reduced-motion:reduce){.ds-promos-pause{display:none;}}"
+    },
+    {
+      "name": "Minimal Discovery Search",
+      "kind": "custom",
+      "refersTo": "discovery-searchbar",
+      "description": "Default homepage search: All/Rent/Buy, live location and Filters. Advanced budgets, furnishing, facilities, verified and nearby options start collapsed inline. The application controls pressed/expanded states, validation, chips and live results; map starts closed and the separate count/map/sort row remains visible on phones.",
+      "html": "<section class=\"ds-discovery-search\" aria-label=\"Property filters\"><div class=\"ds-discovery-purpose\" role=\"group\" aria-label=\"Rent or buy\"><button type=\"button\" aria-pressed=\"true\">All</button><button type=\"button\" aria-pressed=\"false\">Rent</button><button type=\"button\" aria-pressed=\"false\">Buy</button></div><label class=\"ds-discovery-location\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"7.5\"/><path d=\"m16 16 5 5\"/></svg><input type=\"search\" aria-label=\"Location\" placeholder=\"Search a place or property…\"/></label><button type=\"button\" class=\"ds-discovery-toggle\" aria-expanded=\"false\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3M1 14h6m2-6h6m2 8h6\"/></svg>Filters</button></section>",
+      "css": ".ds-discovery-search{font-family:var(--font-sans,'Poppins',ui-sans-serif,system-ui,sans-serif);display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;padding:12px;border:1px solid var(--color-ink-200,#e2e8f0);border-radius:14px;background:white;color:var(--color-ink-900,#0f172a);}.ds-discovery-purpose{display:inline-flex;gap:2px;padding:3px;border-radius:9px;background:var(--color-ink-100,#f1f5f9);}.ds-discovery-purpose button{font-family:inherit;min-width:58px;min-height:40px;padding:0 12px;border:0;border-radius:7px;background:transparent;color:var(--color-ink-600,#475569);font-size:13px;font-weight:500;cursor:pointer;}.ds-discovery-purpose button[aria-pressed=true]{background:var(--color-royal-950,#172554);color:white;}.ds-discovery-purpose button:hover:not([aria-pressed=true]){background:var(--color-ink-200,#e2e8f0);}.ds-discovery-location{display:flex;align-items:center;gap:12px;min-width:0;padding:0 12px;color:var(--color-ink-500,#64748b);}.ds-discovery-location svg{width:18px;height:18px;flex:none;}.ds-discovery-location input{font-family:inherit;min-width:0;flex:1;width:100%;height:46px;border:0;background:transparent;color:var(--color-ink-900,#0f172a);font-size:14px;caret-color:var(--color-royal-700,#1d4ed8);}.ds-discovery-location input::placeholder{color:var(--color-ink-500,#64748b);opacity:1;}.ds-discovery-toggle{font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:8px 16px;border:1px solid var(--color-ink-200,#e2e8f0);border-radius:9px;background:white;color:var(--color-ink-800,#1e293b);font-size:13px;font-weight:500;cursor:pointer;}.ds-discovery-toggle svg{width:17px;height:17px;}.ds-discovery-toggle:hover,.ds-discovery-toggle[aria-expanded=true]{background:var(--color-royal-50,#eff6ff);border-color:var(--color-royal-200,#bfdbfe);color:var(--color-royal-800,#1e40af);}.ds-discovery-purpose button:focus-visible,.ds-discovery-location input:focus-visible,.ds-discovery-toggle:focus-visible{outline:2px solid var(--color-royal-700,#1d4ed8);outline-offset:3px;}.ds-discovery-toggle:active{background:var(--color-royal-100,#dbeafe);}@media(max-width:767px){.ds-discovery-search{grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:0;border:0;border-radius:0;}.ds-discovery-purpose{grid-column:1/-1;justify-self:start;margin-bottom:2px;}.ds-discovery-purpose button{min-width:64px;min-height:36px;font-size:12px;}.ds-discovery-location{gap:8px;min-height:46px;padding:0 12px;border:1px solid var(--color-ink-200,#e2e8f0);border-radius:10px;}.ds-discovery-location input{height:44px;font-size:12px;}.ds-discovery-toggle{min-height:46px;padding:8px 12px;font-size:12px;border-radius:10px;}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "MeroKotha property discovery",
+    "overview": "This is a record of the implemented interface, preserving the established MeroKotha identity. Poppins, royal blue, crimson actions and white surfaces provide continuity across English and Nepali property discovery, account screens and administration. Property photography supplies the primary imagery; content and controls sit on light, bordered surfaces. The current homepage uses a compact introduction, a visibly headed pastel partner advertising section, visible property categories and a minimal live search before listings. Property photography belongs to the listings; the introduction has no photo or large form.\n\nThe interface combines rounded cards with compact form controls and visible selected states. Royal blue carries navigation, price emphasis and map selection; crimson identifies primary actions. The discovery extension uses smaller campaign and map corners alongside the larger existing card shapes. This coexistence is observed implementation, not a new universal radius rule. The current discovery search keeps advanced filters collapsed inline and the map closed initially. All eight category choices fit a grid. Browse navigation uses four equal guest columns or five signed-in columns; synchronized map previews show up to three complete cards on wider layouts and two on phones, without sideways scrolling.",
+    "keyCharacteristics": [
+      "Poppins for headings, text, labels and numbers.",
+      "Royal blue structure and links, crimson primary actions, white surfaces and ink text.",
+      "Property photographs, clearly disclosed partner panels and a synchronized map/photo preview grid.",
+      "Rounded bordered surfaces, light shadows and touch-oriented controls.",
+      "Responsive composition and motion that respects reduced-motion preferences."
+    ],
+    "rules": [
+      {
+        "name": "The Established Identity Rule",
+        "body": "Keep Poppins, royal blue, crimson and white when extending the interface.",
+        "section": "colors"
+      },
+      {
+        "name": "The Dropdown Stability Rule",
+        "body": "Reserve scrollbar space with `html { scrollbar-gutter: stable; }`. While Radix adds `body[data-scroll-locked]`, lock the document viewport with `html:has(body[data-scroll-locked]) { overflow-y: hidden; }`, retain `overflow: clip !important` on the body and set its `margin-right: 0 !important` because the gutter already reserves that space. The body remains clipped without becoming a scroll container. Select menus and navigation dropdowns keep navbar position, page width and scroll position stable while open; Radix keyboard focus, selection and dismissal remain unchanged.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** preserve Poppins, royal blue, crimson and white when extending MeroKotha.",
+      "**Do** keep advertisements labeled and preserve full-row feed placements; use the documented surface brief for the homepage sequence.",
+      "**Do** preserve the larger existing card corners alongside the smaller campaign and map surfaces.",
+      "**Do** retain visible focus, phone compositions, manual carousel controls and reduced-motion behavior.",
+      "**Do** keep categories, discovery filters, Browse navigation and map previews within the viewport; keep homepage horizontal snapping inside the partner rail.",
+      "**Do** use verified local or supplied artwork and record raster origins in `docs/ad-asset-origins.md`."
+    ],
+    "donts": [
+      "**Don't** replace the established identity with a new font or palette.",
+      "**Don't** disguise an advertisement as an ordinary property card.",
+      "**Don't** crop campaign banner artwork with property-thumbnail rules.",
+      "**Don't** invent listings, engagement counts, testimonials, partner claims or unverified partner branding.",
+      "**Don't** use stale source comments as visual authority when the implemented styles differ."
+    ]
+  }
+}

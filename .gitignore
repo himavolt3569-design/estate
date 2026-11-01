@@ -52,3 +52,7 @@ prisma/migrations/
 docs
 
 .next-ad-tests/
+.next-landing-review/
+
+# Local screenshots, emulator output and account/rule audit evidence.
+/.impeccable/review/

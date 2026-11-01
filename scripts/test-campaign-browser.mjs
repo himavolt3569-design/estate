@@ -24,6 +24,7 @@ for(let i=0;i<14;i++) await db.doc(`listings/demo-${i}`).set({ownerId:'owner',ow
 await db.doc('listings/demo-sale').set({ownerId:'owner',ownerName:'Demo Owner',title:'Demo house for sale in Patan',roomType:'house',transactionType:'sale',salePrice:25000000,rentPerMonth:0,status:'active',verificationStatus:'pending',photoUrls:['/images/hero-bg.png'],facilities:['Water'],createdAt:Timestamp.now(),viewCount:9,saveCount:2});
 const settings={enabled:true,partnerAdsEnabled:true,heroEnabled:true,feedEnabled:true,detailsEnabled:true,feedInterval:4,rotationSeconds:6};
 await db.doc('adSettings/public').set(settings);
+if(process.argv.includes('--seed-only')) { console.log('Disposable campaign/browser fixtures seeded.');process.exit(0); }
 const base='http://localhost:3016';
 const folder=new URL('../.impeccable/review/',import.meta.url); await mkdir(folder,{recursive:true});
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,args:['--disable-gpu']});

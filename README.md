@@ -6,6 +6,12 @@ This is a copy of `estate/` using its Poppins typography, colors, buttons, input
 
 The website now includes the requested ad campaigns, revised navigation and collapsed matches, responsive map browsing, public property engagement, photo zoom, content-based recommendations, and Rent/Sell offers (flats remain rental-only). See [the implementation and release handoff](docs/advertising-and-discovery-handoff.md) for the exact schema, verification and remaining deployment steps. No Flutter source content or production Firebase data/rules was changed.
 
+## Advertisement administration - November 1, 2026
+
+Sign in with `himavolt3569@gmail.com`, then open **Dashboard > Advertising** (`/dashboard?tab=ads`). The account already has the protected Firebase `superAdmin` role. It can manage campaign content, images, destinations, priority, schedules and placement, pause individual campaigns, and save master/placement switches, feed spacing and carousel timing. Guests and ordinary accounts cannot change these records.
+
+The missing live permission for `adSettings/public` is now enabled. Only that block from the versioned candidate was added to a fresh live rules snapshot; all other live permissions remain unchanged. Twelve emulator checks cover role enforcement, email spoofing, self-promotion denial, invalid settings and existing campaign controls. Production verification and rollback metadata are in [the release record](docs/ad-administration-release-2026-11-01.md); no roles, passwords, campaign records or display choices were changed. The homepage/UI edits and broader backend candidate still require their separate release.
+
 ## Set up locally
 
 1. Sign in to [Firebase Console for `mero-kotha-1f4f3`](https://console.firebase.google.com/project/mero-kotha-1f4f3/settings/general) and verify it is the Android app's live project. In Project settings > Your apps, register a Web App (or use an existing Web App for this site). Name it `estate-merokotha-website`, then copy the generated public config into `.env.local` using `.env.example` as the field list. You can do this yourself if your account can manage the project. The existing `.env.example` does not need to come from the Android developer. Do not use a service account key here.

@@ -50,8 +50,8 @@ export function normalizeAdSettings(value: Partial<AdSettings> = {}): AdSettings
 
 export const partnerAds: SponsorAd[] = [
   { id: 'partner-himavolt', sponsorName: 'HimaVolt', title: 'Find nearby. One search, one tap.', subtitle: 'Explore HimaVolt for your next local discovery.', imageUrl: '/images/partners/himavolt.png', externalUrl: 'https://himavolt.com/', priority: 30 },
-  { id: 'partner-pitambari', sponsorName: 'Pitambari', title: 'Discover Pitambari', subtitle: 'Explore the latest from our partner.', externalUrl: 'https://pitambari-vercel.app/', priority: 20 },
-  { id: 'partner-floor-cleaner', sponsorName: 'Floor Cleaner', title: 'A fresh start for your space', subtitle: 'Visit Floor Cleaner and explore the website.', externalUrl: 'https://floor-cleaner.vercel.app/', priority: 10 },
+  { id: 'partner-pitambari', sponsorName: 'Pitambari', title: 'Discover Pitambari', subtitle: 'Explore the latest from our partner.', externalUrl: 'https://pitambari.vercel.app/', priority: 20 },
+  { id: 'partner-floor-cleaner', sponsorName: 'Floor Cleaner', title: 'A fresh start for your space', subtitle: 'Visit Floor Cleaner and explore the website.', externalUrl: 'https://floor-clearner.vercel.app/', priority: 10 },
 ].map(ad => ({ ...ad, status: 'active', placement: 'all', linkType: 'external', device: 'all', ctaLabel: 'Visit website' }));
 
 export function campaignAds(stored: SponsorAd[], settings: AdSettings): SponsorAd[] {

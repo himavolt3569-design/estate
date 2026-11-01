@@ -34,7 +34,9 @@ export function AdProvider({ children }: { children: React.ReactNode }) {
 
 export function useCampaigns(area: AdPlacement) {
   const context = useContext(AdContext);
-  const enabled = !context.loading && !context.error && context.settings.enabled && (area === 'landing' ? context.settings.heroEnabled : area === 'listings' ? context.settings.feedEnabled : context.settings.detailsEnabled);
+  // A denied settings read must not suppress public campaigns and bundled partners.
+  // Defaults apply until settings load; a previously loaded off switch stays off.
+  const enabled = !context.loading && context.settings.enabled && (area === 'landing' ? context.settings.heroEnabled : area === 'listings' ? context.settings.feedEnabled : context.settings.detailsEnabled);
   const ads = useMemo(() => enabled && context.now ? activeSponsors(context.ads, area, context.mobile ? 'mobile' : 'desktop', context.now) : [], [context.ads, area, context.mobile, context.now, enabled]);
   return { ...context, campaigns: ads };
 }

@@ -131,15 +131,18 @@ components:
     rounded: "{rounded.lg}"
   campaign-panel:
     rounded: "{rounded.md}"
-  campaign-banner:
+  landing-promo:
+    rounded: "{rounded.lg}"
+  discovery-searchbar:
     backgroundColor: "{colors.white}"
     textColor: "{colors.ink-900}"
-    rounded: "{rounded.md}"
+    rounded: "14px"
+    padding: "12px"
   rental-filters:
     backgroundColor: "{colors.white}"
     textColor: "{colors.ink-900}"
-    rounded: "{rounded.md}"
-    padding: "24px"
+    rounded: "0"
+    padding: "0"
   navigation-current:
     backgroundColor: "{colors.crimson-50}"
     textColor: "{colors.crimson-700}"
@@ -154,9 +157,9 @@ components:
 
 **Creative North Star: "MeroKotha property discovery"**
 
-This is a record of the implemented interface, preserving the established MeroKotha identity. Poppins, royal blue, crimson actions and white surfaces provide continuity across English and Nepali property discovery, account screens and administration. Property photography supplies the primary imagery; content and controls sit on light, bordered surfaces. The current homepage leads with a light search hero and contained desktop/tablet photography, followed by its own compact advertisement strip.
+This is a record of the implemented interface, preserving the established MeroKotha identity. Poppins, royal blue, crimson actions and white surfaces provide continuity across English and Nepali property discovery, account screens and administration. Property photography supplies the primary imagery; content and controls sit on light, bordered surfaces. The current homepage uses a compact introduction, a visibly headed pastel partner advertising section, visible property categories and a minimal live search before listings. Property photography belongs to the listings; the introduction has no photo or large form.
 
-The interface combines rounded cards with compact form controls and visible selected states. Royal blue carries navigation, price emphasis and map selection; crimson identifies primary actions. The discovery extension uses smaller campaign and map corners alongside the larger existing card shapes. This coexistence is observed implementation, not a new universal radius rule. The current discovery filters wrap within the viewport. Browse navigation uses four equal guest columns or five signed-in columns; synchronized map previews show up to three complete cards on wider layouts and two on phones, without sideways scrolling.
+The interface combines rounded cards with compact form controls and visible selected states. Royal blue carries navigation, price emphasis and map selection; crimson identifies primary actions. The discovery extension uses smaller campaign and map corners alongside the larger existing card shapes. This coexistence is observed implementation, not a new universal radius rule. The current discovery search keeps advanced filters collapsed inline and the map closed initially. All eight category choices fit a grid. Browse navigation uses four equal guest columns or five signed-in columns; synchronized map previews show up to three complete cards on wider layouts and two on phones, without sideways scrolling.
 
 **Key Characteristics:**
 
@@ -166,7 +169,7 @@ The interface combines rounded cards with compact form controls and visible sele
 - Rounded bordered surfaces, light shadows and touch-oriented controls.
 - Responsive composition and motion that respects reduced-motion preferences.
 
-This scan is grounded in `src/styles/globals.css`, the active `src/app` screens, `src/components/ui`, and `src/components/merokotha`. The durable identity comes from `PRODUCT.md`; page composition remains in `.impeccable/surfaces/rental-discovery.md`. The current homepage evidence is `.impeccable/review/hero-desktop.png`, `hero-tablet.png`, `hero-mobile.png` and `hero-narrow.png`; older full-page captures are not authoritative for this replacement. The subsequent filter revision is recorded in `.impeccable/review/filters-{desktop,tablet,mobile,narrow}.png`, `filters-preferences-*.png`, `filters-nepali-*.png`, `filters-full-*.png`, `filters-signed-in-narrow.png` and `filter-layout-checks.json`. Its fresh manual review returned SHIP for that bounded scope; the detector remained unavailable. The Impeccable launcher was unavailable in the sandbox/network environment; this document records source and current capture evidence and does not claim a launcher scan or an approved visual comp.
+This record is grounded in `src/styles/globals.css`, the active `src/app` screens, `src/components/ui`, and `src/components/merokotha`. The durable identity comes from `PRODUCT.md`; homepage composition remains in `.impeccable/surfaces/rental-discovery.md`. The current ads revision is recorded in `.impeccable/review/ads-visibility/` with five viewport captures, `mobile-ad-{1,2,3}.png`, `checks.json` and `public-read-check.json`. Final keyboard evidence is `mobile-focus.png`, `desktop-focus.png` and `focus-checks.json`: real Tab focus exposes an unclipped 2px royal outline inset by 3px, matching the sidecar preview. The final ad regression and production build pass. The read-only anonymous production check returned 403 for public settings and 200 for campaigns. Local demo-rule regressions verify all three ads with settings denied, with both reads denied, explicit off switches, paused overrides and no horizontal page overflow at five widths; 68 unit tests pass. The completed follow-up review returned SHIP for the scored keyboard-focus fix on phone and desktop: all nine refreshed captures were valid with no visible regressions. The preceding full ads review matched on every other row. Earlier `.impeccable/review/landing-refresh/` evidence retains the discovery behavior checks: `mobile`, `narrow`, `phone-wide`, `tablet` and `desktop` captures, with `-full`, `-filters` and `-nepali` variants and `checks.json`. The checks cover 320/390/500/800/1440px layouts, no horizontal page overflow, category/purpose/flat/budget/furnishing/sort/reset/empty/map/ad behavior and disposable demo listings. The earlier landing revision passed normal-motion autoplay/pause QA and its production build. The Impeccable launcher/detector was unavailable because the engine was missing and the cache could not be used in the sandbox; this record does not claim a tool scan. The visual revision made no backend change or deployment. The November 1 ad-administration follow-up verified himavolt3569@gmail.com as an existing enabled, verified superAdmin and added only the versioned adSettings/public permission block to the current live rules. Twelve access checks passed. The exact deployed source was verified; public reads now reach the absent settings document (404 instead of permission-denied), ready for its first superadmin save. No account roles or production documents were changed. The broader backend candidate, functions and homepage UI deployment remain pending.
 
 ## Colors
 
@@ -174,7 +177,7 @@ The normative values are in the frontmatter, using the source stylesheet's hex n
 
 ### Primary
 
-- **Royal Blue:** the royal family supplies blue links, navigation controls, prices, focus and map selection. The darkest royal tone supplies the homepage headline, selected hero categories and footer; pale royal tones supply hover and selected backgrounds.
+- **Royal Blue:** the royal family supplies blue links, navigation controls, prices, focus and map selection. The darkest royal tone supplies the homepage headline, selected transaction purpose and footer; pale royal tones supply hover and selected backgrounds.
 
 ### Secondary
 
@@ -190,7 +193,7 @@ The normative values are in the frontmatter, using the source stylesheet's hex n
 - **White:** page, form, card and carousel surfaces.
 - **Ink:** darkest values anchor headings and important facts; medium values carry supporting text and form hints; pale values provide quiet backgrounds, borders and dividers.
 
-Generic partner panels retain their scoped pale blue, green or cyan backgrounds and darker text/CTA colors in the stylesheet. The homepage banner overrides these with a neutral white surface, ink copy and a royal text CTA. Those scoped treatments do not replace the MeroKotha palette.
+Generic partner panels retain their scoped pale blue, green or cyan backgrounds and darker text/CTA colors in the stylesheet. The homepage partner cards instead use scoped peach, lavender and mint surfaces with warm brown, purple and green copy and circular icon motifs. These HTML/CSS treatments support the requested premium, cute feel without replacing the MeroKotha palette or asserting unverified partner branding.
 
 **The Established Identity Rule.** Keep Poppins, royal blue, crimson and white when extending the interface.
 
@@ -200,41 +203,41 @@ Generic partner panels retain their scoped pale blue, green or cyan backgrounds 
 
 **Body Font:** the same Poppins stack; no separate display serif or monospace identity.
 
-Poppins is self-hosted through `public/fonts/poppins.css`, linked by the active root layout. Local faces cover Devanagari, Latin and Latin Extended at weights 400, 500, 600 and 700, with `font-display: swap`. The current homepage hero and banner headings use the available 600 weight. Generic sponsor heading CSS still requests 650; no separate 650 face is shipped, so the browser matches it to the available faces.
+Poppins is self-hosted through `public/fonts/poppins.css`, linked by the active root layout. Local faces cover Devanagari, Latin and Latin Extended at weights 400, 500, 600 and 700, with `font-display: swap`. The compact homepage introduction and partner headings use the available 600 weight. Generic sponsor heading CSS still requests 650; no separate 650 face is shipped, so the browser matches it to the available faces.
 
 ### Hierarchy
 
-- **Display:** the homepage hero uses the frontmatter display role and a navy headline on a pale ink background. Through 767px it becomes `clamp(2rem, 9vw, 2.5rem)` with a 16-character maximum line measure. Desktop maximum measure is 15 characters.
+- **Display:** the frontmatter display role remains an incumbent stylesheet value. The homepage uses a scoped compact navy headline instead: `clamp(1.75rem, 2.5vw, 2.25rem)`, weight 600, line height 1.25 and tracking -0.035em. Through 767px it becomes `clamp(1.375rem, 6vw, 1.75rem)` with -0.03em tracking. This local composition does not replace the shared type scale.
 - **Headline:** reusable section headings use the responsive headline role. The wider existing display scale also remains defined in the source stylesheet.
 - **Title:** card and panel headings use semibold or bold Poppins, with individual listing titles stepping from base size to large size at the small breakpoint.
-- **Body:** the base body role supports longer text; compact forms and listing facts use body-small. Hero supporting copy has a 52-character maximum measure, size (0.9375rem) and line height (1.7); through 767px it remains visible at 0.875rem.
-- **Label:** medium Poppins identifies controls. Existing badges and technical eyebrow labels use the smaller 2xs scale; generic advertisement disclosure is a distinct compact label (10px, weight 500, line height 1.6). The homepage banner uses 11px disclosure, reducing to 10px through 767px.
+- **Body:** the base body role supports longer text; compact forms and listing facts use body-small. Homepage supporting copy uses 0.875rem with line height 1.6, reducing to 0.75rem through 767px and 0.6875rem through 359px.
+- **Label:** medium Poppins identifies controls. Existing badges use the smaller 2xs scale; generic advertisement disclosure is a distinct compact label (10px, weight 500, line height 1.6). The homepage section uses a semibold From our partners heading (1.0625rem, line height 1.5), reducing to 0.9375rem on phones, with a separate 10px Advertisement label. Partner brand names use 1rem semibold; ad titles are h3 elements using `clamp(1.125rem, 1.6vw, 1.375rem)` with line height 1.35, becoming 1.25rem on phones and 1.125rem through 359px. Existing technical eyebrow treatments are not a reusable heading rule.
 
 Prices, counts and dates use tabular figures where the component declares them. Preserve English/Nepali switching and the local font subsets.
 
 ## Layout
 
-The shared maximum container is 90rem, matching the hero's 1440px maximum. Typical page gutters are 16px on phones, 24px from the small breakpoint and 32px at large desktop sizes. The reusable spacing values in frontmatter come from repeated padding and gap values; they do not introduce a new CSS spacing scale.
+The shared maximum container is 90rem (1440px). Current homepage sections use 32px horizontal gutters, 24px through 900px, 16px through 767px and 14px through 359px. The reusable spacing values in frontmatter come from repeated padding and gap values; they do not introduce a new CSS spacing scale.
 
-Discovery results use four equal columns at widths of at least 1200px, three from 901–1199px, two from 540–900px and one through 539px. The grid gap is 20px. The light discovery hero has a copy/photo introduction above the search form. Its introduction uses a 1.15:1 grid with a 64px gap, reducing to 32px through 1199px. The contained photo has 16px corners and a 280–340px height range; it is hidden through 767px, where the introduction becomes one column. The hero has no photographic wallpaper or scrim. Inner padding is 40px 32px 32px by default, 32px 24px through 900px and 28px 16px 24px through 767px.
+Discovery results use four equal columns at widths of at least 1200px, three from 901-1199px, two from 540-900px and one through 539px. The grid gap is 20px. A compact title and supporting line precede partner cards, all property categories, minimal filters, the results toolbar and listings. Saved searches/matches follow the listing grid in a collapsed disclosure. The wider-layout See my matches link opens it; that link is hidden on phones. These are current homepage composition choices, not requirements for every future screen.
 
-The location/type/budget search sits inside the hero, directly below the introduction. It uses four proportional columns on desktop and two through 900px. On phones, the first field and submit control span the row. Hero categories use a two-by-two grid through 1000px with 44px minimum-height controls; all four expose their selected state through `aria-pressed`. The homepage advertisement is a separate strip below the hero, aligned to its container with a 24px top margin, reducing to 16px on phones. Saved-search/match content starts collapsed and uses a full-width disclosure panel. These are current discovery patterns, not requirements for every future screen.
+The partner rail shows three equal cards above 900px, two through 900px and one card with a peek of the next through 767px. It uses native horizontal scroll snapping, contained inline overscroll and a hidden scrollbar; the page itself does not overflow horizontally. Built-in card minimum height is 224px, reducing to 196px on phones. The visible section heading, destination and filled CTA give ads more room; current fixture captures put the first listing around 837-847px on phones/tablet and 720px on desktop. Custom SponsorCard campaigns retain their own content sizing. Categories use eight columns on desktop/tablet and a four-by-two grid through 767px, with all properties, houses, apartments, flats, rooms, offices, shops and land visible.
 
-The results filter panel has four desktop field columns in a 1.8:1.4:1:1 ratio and two equal columns through 1000px. Through 767px, location and property type each span the full row, with minimum and maximum prices paired below. Property preferences use three desktop columns, two through 1000px and one through 767px. The panel padding reduces from 24px to 16px on phones. Applied criteria wrap as individually removable chips. The map/nearby/sort toolbar places actions and sort alongside each other on larger layouts, then stacks them on phones with two equal map/nearby action columns. The result-count status is hidden through 767px. Category controls wrap instead of requiring sideways scrolling.
+The minimal search combines All/Rent/Buy, location and the Filters toggle in a single bordered row on wider layouts. On phones, purpose sits above a location/toggle row with separate outlines. Advanced options start collapsed and expand inline into four field columns, two through 900px; phones retain paired minimum/maximum amounts and full-row furnishing/facility fields. Verified-only, nearby, reset and Show results follow. Applied advanced criteria wrap in removable chips. The toolbar keeps its result count, optional map toggle and sort on one responsive row; the count remains visible on phones. The map starts closed on every width and only interrupts the grid when opened.
 
 The map is 390px tall on wider layouts and 310px through 767px. Its price markers synchronize with a three-column preview grid containing at most three complete cards. Through 767px, the grid has two columns and shows at most two cards. Cards put photo and summary side by side on desktop and stack them on phones; the selected map listing is placed first. The preview grid has no horizontal scrolling or scroll snapping.
 
-Desktop navigation appears from 1024px. Below that, Browse navigation uses four equal columns for guests and five for signed-in users, including Post. Tools uses a compact icon-and-label trigger. These controls fit the viewport without a scrolling rail; labels reduce from 11px to 10px through 359px. Header search expands inline from 1280px; smaller layouts use a search button and popover. Language controls use their compact treatment below 768px. The 1000px, 767px and 359px filter/navigation rules are local component adaptations, not replacements for the global breakpoint system.
+Desktop navigation appears from 1024px. Below that, Browse navigation uses four equal columns for guests and five for signed-in users, including Post. Tools uses a compact icon-and-label trigger. On the homepage through 767px these links place their small icon beside the label with a 44px minimum height; other pages retain the stacked icon-circle composition. These controls fit the viewport without a scrolling rail; labels reduce from 11px to 10px through 359px. Header search expands inline from 1280px; smaller layouts use a search button and popover. Language controls use their compact treatment below 768px. The 900px, 767px and 359px discovery/navigation rules are local component adaptations, not replacements for the global breakpoint system.
 
 ## Elevation & Depth
 
-Depth combines fine ink borders, white surfaces, tonal backgrounds and restrained shadows. The source's named shadow vocabulary is retained in the sidecar: hairline for minimal lift, soft for reusable surfaces, raised for stronger separation and floating for overlays. Generic campaign carousels retain a separate diffuse shadow; feed campaign rows remove it and use a border. The homepage banner also has no shadow and uses a thin ink border on white. Map price labels have small local shadows to stay legible against map detail.
+Depth combines fine ink borders, white surfaces, tonal backgrounds and restrained shadows. The source's named shadow vocabulary is retained in the sidecar: hairline for minimal lift, soft for reusable surfaces, raised for stronger separation and floating for overlays. Generic campaign carousels retain a separate diffuse shadow; feed campaign rows remove it and use a border. The homepage pastel partner cards are flat tonal surfaces with no shadow; its listing cards also remove the shared shadow and use a fine border. Map price labels have small local shadows to stay legible against map detail.
 
 Buttons lift slightly on hover and scale down when pressed. Listing cards lift on hover and their image zooms gently. Focus is visible: the final global rule is a royal outline (2px) offset by 3px, while fields add a royal border and translucent ring. Component CSS may supply a more specific treatment.
 
 ## Shapes
 
-The stylesheet defines six corner sizes from xs through 2xl, recorded in the frontmatter. Existing property cards use 2xl corners; the shared Surface uses xl corners. Buttons use lg corners, fields use md, and badges are pills. Newer campaign panels, map shells, disclosures and photo dialogs use md; generic campaign carousel shells and main property photography use lg. The homepage banner shell uses md with square inner panel corners and xs corners around its contained artwork.
+The stylesheet defines six corner sizes from xs through 2xl, recorded in the frontmatter. Existing property cards use 2xl corners; the shared Surface uses xl corners. Buttons use lg corners, fields use md, and badges are pills. Newer campaign panels, map shells, disclosures and photo dialogs use md; generic campaign carousel shells and main property photography use lg. Homepage partner cards use lg corners, reducing locally to 14px on phones. The wider-layout minimal search uses 14px corners; its phone location and Filters controls use 10px. Homepage listing cards use lg corners while other listing surfaces retain their existing larger corners.
 
 The discovery extension also contains local corner values for tabs (9px), map preview cards (10px) and popup photo strips (7px). Keep these as observed component details rather than replacing the existing radius scale. Image containers clip their corners; the main listing image uses `object-fit: contain` to show the complete property photo, while feed and map preview thumbnails crop with `object-fit: cover`.
 
@@ -248,11 +251,11 @@ Shared buttons transition for 200ms with the source exponential easing, lift on 
 
 ### Chips
 
-Badges use compact uppercase semibold labels, a thin border and pill silhouette. Verified badges use emerald; neutral, pending, rejected, royal, solid, crimson and marigold variants are already defined. Discovery type controls are larger rounded tabs with separate pale-blue active states; hero tabs use bordered white surfaces at rest, a royal-950 fill with white text when selected, and a pale-royal hover on inactive options. All four hero categories have `aria-pressed` states; the responsive two-by-two layout keeps labels and 44px touch targets intact through 1000px. Applied filter chips use pale royal surfaces, a royal border, 8px corners and a 44px minimum height. Their text wraps within the viewport, and each chip exposes an individual removal action.
+Badges use compact uppercase semibold labels, a thin border and pill silhouette. Verified badges use emerald; neutral, pending, rejected, royal, solid, crimson and marigold variants are already defined. Homepage property categories are icon-and-label buttons with `aria-pressed`, a pale-royal selected surface and a short royal underline. Category controls have 12px corners and an 82px minimum height, reducing to 68px on phones. Applied advanced-filter chips use pale royal surfaces, a royal border, 8px corners and a 36px minimum height. Their text wraps within the viewport, and each exposes an individual removal action.
 
 ### Cards / Containers
 
-Property cards use the larger existing corners, white surfaces, light borders and small shadows. Their content padding grows from 16px to 20px at 640px. Card media is 160px high below 640px and 16:9 from 640px. The whole title links to the listing while save remains its own button.
+Shared property cards use the larger existing corners, white surfaces, light borders and small shadows. The homepage scopes these cards to 16px corners with no shadow and a 3px hover lift; other surfaces retain their current card treatment. Their content padding grows from 16px to 20px at 640px. Card media is 160px high below 640px and 16:9 from 640px. The whole title links to the listing while save remains its own button.
 
 Reusable Surface panels use white, a fine ink border and soft shadow. Their padding is assigned by each caller. Do not infer one universal padding from the component.
 
@@ -260,27 +263,31 @@ Reusable Surface panels use white, a fine ink border and soft shadow. Their padd
 
 Text fields and selects are white, bordered, 48px tall and padded horizontally by 16px. Placeholder text and Field hints use ink-500. Hover shifts the border toward royal; keyboard focus adds a royal border and a translucent ring. Invalid fields use clay; disabled fields use a pale ink background and reduced opacity. Textareas share the same treatment with a 96px minimum height.
 
+**The Dropdown Stability Rule.** Reserve scrollbar space with `html { scrollbar-gutter: stable; }`. While Radix adds `body[data-scroll-locked]`, lock the document viewport with `html:has(body[data-scroll-locked]) { overflow-y: hidden; }`, retain `overflow: clip !important` on the body and set its `margin-right: 0 !important` because the gutter already reserves that space. The body remains clipped without becoming a scroll container. Select menus and navigation dropdowns keep navbar position, page width and scroll position stable while open; Radix keyboard focus, selection and dismissal remain unchanged.
+
 ### Rental filters and results toolbar
 
-The results panel groups labeled live location, property-type, minimum and maximum budget fields with View all/Rent/Buy controls. Selecting a flat forces Rent and removes Buy; changing transaction purpose clears the budget. Filters update results as values change. Clear filters resets all criteria and is disabled when there is nothing to reset. If minimum exceeds maximum, the maximum field exposes `aria-invalid`, points to the clay-colored error and the message uses `role="alert"`.
+The homepage exposes only All/Rent/Buy, a live location search and Filters initially. All is the default purpose. Selecting a flat forces Rent, clears the budget and removes Buy; purpose changes clear the budget. The Filters button exposes `aria-expanded`, the controlled inline panel and a count of applied advanced options.
 
-Property preferences is a native details disclosure, available independently of map visibility. It contains furnishing, a facility text match and verified-only controls, with an optional selected-preference count. Location, type, budget and preferences appear as wrapping removable chips when applied. The white panel has a fine ink border and 12px corners; the purpose control has a pale ink container with 10px corners and 7px inner button corners. Its selected state is navy with white text.
+The inline panel contains minimum/maximum amounts, furnishing, facility text, verified-only and nearby controls. It starts closed and is independent of map visibility. Values update listings live. Show results closes the panel and is disabled for an invalid range; Clear filters resets all criteria and is disabled when there is nothing to reset. If minimum exceeds maximum, the maximum field exposes `aria-invalid`, references the clay-colored error and the message uses `role="alert"`. Removable chips represent budget, furnishing, facility, verification and nearby criteria; purpose/category/location remain visible in their controls.
 
-The separate results toolbar groups Map filter, Nearby/Clear nearby and the labeled sort menu. Map uses an expanded state and Nearby uses a pressed state; active actions use the existing royal button variant. Sort offers recommended, newest and ascending/descending price. The result count is a polite status on larger layouts and is hidden on phones.
+The compact results toolbar keeps a polite live result count, Map/Hide map with `aria-expanded` and an accessible sort menu. Sort offers recommended, newest and ascending/descending price. Nearby is inside advanced options; successful geolocation opens the map. The map is closed initially on every width.
 
 ### Navigation
 
-The active shell has a sticky, translucent white header with backdrop blur and a subtle bottom border. Brand geometry and blue controls preserve the royal identity; the Home link uses pale crimson. Tools groups EMI and land-size actions in a dropdown. Property search sits after Messages and before language controls on the desktop header. The smaller Browse navigation uses an equal-column grid with icon circles and compact labels: four columns for guests, five when Post is present for signed-in users. The compact Tools trigger follows the same icon/label composition and omits its desktop chevron. Labels may wrap and reduce to 10px through 359px; the navigation requires no horizontal scrolling.
+The active shell has a sticky, translucent white header with backdrop blur and a subtle bottom border. Brand geometry and blue controls preserve the royal identity; the Home link uses pale crimson. Tools groups EMI and land-size actions in a dropdown. Property search sits after Messages and before language controls on the desktop header. The smaller Browse navigation uses an equal-column grid with compact labels: four columns for guests, five when Post is present for signed-in users. The compact Tools trigger follows the same icon/label composition and omits its desktop chevron. On the homepage through 767px, icons and labels share a compact horizontal row; through 359px labels reduce to 9px. Other pages retain their icon circles and stacked labels, reducing to 10px through 359px. The navigation requires no horizontal scrolling.
 
 ### Campaign carousel and administration
 
-Advertisements retain an explicit Advertisement disclosure and a clear destination action. Current placements are a separate homepage banner below the search hero, full-width rows between listings and the property-description area. The placement selector calls the first option Homepage banner; its stored `landing` placement and `heroEnabled` setting remain compatible with existing campaign data. The admin's Every placement value maps a campaign to all three; device targeting is all, mobile or desktop. Full-row feed ads span every result column. Admin controls also cover schedule, ordering, rotation, images and enable/disable settings.
+Advertisements retain explicit disclosure and a clear destination action. Current placements are the homepage partner rail below the compact introduction, full-width rows between listings and the property-description area. The administration placement selector still calls the first option Homepage banner; its stored `landing` placement and `heroEnabled` setting remain compatible with existing campaign data. The admin's Every placement maps to all three; device targeting is all, mobile or desktop. Full-row feed ads span every result column. Admin controls also cover schedule, ordering, rotation, images and enable/disable settings.
 
-The homepage alone uses the banner variant: a neutral white, 1px-bordered, 12px-cornered shell without shadow. Desktop artwork is 232px wide, contained at its natural 2.52 aspect ratio, followed by copy, a royal text CTA and side controls. Through 1000px, artwork becomes 180px, the subtitle hides and the CTA moves below the headline. Through 767px, artwork becomes 112px and remains beside the visible headline/CTA, while carousel controls move to a row below the panel. The banner supports a text-only branch when there is no artwork. Its arrow controls are at least 44px square.
+The homepage advertises a visible From our partners section with an Advertisement label above the cards. Built-in cards use HTML/CSS peach, lavender and mint surfaces, prominent 16px partner names, h3 ad headlines, the actual destination hostname and filled 40px Visit website actions in the card's dark accent. Circular medallions use Lucide UtensilsCrossed, Leaf and Sparkles motifs; the leaf follows the Android reference without adding a product claim. No new raster artwork is used for this composition. Supplied custom artwork is contained, mobile-only uploaded artwork is supported, and custom campaigns use the generic SponsorCard branch. Current configured destinations are `https://himavolt.com/`, `https://pitambari.vercel.app/` and `https://floor-clearner.vercel.app/`; source configuration does not establish live reachability.
 
-Other placements and the admin preview retain their generic compact treatment. Banner art is contained rather than cropped as a property thumbnail. Compact desktop panels put art beside copy. On phones, art stacks above a short disclosure/CTA row and redundant heading/body text is hidden when artwork is present. The admin Mobile preview explicitly applies that generic phone composition inside its 280px preview container, regardless of the desktop viewport; it does not switch to the homepage-only banner variant. Text-only panels retain their copy.
+The native snap rail shows controls only when it can scroll. It exposes named partner buttons for up to four slides, dots for five to eight and a counter beyond eight, alongside previous/next and pause/play outside reduced motion. Selected choices use royal text and an underline. Previous/next and autoplay wrap at the actual scroll boundary, including tablet layouts with two cards visible. Auto-rotation follows the configured interval with a four-second minimum, pauses on hover/focus or a hidden document, and stops after pointer or manual navigation until Play is chosen. Reduced motion disables autoplay and uses instant manual scrolling. Slide labels expose position, the section identifies itself as a carousel, and links retain sponsored/noopener/noreferrer attributes.
 
-Carousels expose previous/next controls, touch swipes and pause/play when auto-rotation applies. Hover and keyboard focus pause rotation; hidden tabs do not advance. Reduced motion disables automatic rotation and the slide-entry animation while leaving manual navigation available.
+Public advertising visibility is independent of a failed settings read once loading settles. Defaults apply until settings load; the last successful settings remain in force after later errors. Master, partner-preset and homepage off switches and paused partner overrides remain authoritative, while errors stay available to administration. This fallback remains useful for network or configuration failures. The November 1 ad-administration follow-up verified himavolt3569@gmail.com as an existing enabled, verified superAdmin and added only the versioned adSettings/public permission block to the current live rules. Twelve access checks passed. The exact deployed source was verified; public reads now reach the absent settings document (404 instead of permission-denied), ready for its first superadmin save. No account roles or production documents were changed. The broader backend candidate, functions and homepage UI deployment remain pending.
+
+Other placements and the admin preview retain their generic compact treatment. Banner art is contained rather than cropped as a property thumbnail. Compact desktop panels put art beside copy. On phones, art stacks above a short disclosure/CTA row and redundant heading/body text is hidden when artwork is present. The admin Mobile preview explicitly applies that generic phone composition inside its 280px preview container, regardless of the desktop viewport. Text-only panels retain their copy. Generic carousels preserve their existing swipe, previous/next, pause/play, hidden-tab and reduced-motion behavior.
 
 ### Map, photo previews and listing gallery
 
@@ -288,17 +295,17 @@ White price markers become royal with white text when selected; the matching pre
 
 ### Motion
 
-The homepage loads GSAP for one introduction-group entrance: the copy/photo group rises from 10px, opacity 0.85 and blur 1px to its normal state over 0.65s with `expo.out`. It clears inline properties and reverts on unmount. The search and separate campaign strip have no additional GSAP entrance, rotation or tilt. The reduced-motion preference skips this entrance. Global reduced-motion CSS also suppresses animation and transitions and turns off smooth scrolling. The sidecar records exact reusable easing and observed motion values.
+The homepage loads GSAP for one introduction-group entrance: the compact title/supporting-copy group rises from 10px, opacity 0.85 and blur 1px to its normal state over 0.65s with `expo.out`. It clears inline properties and reverts on unmount. The search and partner rail have no additional GSAP entrance. Partner medallions rotate from -12 degrees to level on hover with a 400ms exponential transition; dots and category selection have short state transitions. These transitions are removed for reduced motion. The reduced-motion preference skips this entrance. Global reduced-motion CSS also suppresses animation and transitions and turns off smooth scrolling. The sidecar records exact reusable easing and observed motion values.
 
 ## Do's and Don'ts
 
 ### Do:
 
 - **Do** preserve Poppins, royal blue, crimson and white when extending MeroKotha.
-- **Do** keep advertisements labeled, use the separate homepage strip and retain their full-row feed placement.
+- **Do** keep advertisements labeled and preserve full-row feed placements; use the documented surface brief for the homepage sequence.
 - **Do** preserve the larger existing card corners alongside the smaller campaign and map surfaces.
 - **Do** retain visible focus, phone compositions, manual carousel controls and reduced-motion behavior.
-- **Do** keep discovery filters, Browse navigation and map previews within the viewport using wrapping controls and complete-card grids.
+- **Do** keep categories, discovery filters, Browse navigation and map previews within the viewport; keep homepage horizontal snapping inside the partner rail.
 - **Do** use verified local or supplied artwork and record raster origins in `docs/ad-asset-origins.md`.
 
 ### Don't:

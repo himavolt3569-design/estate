@@ -18,7 +18,8 @@ describe('campaign eligibility', () => {
     const merged = campaignAds([paused], defaultAdSettings);
     expect(merged.filter(ad => ad.id === paused.id)).toEqual([paused]);
     expect(campaignAds([], { ...defaultAdSettings, partnerAdsEnabled: false })).toEqual([]);
-    expect(partnerAds[1]?.externalUrl).toBe('https://pitambari-vercel.app/');
+    expect(partnerAds[1]?.externalUrl).toBe('https://pitambari.vercel.app/');
+    expect(partnerAds[2]?.externalUrl).toBe('https://floor-clearner.vercel.app/');
   });
   it('rejects unsafe or ambiguous destination URLs and encodes listing IDs', () => {
     for (const externalUrl of ['javascript:alert(1)', '//example.com', 'https://user:secret@example.com', 'not a URL']) expect(sponsorHref({ id: 'x', linkType: 'external', externalUrl })).toBeNull();

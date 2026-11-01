@@ -108,7 +108,7 @@ export function SiteShell({ children, locale: initialLocale }: { children: React
           </div>
         </div>
       </header>
-      <nav aria-label="Browse" className="browse-nav grid gap-1 border-b border-ink-100 bg-white px-4 py-2 sm:px-6 lg:hidden" style={{ gridTemplateColumns: `repeat(${user ? 5 : 4}, minmax(0, 1fr))` }}>
+      <nav aria-label="Browse" className={`browse-nav ${pathname === '/' ? 'browse-nav--home' : ''} grid gap-1 border-b border-ink-100 bg-white px-4 py-2 sm:px-6 lg:hidden`} style={{ gridTemplateColumns: `repeat(${user ? 5 : 4}, minmax(0, 1fr))` }}>
         {user && <Link href="/dashboard?tab=post" className="browse-nav__link"><span className="flex size-9 items-center justify-center rounded-full bg-crimson-50 text-crimson-600"><Plus aria-hidden className="size-4.5" /></span><span className="text-[11px] font-medium leading-tight">{locale === 'ne' ? 'राख्नुहोस्' : 'Post'}</span></Link>}
         <HeaderTools compact />
         {browseLinks.map(item => (

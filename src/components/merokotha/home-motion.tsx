@@ -10,7 +10,7 @@ export function HomeMotion() {
     void import('gsap').then(({ gsap }) => {
       if (stopped) return;
       const context = gsap.context(() => {
-        gsap.fromTo('.home-hero__intro', { y: 10, opacity: 0.85, filter: 'blur(1px)' }, { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.65, ease: 'expo.out', clearProps: 'all' });
+        gsap.fromTo('.home-discovery__intro', { y: 10, opacity: 0.85, filter: 'blur(1px)' }, { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.65, ease: 'expo.out', clearProps: 'all' });
       });
       revert = () => context.revert();
     });
