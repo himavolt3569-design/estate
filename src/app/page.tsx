@@ -27,7 +27,7 @@ const MapView = dynamic(() => import('@/components/merokotha/map-view'), { ssr: 
 export default function Home() {
   const { ui, locale } = useSiteLanguage();
   const { items, error, loading } = useDocs<Listing>('listings', 'status', 'active');
-  const { campaigns: landingAds, settings } = useCampaigns('landing');
+  const { campaigns: landingAds, settings, mobile } = useCampaigns('landing');
   const { campaigns: feedAds } = useCampaigns('listings');
   const [search, setSearch] = useState('');
   const [type, setType] = useState('');
@@ -78,7 +78,7 @@ export default function Home() {
     <HomeMotion />
     <section className="home-discovery" aria-labelledby="home-heading">
       <div className="home-discovery__intro"><div><h1 id="home-heading">{ui.heroTitle}</h1><p>{locale === 'ne' ? 'तपाईंको ठाउँ। तपाईंको बजेट। तपाईंको नयाँ सुरुवात।' : 'Your place. Your budget. Your next chapter.'}</p></div><Link href="#saved-searches" className="home-matches-link" onClick={() => { const panel = document.getElementById('saved-search-disclosure'); if (panel instanceof HTMLDetailsElement) panel.open = true; }}>{ui.seeMyMatches}<ArrowRight aria-hidden size={16} /></Link></div>
-      {heroAds.length > 0 && <div className="home-partners home-partners--discovery"><LandingPromos ads={heroAds} interval={settings.rotationSeconds} /></div>}
+      {heroAds.length > 0 && <div className="home-partners home-partners--discovery"><LandingPromos ads={heroAds} interval={settings.rotationSeconds} mobile={mobile} /></div>}
       <div className="property-categories" role="group" aria-label={locale === 'ne' ? 'घरजग्गाका प्रकारहरू' : 'Property types'}>
         <button type="button" aria-pressed={!type} onClick={() => setType('')}><LayoutGrid aria-hidden /><span>{locale === 'ne' ? 'सबै' : 'All properties'}</span></button>
         {propertyTypes.map(item => <button key={item.value} type="button" aria-pressed={type === item.value} onClick={() => { setType(item.value); if (item.value === 'flat') { setTransactionType('rent'); setMin(''); setMax(''); } }}><item.icon aria-hidden /><span>{locale === 'ne' ? item.ne : item.label}</span></button>)}

@@ -1,0 +1,31 @@
+{
+  "generator": "Built-in image_gen.imagegen",
+  "createdDate": "2026-11-01",
+  "purpose": "Interim generated partner advertising artwork; the superadmin may replace it.",
+  "assets": [
+    {
+      "brand": "himavolt",
+      "file": "himavolt-generated-v1.webp",
+      "prompt": "Use case: ads-marketing. Create one premium, beautifully art-directed raster illustration for a HimaVolt advertising banner, an app for discovering nearby restaurants and local places in Nepal. Landscape 16:9 composition, high resolution. A restrained, exceptionally polished 3D commercial still life: on the RIGHT HALF, a contemporary cobalt-blue smartphone with a simple abstract location map and a large blue map pin, a little elegant blue-and-white cafe facade behind it, and a white ceramic plate of steamed Nepalese momo dumplings with fresh green garnish. Carefully crafted realistic ceramic, frosted glass and soft-touch materials, delicate soft shadows, gorgeous natural studio lighting, sophisticated charming miniature quality. The LEFT 48 percent must be calm pale icy blue negative space, evenly lit, clean and uncluttered, for editable website copy to be placed later. The artwork must extend edge to edge with no border or frame. Scene objects stay safely inside the rightmost 48 percent and central 75 percent of image height so modest responsive cropping is safe. Palette: ice blue, cobalt, periwinkle, fresh aqua, crisp white, small green accents. HimaVolt MUST NOT have a brown, tan, beige, orange or warm earth-tone background or brand palette. No wooden textures, no brown objects, no black advertising panel. Keep it premium and decent, not loud or childish; no neon, confetti, stars, badges, prices, discounts, text, letters, logos, watermarks, app screenshots or invented product claims. This is atmospheric advertising artwork with NO text, not a finished webpage, not an icon, not a poster mockup.",
+      "width": 1672,
+      "height": 941,
+      "bytes": 133544
+    },
+    {
+      "brand": "pitambari",
+      "file": "pitambari-generated-v1.webp",
+      "prompt": "Use case: ads-marketing. Create one beautiful, premium raster illustration for a Pitambari website advertising banner, interpreting the existing message 'Discover Pitambari' and a gentle botanical motif without inventing a product, packaging or health claim. Landscape 16:9 composition, high resolution. On the RIGHT HALF, a sculptural arrangement of fresh green botanical leaves emerging beside two elegant translucent frosted-lavender glass forms and one smooth porcelain sphere on a softly lit lilac plinth. One natural leaf casts a delicate realistic shadow. Extremely refined commercial 3D still-life art direction, tactile glass and porcelain, physically believable materials, beautiful soft daylight, clean sophisticated composition, charming without being childish. The LEFT 48 percent must remain quiet pale lavender negative space for editable live website copy, evenly lit and with no objects or textures behind the copy. Full bleed, no borders, no frame. Keep all subject matter safely in the rightmost 48 percent and central 75 percent of image height to tolerate modest responsive cropping. Palette: pale lavender, rich plum reflected subtly in glass, fresh natural green, porcelain white. A coherent visual family with a blue HimaVolt discovery banner and a mint Floor Cleaner banner, but distinct botanical subject matter. No branded jars or bottles, no invented real-world products, no text, letters, logos, watermarks, prices, promotional seals, discounts, health claims, glitter, neon, busy decoration or UI mockups. Actual sophisticated raster artwork, not a line icon or vector placeholder.",
+      "width": 1672,
+      "height": 941,
+      "bytes": 102672
+    },
+    {
+      "brand": "floor-cleaner",
+      "file": "floor-cleaner-generated-v1.webp",
+      "prompt": "Use case: ads-marketing. Create one exceptionally polished, fresh and premium raster illustration for a Floor Cleaner advertising banner based on 'A fresh start for your space'. Landscape 16:9 composition, high resolution. On the RIGHT HALF, a beautiful miniature modern sunlit interior with an immaculate glossy pale aqua-white tiled floor, an elegant white sofa edge, a clear tall window, and a small sculptural planter with fresh green leaves. A few very subtle translucent soap bubbles near the floor suggest freshness; no bottles or invented branded products. Photorealistic high-end 3D architectural still-life, refined materials, precise but softly rounded craftsmanship, believable daylight and delicate clean reflections, calm commercial art direction, charming and decent rather than childish. The LEFT 48 percent is quiet very pale mint negative space for editable website text, completely uncluttered and evenly lit. Artwork fills the entire image, no frame or border. Subjects safely contained in rightmost 48 percent and central 75 percent of height so modest responsive cropping is safe. Palette: pale mint, aqua, porcelain white, fresh leaf green, restrained teal. Cohesive family with a cobalt-blue local-discovery banner and a lavender botanical banner. No text, letters, logos, watermarks, prices, discount badges, exaggerated before/after promises, plastic detergent packages, human figures, neon, excessive bubbles or web interface elements. Deliver a crafted full raster advertising visual, not a simple icon or generic gradient.",
+      "width": 1672,
+      "height": 941,
+      "bytes": 117088
+    }
+  ]
+}

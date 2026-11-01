@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
-import { sponsorHref, type AdPlacement, type SponsorAd } from '@/lib/ads';
+import { adArtwork, sponsorHref, type AdPlacement, type SponsorAd } from '@/lib/ads';
 import { recordAdEvent } from './ad-provider';
 
 export { activeSponsors, sponsorHref, type SponsorAd } from '@/lib/ads';
@@ -21,8 +21,7 @@ export function SponsorCard({ ad, compact = false, tile = false, banner = false,
     return () => { observer.disconnect(); clearTimeout(timer); };
   }, [ad.id, href, placement, track]);
   if (!href) return null;
-  const images = ad.imageUrls?.length ? ad.imageUrls : ad.imageUrl ? [ad.imageUrl] : [];
-  const image = images[imageIndex % Math.max(images.length, 1)];
+  const image = adArtwork(ad, imageIndex) || ad.mobileImageUrl;
   const external = ad.linkType === 'external';
   const brand = ad.id.includes('pitambari') ? 'pitambari' : ad.id.includes('floor-cleaner') ? 'cleaner' : 'default';
   return <a ref={element} href={href} target={external ? '_blank' : undefined} rel={external ? 'sponsored noopener noreferrer' : 'sponsored'}

@@ -12,6 +12,12 @@ Sign in with `himavolt3569@gmail.com`, then open **Dashboard > Advertising** (`/
 
 The missing live permission for `adSettings/public` is now enabled. Only that block from the versioned candidate was added to a fresh live rules snapshot; all other live permissions remain unchanged. Twelve emulator checks cover role enforcement, email spoofing, self-promotion denial, invalid settings and existing campaign controls. Production verification and rollback metadata are in [the release record](docs/ad-administration-release-2026-11-01.md); no roles, passwords, campaign records or display choices were changed. The homepage/UI edits and broader backend candidate still require their separate release.
 
+## Temporary partner artwork - November 1, 2026
+
+The three built-in partners now use temporary generated WebP artwork: blue HimaVolt, lavender Pitambari and mint Floor Cleaner. Live HTML keeps the ad text editable. In **Dashboard > Advertising**, a superadmin can replace this art with up to eight ordered images and an optional mobile image; the first upload replaces the preset rather than adding an extra slide. Client images display whole with a brand/domain/CTA caption. Missing preset artwork falls back through `partnerArtwork` / `adArtwork` in `src/lib/ads.ts`, also used by feed/detail ads and admin previews.
+
+The shipped assets total 353304 bytes at 1672 x 941px each. See [asset provenance](docs/ad-asset-origins.md) and [exact generation prompts](public/images/partners/generated-artwork.json); each WebP also embeds its prompt in XMP. This local artwork revision changes no production rules/data and leaves the ad-administration release above intact. The scoped artwork review returned SHIP with no material fixes.
+
 ## Set up locally
 
 1. Sign in to [Firebase Console for `mero-kotha-1f4f3`](https://console.firebase.google.com/project/mero-kotha-1f4f3/settings/general) and verify it is the Android app's live project. In Project settings > Your apps, register a Web App (or use an existing Web App for this site). Name it `estate-merokotha-website`, then copy the generated public config into `.env.local` using `.env.example` as the field list. You can do this yourself if your account can manage the project. The existing `.env.example` does not need to come from the Android developer. Do not use a service account key here.

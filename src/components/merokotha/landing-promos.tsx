@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ChevronLeft, ChevronRight, Leaf, Pause, Play, Sparkles, UtensilsCrossed } from 'lucide-react';
-import { sponsorHref, type SponsorAd } from '@/lib/ads';
+import { adArtwork, partnerArtwork, sponsorHref, type SponsorAd } from '@/lib/ads';
 import { SponsorCard } from './sponsor-card';
 import { recordAdEvent } from './ad-provider';
 import { useSiteLanguage } from './site-language';
 
-export function LandingPromos({ ads, interval = 6 }: { ads: SponsorAd[]; interval?: number }) {
+export function LandingPromos({ ads, interval = 6, mobile = false }: { ads: SponsorAd[]; interval?: number; mobile?: boolean }) {
   const { locale } = useSiteLanguage();
   const ne = locale === 'ne';
   const rail = useRef<HTMLDivElement>(null);
@@ -77,14 +77,15 @@ export function LandingPromos({ ads, interval = 6 }: { ads: SponsorAd[]; interva
       {slides.map(({ ad, imageIndex }, position) => {
         const brand = ad.id === 'partner-himavolt' ? 'himavolt' : ad.id === 'partner-pitambari' ? 'pitambari' : ad.id === 'partner-floor-cleaner' ? 'cleaner' : 'custom';
         const Icon = brand === 'himavolt' ? UtensilsCrossed : brand === 'cleaner' ? Sparkles : brand === 'pitambari' ? Leaf : ArrowUpRight;
-        const artwork = ad.imageUrls?.[imageIndex] || ad.imageUrl;
-        const uploadedArtwork = Boolean(ad.mobileImageUrl || artwork && artwork !== '/images/partners/himavolt.png');
+        const artwork = mobile && ad.mobileImageUrl ? ad.mobileImageUrl : adArtwork(ad, imageIndex);
+        const generatedArtwork = Boolean(artwork && artwork === partnerArtwork[ad.id]);
+        const uploadedArtwork = Boolean(artwork && !generatedArtwork);
         const destination = sponsorHref(ad);
         const domain = destination?.startsWith('http') ? new URL(destination).hostname.replace(/^www\./, '') : '';
-        return <div key={`${ad.id}-${imageIndex}`} data-campaign={ad.id} className={`landing-promo landing-promo--${brand}`} role="group" aria-roledescription="slide" aria-label={`${position + 1} / ${slides.length}`} onClick={() => { if (brand === 'custom') void recordAdEvent(ad.id, 'click', 'landing'); }}>
+        return <div key={`${ad.id}-${imageIndex}`} data-campaign={ad.id} className={`landing-promo landing-promo--${brand} ${generatedArtwork ? 'landing-promo--illustrated' : ''} ${uploadedArtwork ? 'landing-promo--uploaded' : ''}`} role="group" aria-roledescription="slide" aria-label={`${position + 1} / ${slides.length}`} onClick={() => { if (brand === 'custom') void recordAdEvent(ad.id, 'click', 'landing'); }}>
           {brand === 'custom' ? <SponsorCard ad={ad} imageIndex={imageIndex} track={false} placement="landing" /> : <a href={sponsorHref(ad) || undefined} target="_blank" rel="sponsored noopener noreferrer" onClick={() => void recordAdEvent(ad.id, 'click', 'landing')}>
-            <div className="landing-promo__text"><span className="landing-promo__brand">{ad.sponsorName}</span><h3>{ad.title}</h3><span className="landing-promo__domain">{domain}</span><span className="landing-promo__link">{ne ? 'वेबसाइट हेर्नुहोस्' : ad.ctaLabel || 'Visit website'}<ArrowUpRight aria-hidden size={15} /></span></div>
-            {uploadedArtwork ? <picture className="landing-promo__uploaded">{ad.mobileImageUrl && <source media="(max-width: 767px)" srcSet={ad.mobileImageUrl} />}<img src={artwork || ad.mobileImageUrl} alt="" /></picture> : <span className="landing-promo__symbol" aria-hidden><Icon strokeWidth={1.35} /></span>}
+            {generatedArtwork && <img className="landing-promo__artwork" src={artwork} alt="" loading="eager" />}
+            {uploadedArtwork ? <><picture className="landing-promo__uploaded"><img src={artwork} alt={ad.title || ''} /></picture><div className="landing-promo__caption"><div><span className="landing-promo__brand">{ad.sponsorName}</span><span className="landing-promo__domain">{domain}</span></div><span className="landing-promo__link">{ne ? 'वेबसाइट हेर्नुहोस्' : ad.ctaLabel || 'Visit website'}<ArrowUpRight aria-hidden size={15} /></span></div></> : <><div className="landing-promo__text"><span className="landing-promo__brand">{ad.sponsorName}</span><h3>{ad.title}</h3><span className="landing-promo__domain">{domain}</span><span className="landing-promo__link">{ne ? 'वेबसाइट हेर्नुहोस्' : ad.ctaLabel || 'Visit website'}<ArrowUpRight aria-hidden size={15} /></span></div>{!generatedArtwork && <span className="landing-promo__symbol" aria-hidden><Icon strokeWidth={1.35} /></span>}</>}
           </a>}
         </div>;
       })}
