@@ -1,3 +1,4 @@
+import { showHeroAd } from './hero-ad-navigation.mjs';
 // Generated-banner QA against only demo-merokotha-feature-tests and local storage.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
@@ -22,10 +23,10 @@ try{
   assert.equal(await page.locator('.landing-promo__artwork').count(),3);
   const sources=await page.locator('.landing-promo__artwork').evaluateAll(images=>images.map(image=>image.getAttribute('src')));
   assert.deepEqual(sources,['/images/partners/himavolt-generated-v1.webp','/images/partners/pitambari-generated-v1.webp','/images/partners/floor-cleaner-generated-v1.webp']);
-  const hima=await page.locator('[data-campaign="partner-himavolt"]').evaluate(el=>({background:getComputedStyle(el).backgroundColor,cta:getComputedStyle(el.querySelector('.landing-promo__link')).backgroundColor}));
+  const hima=await page.locator('.landing-promos [data-campaign="partner-himavolt"]').evaluate(el=>({background:getComputedStyle(el).backgroundColor,cta:getComputedStyle(el.querySelector('.landing-promo__link')).backgroundColor}));
   assert.equal(hima.background,'rgb(234, 244, 255)');assert.equal(hima.cta,'rgb(29, 78, 216)');assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   await capture(page,name);checks.push(`${name}: all three generated raster banners loaded, no overflow, HimaVolt blue palette.`);
-  if(width<=900){for(let i=1;i<=3;i++){await page.locator('.landing-promos').getByRole('button',{name:`Show advertisement ${i}`,exact:true}).click();await page.waitForFunction(i=>document.querySelector(`[aria-label="Show advertisement ${i}"]`).getAttribute('aria-pressed')==='true',i);await capture(page,`${name}-ad-${i}`);}}
+  if(width<=900){for(let i=1;i<=3;i++){await showHeroAd(page, i - 1);await capture(page,`${name}-ad-${i}`);}}
   if(width===390){await page.locator('button[lang="ne"]:visible').click();await page.waitForFunction(()=>document.documentElement.lang==='ne');await capture(page,'mobile-nepali');assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));}
   await context.close();
  }
@@ -35,8 +36,8 @@ try{
  await admin.locator('#sponsor-editor .sponsor-panel__art img').waitFor();assert.ok((await admin.locator('#sponsor-editor .sponsor-panel__art img').getAttribute('src')).includes('himavolt-generated-v1.webp'));
  await admin.locator('#ad-images').setInputFiles(fileURLToPath(new URL('../public/images/partners/himavolt-generated-v1.webp',import.meta.url)));await admin.getByRole('button',{name:'Save campaign',exact:true}).click();await admin.getByText('Campaign saved. Changes sync across devices.',{exact:true}).waitFor();
  let saved;await env.withSecurityRulesDisabled(async ctx=>{saved=(await getDoc(doc(ctx.firestore(),'ads','partner-himavolt'))).data();});assert.equal(saved.imageUrls.length,1);assert.ok(saved.imageUrls[0].startsWith('http://127.0.0.1:9198/'));
- const guest=await browser.newPage({viewport:{width:390,height:1000},reducedMotion:'reduce'});await guest.goto('http://localhost:3016');await guest.locator('[data-campaign="partner-himavolt"] .landing-promo__uploaded img').waitFor();await images(guest);assert.equal(await guest.locator('[data-campaign="partner-himavolt"] .landing-promo__artwork').count(),0);await guest.addStyleTag({content:'nextjs-portal{display:none!important}'});await capture(guest,'client-upload',true);checks.push('Superadmin preview uses default art; first upload replaces it, saves exactly one image, and renders on homepage without the generated text overlay.');
- await env.withSecurityRulesDisabled(ctx=>deleteDoc(doc(ctx.firestore(),'ads','partner-himavolt')));await guest.locator('[data-campaign="partner-himavolt"] .landing-promo__artwork').waitFor();checks.push('Removing client imagery restores generated fallback without changing campaign controls.');
+ const guest=await browser.newPage({viewport:{width:390,height:1000},reducedMotion:'reduce'});await guest.goto('http://localhost:3016');await guest.locator('.landing-promos [data-campaign="partner-himavolt"] .landing-promo__uploaded img').waitFor();await images(guest);assert.equal(await guest.locator('.landing-promos [data-campaign="partner-himavolt"] .landing-promo__artwork').count(),0);await guest.addStyleTag({content:'nextjs-portal{display:none!important}'});await capture(guest,'client-upload',true);checks.push('Superadmin preview uses default art; first upload replaces it, saves exactly one image, and renders on homepage without the generated text overlay.');
+ await env.withSecurityRulesDisabled(ctx=>deleteDoc(doc(ctx.firestore(),'ads','partner-himavolt')));await guest.locator('.landing-promos [data-campaign="partner-himavolt"] .landing-promo__artwork').waitFor();checks.push('Removing client imagery restores generated fallback without changing campaign controls.');
  await guest.close();await adminContext.close();
  assert.deepEqual(errors,[]);await writeFile(new URL('checks.json',folder),JSON.stringify({checks,errors,fixtures:'Disposable local demo records only; no production writes'},null,2));console.log(JSON.stringify({passed:checks.length,checks,errors},null,2));
 }finally{await env.withSecurityRulesDisabled(ctx=>deleteDoc(doc(ctx.firestore(),'ads','partner-himavolt')));await browser.close();await env.cleanup();}

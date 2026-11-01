@@ -1,3 +1,4 @@
+import { showHeroAd } from './hero-ad-navigation.mjs';
 // Local UI acceptance checks. Uses only seeded demo-merokotha-feature-tests data.
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -86,9 +87,9 @@ try {
     await page.locator('#rental-map-filter .leaflet-container').waitFor();
     await page.getByRole('button', { name: 'Hide map', exact: true }).click();
     if (width <= 900) {
-      await page.locator('.landing-promos').getByRole('button', { name: 'Next advertisement', exact: true }).click();
+      await showHeroAd(page, 1);
       await settle(page);
-      assert.equal(await page.getByRole('button', { name: 'Show advertisement 2' }).getAttribute('aria-pressed'), 'true');
+      assert.equal(await page.locator('.landing-promos button').count(), 0);
       const hrefs = await page.locator('.landing-promo > a').evaluateAll(elements => elements.map(x => x.href));
       assert.deepEqual(hrefs, ['https://himavolt.com/', 'https://pitambari.vercel.app/', 'https://floor-clearner.vercel.app/']);
     }

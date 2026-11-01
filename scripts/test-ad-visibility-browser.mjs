@@ -1,3 +1,4 @@
+import { showHeroAd } from './hero-ad-navigation.mjs';
 // Reproduces the production ad-settings permission failure using local demo rules only.
 import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
@@ -51,8 +52,7 @@ try{
   assert.ok(layout.scrollWidth<=width+1,`${name}: page overflows`);assert.ok(layout.ads<layout.types&&layout.types<layout.listings);
   await page.screenshot({path:fileURLToPath(new URL(`${name}.png`,folder)),animations:'disabled'});
   if(width<=900){for(let i=1;i<=3;i++){
-    await page.locator('.landing-promos').getByRole('button',{name:`Show advertisement ${i}`,exact:true}).click();
-    await page.waitForFunction(i=>document.querySelector(`[aria-label="Show advertisement ${i}"]`).getAttribute('aria-pressed')==='true',i);
+    await showHeroAd(page, i - 1);
     await page.evaluate(()=>scrollTo(0,0));
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     await page.locator('.landing-promos').screenshot({path:fileURLToPath(new URL(`${name}-ad-${i}.png`,folder)),animations:'disabled'});

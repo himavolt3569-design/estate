@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, ChevronLeft, ChevronRight, Leaf, Pause, Play, Sparkles, UtensilsCrossed } from 'lucide-react';
+import { ArrowUpRight, Leaf, Sparkles, UtensilsCrossed } from 'lucide-react';
 import { adArtwork, partnerArtwork, sponsorHref, type SponsorAd } from '@/lib/ads';
 import { SponsorCard } from './sponsor-card';
 import { recordAdEvent } from './ad-provider';
@@ -72,12 +72,18 @@ export function LandingPromos({ ads, interval = 6, mobile = false }: { ads: Spon
     onMouseEnter={() => setInteracting(true)} onMouseLeave={() => setInteracting(false)}
     onFocusCapture={() => setInteracting(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }}>
     <div className="landing-promos__heading"><h2>{ne ? 'हाम्रा साझेदारहरू' : 'From our partners'}</h2><span>{ne ? 'विज्ञापन' : 'Advertisement'}</span></div>
-    <div ref={rail} className="landing-promos__rail" onPointerDown={() => { requestedIndex.current = null; setPaused(true); }} onWheel={() => { requestedIndex.current = null; setPaused(true); }} onKeyDown={() => { requestedIndex.current = null; setPaused(true); }} onScroll={event => {
+    <div ref={rail} className="landing-promos__rail" tabIndex={canSlide ? 0 : undefined} aria-label={ne ? "विज्ञापन हेर्न स्वाइप गर्नुहोस्" : "Advertisements. Swipe or use arrow keys to browse."} onPointerDown={() => { requestedIndex.current = null; setPaused(true); }} onWheel={() => { requestedIndex.current = null; setPaused(true); }} onFocusCapture={event => { if (event.target !== event.currentTarget) { requestedIndex.current = null; setPaused(true); } }} onKeyDown={event => {
+      requestedIndex.current = null;
+      setPaused(true);
+      if (event.target !== event.currentTarget) return;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); move(index + (event.key === 'ArrowRight' ? 1 : -1), true); }
+      if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); move(event.key === 'Home' ? 0 : slides.length - 1); }
+    }} onScroll={event => {
       const element = event.currentTarget;
       const first = element.children[0] as HTMLElement | undefined;
       const second = element.children[1] as HTMLElement | undefined;
       const step = first && second ? second.offsetLeft - first.offsetLeft : 0;
-      // A tablet may show two cards; choosing the last brand must select that brand.
+      // Preserve the requested slide when several banners share the viewport.
       if (step > 0) setIndex(requestedIndex.current ?? Math.min(slides.length - 1, Math.round(element.scrollLeft / step)));
     }}>
       {slides.map(({ ad, imageIndex }, position) => {
@@ -96,10 +102,6 @@ export function LandingPromos({ ads, interval = 6, mobile = false }: { ads: Spon
         </div>;
       })}
     </div>
-    {canSlide && <div className="landing-promos__footer"><div className={slides.length <= 4 ? 'landing-promos__choices' : 'landing-promos__dots'} role="group" aria-label={ne ? 'साझेदार छान्नुहोस्' : 'Choose partner'}>{slides.length <= 8 ? slides.map(({ ad, imageIndex }, i) => <button key={`${ad.id}-${imageIndex}`} type="button" aria-label={`${ne ? 'विज्ञापन हेर्नुहोस्' : 'Show advertisement'} ${i + 1}`} aria-pressed={index === i} onClick={() => { setPaused(true); move(i); }}>{slides.length <= 4 ? ad.sponsorName || ad.title : <span />}</button>) : <span>{index + 1} / {slides.length}</span>}</div><div className="landing-promos__navigation">
-      <button type="button" aria-label="Previous advertisement" onClick={() => { setPaused(true); move(index - 1, true); }}><ChevronLeft size={15} aria-hidden /></button>
-      {!reduced && <button type="button" aria-label={paused ? 'Play advertisements' : 'Pause advertisements'} onClick={() => setPaused(value => !value)}>{paused ? <Play size={12} aria-hidden /> : <Pause size={12} aria-hidden />}</button>}
-      <button type="button" aria-label="Next advertisement" onClick={() => { setPaused(true); move(index + 1, true); }}><ChevronRight size={15} aria-hidden /></button>
-    </div></div>}
+
   </section>;
 }

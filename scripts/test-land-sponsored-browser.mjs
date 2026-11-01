@@ -1,3 +1,4 @@
+import { showHeroAd } from './hero-ad-navigation.mjs';
 // Browser QA uses only localhost and disposable demo Firebase data.
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -104,14 +105,14 @@ try {
   assert.equal(await visitor.locator('.landing-promos [data-campaign="listing-demo-2"]').count(), 1); assert.equal(await visitor.locator('.rental-grid__ad').count(), 2); assert.equal(await visitor.locator('a[href="/listing/demo-2"]').count(), 3);
   for (const [width, name] of [[1440, 'home-property-top-desktop'], [390, 'home-property-top-mobile']]) {
     await visitor.setViewportSize({ width, height: 1000 }); await visitor.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-    await visitor.locator('.landing-promos').getByRole('button', { name: 'Show advertisement 4', exact: true }).click();
+    await showHeroAd(visitor, 3);
     await visitor.waitForFunction(() => { const rail = document.querySelector('.landing-promos__rail').getBoundingClientRect(); const card = document.querySelector('[data-campaign="listing-demo-2"]').getBoundingClientRect(); return card.left >= rail.left - 2 && card.right <= rail.right + 2; });
     await visitor.locator('.landing-promos [data-campaign="listing-demo-2"] h3').waitFor(); await capture(visitor, name, visitor.locator('.home-discovery'));
   }
   checks.push('Flat rentals can be sponsored in the homepage rail with a single cover, while partner ads remain between listings without repeated feed campaigns.');
   await visitor.getByRole('button', { name: 'Land', exact: true }).click(); await visitor.getByRole('button', { name: 'Filters', exact: true }).click();
   assert.equal(await visitor.locator('#filter-furnishing').count(), 0); await choose(visitor, 'filter-land-use', 'Residential'); await choose(visitor, 'filter-road-access', 'Motorable road');
-  await visitor.locator('.landing-promos').getByRole('button', { name: 'Show advertisement 1', exact: true }).click();
+  await showHeroAd(visitor, 0);
   await visitor.waitForFunction(() => document.querySelector('.landing-promos__rail').scrollLeft < 2);
   await capture(visitor, 'land-filter-mobile');
   checks.push('Land search exposes use/access filters and hides furnishing.');
