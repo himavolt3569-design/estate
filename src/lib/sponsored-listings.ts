@@ -19,9 +19,9 @@ export function resolveListingCampaigns(ads: SponsorAd[], listings: Listing[]) {
   });
 }
 
-/** One destination per page, even when several campaign records point to it. */
-export function uniqueCampaigns(ads: SponsorAd[], excluded: SponsorAd[] = []) {
-  const seen = new Set(excluded.map(ad => sponsorHref(ad)));
+/** One destination within each placement, even with duplicate campaign records. */
+export function uniqueCampaigns(ads: SponsorAd[]) {
+  const seen = new Set<string>();
   return ads.filter(ad => {
     const href = sponsorHref(ad);
     if (!href || seen.has(href)) return false;

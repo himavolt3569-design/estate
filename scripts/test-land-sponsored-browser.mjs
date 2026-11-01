@@ -79,7 +79,7 @@ try {
 
   const admin = await makePage(1440, 'admin'); await admin.goto(base + '/dashboard?tab=ads');
   await choose(admin, 'ad-link', 'Sponsored property'); await admin.locator('#sponsored-property-type').selectOption('land'); await admin.locator('#sponsored-property-search').fill(id);
-  await admin.locator(`input[name="sponsoredProperty"][value="${id}"]`).check(); await choose(admin, 'ad-placement', 'Between listings');
+  await admin.locator(`input[name="sponsoredProperty"][value="${id}"]`).check(); await choose(admin, 'ad-placement', 'Between listings'); await admin.locator('#ad-priority').fill('100');
   assert.equal(await admin.locator('#ad-title, #ad-images, #ad-url').count(), 0);
   await capture(admin, 'admin-desktop', admin.locator('#sponsor-editor'));
   await admin.setViewportSize({ width: 390, height: 1000 }); await capture(admin, 'admin-mobile', admin.locator('#sponsor-editor'));
@@ -88,27 +88,27 @@ try {
   checks.push('Superadmin can search, select and sponsor a land listing with automatic creative.');
   // Website duplicates are deliberately inserted to prove destination deduplication.
   await db.doc('ads/demo-duplicate-hima').set({ title: 'Duplicate HimaVolt', status: 'active', linkType: 'external', externalUrl: 'https://himavolt.com/', placement: 'home', priority: 0 });
-  const visitor = await makePage(1440); await visitor.goto(base); await visitor.locator('.rental-grid__ad .sponsor-panel').waitFor();
-  assert.equal(await visitor.locator('.rental-grid__ad').count(), 1); assert.equal(await visitor.locator('.rental-grid .ad-carousel__controls').count(), 0);
+  const visitor = await makePage(1440); await visitor.goto(base); await visitor.locator('.rental-grid__ad .sponsor-panel').first().waitFor();
+  assert.equal(await visitor.locator('.rental-grid__ad').count(), 2); assert.equal(await visitor.locator('.rental-grid .ad-carousel__controls').count(), 0);
   assert.equal(await visitor.locator(`a[href="/listing/${id}"]`).count(), 1);
-  for (const [width, name] of [[1440, 'home-desktop'], [800, 'home-tablet'], [390, 'home-mobile'], [320, 'home-narrow']]) { await visitor.setViewportSize({ width, height: 1000 }); await capture(visitor, name); await capture(visitor, name.replace('home-', 'feed-'), visitor.locator('.rental-grid__ad')); }
+  for (const [width, name] of [[1440, 'home-desktop'], [800, 'home-tablet'], [390, 'home-mobile'], [320, 'home-narrow']]) { await visitor.setViewportSize({ width, height: 1000 }); await capture(visitor, name); await capture(visitor, name.replace('home-', 'feed-'), visitor.locator('.rental-grid__ad').first()); }
   await db.doc(`listings/${id}`).update({ title: 'Demo land price updated', salePrice: 9000000, address: 'Updated Patan location' });
-  await visitor.locator('.rental-grid__ad h3').getByText('Demo land price updated', { exact: true }).waitFor(); assert.ok((await visitor.locator('.rental-grid__ad').innerText()).includes('9,000,000'));
+  await visitor.locator('.rental-grid__ad h3').getByText('Demo land price updated', { exact: true }).waitFor(); assert.ok((await visitor.locator('.rental-grid__ad').filter({ hasText: 'Demo land price updated' }).innerText()).includes('9,000,000'));
   checks.push('Ad updates follow listing changes, with no duplicate banners, repeated property or circled carousel footer.');
-  await db.doc(`listings/${id}`).update({ status: 'paused' }); await visitor.waitForFunction(() => !document.querySelector('.rental-grid__ad'));
+  await db.doc(`listings/${id}`).update({ status: 'paused' }); await visitor.locator(`.rental-grid__ad a[href="/listing/${id}"]`).waitFor({ state: 'detached' });
   checks.push('Paused properties automatically disappear from advertising.');
   await choose(admin, 'ad-link', 'Sponsored property'); await admin.locator('#sponsored-property-type').selectOption('flat'); await admin.locator('#sponsored-property-purpose').selectOption('rent'); await admin.locator('#sponsored-property-search').fill('demo-2');
   await admin.locator('input[name="sponsoredProperty"][value="demo-2"]').check();
   await admin.getByRole('button', { name: 'Save campaign', exact: true }).click(); await admin.getByText('Campaign saved. Changes sync across devices.', { exact: true }).waitFor();
   await visitor.goto(base); await visitor.locator('[data-campaign="listing-demo-2"]').waitFor({ state: 'attached' });
-  assert.equal(await visitor.locator('[data-campaign="listing-demo-2"]').count(), 1); assert.equal(await visitor.locator('.rental-grid__ad').count(), 0); assert.equal(await visitor.locator('a[href="/listing/demo-2"]').count(), 1);
+  assert.equal(await visitor.locator('[data-campaign="listing-demo-2"]').count(), 1); assert.equal(await visitor.locator('.rental-grid__ad').count(), 2); assert.equal(await visitor.locator('a[href="/listing/demo-2"]').count(), 1);
   for (const [width, name] of [[1440, 'home-property-top-desktop'], [390, 'home-property-top-mobile']]) {
     await visitor.setViewportSize({ width, height: 1000 }); await visitor.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     await visitor.locator('.landing-promos').getByRole('button', { name: 'Show advertisement 4', exact: true }).click();
     await visitor.waitForFunction(() => { const rail = document.querySelector('.landing-promos__rail').getBoundingClientRect(); const card = document.querySelector('[data-campaign="listing-demo-2"]').getBoundingClientRect(); return card.left >= rail.left - 2 && card.right <= rail.right + 2; });
     await visitor.locator('[data-campaign="listing-demo-2"] h3').waitFor(); await capture(visitor, name, visitor.locator('.home-discovery'));
   }
-  checks.push('Flat rentals can be sponsored in the homepage rail with a single cover and no repeated property or feed ad.');
+  checks.push('Flat rentals can be sponsored in the homepage rail with a single cover, while partner ads remain between listings without repeated feed campaigns.');
   await visitor.getByRole('button', { name: 'Land', exact: true }).click(); await visitor.getByRole('button', { name: 'Filters', exact: true }).click();
   assert.equal(await visitor.locator('#filter-furnishing').count(), 0); await choose(visitor, 'filter-land-use', 'Residential'); await choose(visitor, 'filter-road-access', 'Motorable road');
   await visitor.locator('.landing-promos').getByRole('button', { name: 'Show advertisement 1', exact: true }).click();

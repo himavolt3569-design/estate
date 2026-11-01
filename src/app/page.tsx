@@ -64,7 +64,7 @@ export default function Home() {
   useEffect(() => setVisibleCount(12), [search, type, min, max, furnishing, facility, verifiedOnly, nearby, sort, area, transactionType, landUse, roadAccess]);
   const availableAds = (ads: typeof landingAds) => ads.filter(ad => ad.linkType !== 'listing' || items.some(item => item.id === ad.listingId));
   const heroAds = uniqueCampaigns(availableAds(landingAds));
-  const inlineAds = uniqueCampaigns(availableAds(feedAds), heroAds);
+  const inlineAds = uniqueCampaigns(availableAds(feedAds));
   const visible = filtered.slice(0, visibleCount);
   const feed = listingFeed(visible, inlineAds, settings.feedInterval);
   const promotedIds = new Set([...heroAds, ...feed.flatMap(slot => slot.kind === 'sponsor' ? [slot.ad] : [])].filter(ad => ad.linkType === 'listing').map(ad => ad.listingId));

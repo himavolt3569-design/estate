@@ -19,9 +19,8 @@ describe('automatic sponsored properties', () => {
     expect(resolveListingCampaigns([ad, external], [{ ...listing, status: 'paused' }])).toEqual([external]);
     expect(resolveListingCampaigns([ad], [])).toEqual([]);
   });
-  it('suppresses duplicate destinations and already displayed homepage campaigns', () => {
+  it('suppresses duplicate destinations within a placement', () => {
     const external = { id: 'one', linkType: 'external', externalUrl: 'https://example.com' };
     expect(uniqueCampaigns([external, { ...external, id: 'two' }, ad, { ...ad, id: 'copy' }])).toEqual([external, ad]);
-    expect(uniqueCampaigns([external, ad], [external])).toEqual([ad]);
   });
 });
