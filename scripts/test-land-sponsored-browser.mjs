@@ -110,7 +110,7 @@ try {
     await visitor.locator('.landing-promos [data-campaign="listing-demo-2"] h3').waitFor(); await capture(visitor, name, visitor.locator('.home-discovery'));
   }
   checks.push('Flat rentals can be sponsored in the homepage rail with a single cover, while partner ads remain between listings without repeated feed campaigns.');
-  await visitor.getByRole('button', { name: 'Land', exact: true }).click(); await visitor.getByRole('button', { name: 'Filters', exact: true }).click();
+  await visitor.getByRole('button', { name: 'Lands', exact: true }).click(); await visitor.getByRole('button', { name: 'Filters', exact: true }).click();
   assert.equal(await visitor.locator('#filter-furnishing').count(), 0); await choose(visitor, 'filter-land-use', 'Residential'); await choose(visitor, 'filter-road-access', 'Motorable road');
   await showHeroAd(visitor, 0);
   await visitor.waitForFunction(() => document.querySelector('.landing-promos__rail').scrollLeft < 2);

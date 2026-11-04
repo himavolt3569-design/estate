@@ -52,7 +52,7 @@ try {
     const categories = page.getByRole('group', { name: 'Property types', exact: true });
     await categories.getByRole('button', { name: 'Rooms', exact: true }).click();
     await page.waitForFunction(() => [...document.querySelectorAll('.rental-grid > article h3')].every(x => x.textContent.includes('room')) && document.querySelectorAll('.rental-grid > article').length > 0);
-    await categories.getByRole('button', { name: 'Houses', exact: true }).click();
+    await categories.getByRole('button', { name: 'House', exact: true }).click();
     await page.getByRole('group', { name: 'Rent or buy' }).getByRole('button', { name: 'Buy', exact: true }).click();
     await page.getByRole('link', { name: 'Demo house for sale in Patan', exact: true }).waitFor();
     await categories.getByRole('button', { name: 'Flats', exact: true }).click();

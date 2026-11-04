@@ -36,8 +36,9 @@ import { useSiteLanguage } from "@/components/merokotha/site-language";
 import { listingContact, whatsAppNumber } from "@/lib/contact";
 import { recordListingVisit } from "@/lib/firebase/property-features";
 import { ListingTour } from "@/components/merokotha/listing-tour";
-import { AdCarousel } from '@/components/merokotha/sponsor-card';
-import { useCampaigns } from '@/components/merokotha/ad-provider';
+import { DetailAd } from '@/components/merokotha/detail-ad';
+import { AgentSummary, usePublicLister } from '@/components/merokotha/agent-summary';
+import { listingListerId, listingListerName } from '@/lib/public-lister';
 import { ListingEngagement } from '@/components/merokotha/listing-engagement';
 import { ListingRecommendations } from '@/components/merokotha/listing-recommendations';
 import { landFacts } from '@/lib/land';
@@ -53,9 +54,8 @@ export default function ListingPage() {
   const [loading, setLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [agentName, setAgentName] = useState("Agent");
-  const [agentProfileAvailable, setAgentProfileAvailable] = useState(false);
-  const { campaigns, settings } = useCampaigns('details');
+  const listerId = listingListerId(listing);
+  const { person: agent, loading: agentLoading } = usePublicLister(listerId);
 
   useEffect(() => {
     if (!configured || !id) {
@@ -93,31 +93,6 @@ export default function ListingPage() {
       .then((snapshot) => setFavorite(snapshot.exists()))
       .catch(() => {});
   }, [user, id]);
-
-  useEffect(() => {
-    if (!listing?.agentId) {
-      setAgentProfileAvailable(false);
-      return;
-    }
-    let current = true;
-    void getDoc(doc(db(), "agentsPublic", listing.agentId))
-      .then(async (snapshot) => {
-        if (!current) return;
-        if (snapshot.exists()) {
-          setAgentName(String(snapshot.data().name || "Agent"));
-          setAgentProfileAvailable(true);
-        } else if (user) {
-          const fallback = await getDoc(
-            doc(db(), "usersPublic", listing.ownerId),
-          );
-          if (current) setAgentName(String(fallback.data()?.name || "Agent"));
-        }
-      })
-      .catch(() => {});
-    return () => {
-      current = false;
-    };
-  }, [user, listing?.agentId, listing?.ownerId]);
 
   useEffect(() => {
     if (listing && !authLoading) void recordListingVisit(listing, user?.uid);
@@ -207,6 +182,8 @@ export default function ListingPage() {
         </span>
       </nav>
 
+      <DetailAd key={`title-${listing.id}`} slot="title" listingId={listing.id} />
+
       <ListingGallery key={listing.id} photos={photos} title={listing.title} />
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
@@ -262,6 +239,8 @@ export default function ListingPage() {
             </div>
           </header>
 
+          <DetailAd slot="price" listingId={listing.id} />
+
           <ListingTour scenes={listing.tourScenes} />
 
           <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-ink-200 bg-ink-200 sm:grid-cols-3">
@@ -286,8 +265,6 @@ export default function ListingPage() {
               {listing.description || ui.noDescription}
             </p>
           </section>
-
-          <AdCarousel ads={campaigns.filter(ad => ad.linkType !== 'listing' || ad.listingId !== listing.id)} placement="details" compact interval={settings.rotationSeconds} />
 
           {Boolean(listing.facilities?.length) && (
             <section>
@@ -336,28 +313,9 @@ export default function ListingPage() {
             <p className="mt-2 text-3xl font-semibold text-royal-700">
               {money(listingPrice(listing))}
             </p>
-            <p className="mt-4 border-t border-ink-100 pt-4 text-sm text-ink-600">
-              {ui.listedBy}{" "}
-              {listing.agentId &&
-              agentProfileAvailable &&
-              !listing.contactIsAnonymous ? (
-                <Link
-                  href={`/agents/${listing.agentId}`}
-                  className="font-semibold text-royal-700 hover:underline"
-                >
-                  {agentName}
-                </Link>
-              ) : (
-                <span className="font-semibold text-ink-900">
-                  {listing.contactIsAnonymous
-                    ? ui.privateLister
-                    : listing.agentId
-                      ? agentName
-                      : listing.ownerName}
-                </span>
-              )}
-            </p>
+            <div className="mt-5 border-t border-ink-100 pt-5"><AgentSummary agent={agent} loading={agentLoading} profileId={listerId} listingId={listing.id} fallbackName={listing.contactIsAnonymous ? ui.privateLister : listingListerName(listing, listerId) || (listing.agentId ? (locale === 'ne' ? 'एजेन्ट' : 'Agent') : (locale === 'ne' ? 'विज्ञापनदाता' : 'Property lister'))} /></div>
           </Surface>
+          <DetailAd key={`agent-${listing.id}`} slot="agent" listingId={listing.id} dismissKey={listing.agentId || listing.id} />
           {contact.call || contact.whatsapp ? (
             <Surface className="p-6">
               <p className="label text-crimson-700">{ui.contact}</p>
@@ -465,6 +423,7 @@ export default function ListingPage() {
           <ListingReportForm key={listing.id} listing={listing} />
         </aside>
       </div>
+      <div className="mt-10"><DetailAd slot="recommendations" listingId={listing.id} /></div>
       <ListingRecommendations listing={listing} />
     </div>
   );

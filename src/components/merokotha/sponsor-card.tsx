@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { adArtwork, sponsorHref, type AdPlacement, type SponsorAd } from '@/lib/ads';
 import { recordAdEvent } from './ad-provider';
 
@@ -58,18 +58,18 @@ export function AdCarousel({ ads, placement, compact = false, banner = false, in
   }, [slides.length, paused, hovered, reducedMotion, interval]);
   if (!current) return null;
   const move = (step: number) => setIndex(value => (value + step + slides.length) % slides.length);
-  return <section className={`ad-carousel ${compact ? 'ad-carousel--compact' : ''} ${banner ? 'ad-carousel--banner' : ''}`} aria-roledescription="carousel" aria-label="Partner advertisements"
-    onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setHovered(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setHovered(false); }}
+  return <section className={`ad-carousel ${compact ? 'ad-carousel--compact' : ''} ${banner ? 'ad-carousel--banner' : ''}`} aria-roledescription="carousel" aria-label="Partner advertisements. Swipe or use arrow keys to browse." tabIndex={slides.length > 1 ? 0 : undefined}
+    onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => { setHovered(true); setPaused(true); }} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setHovered(false); }}
+    onPointerDown={() => setPaused(true)} onWheel={() => setPaused(true)}
+    onKeyDown={event => {
+      if (event.target !== event.currentTarget || slides.length < 2) return;
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault(); setPaused(true);
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') move(event.key === 'ArrowRight' ? 1 : -1);
+      if (event.key === 'Home' || event.key === 'End') setIndex(event.key === 'Home' ? 0 : slides.length - 1);
+    }}
     onTouchStart={event => { touchStart.current = event.touches[0]?.clientX ?? null; }}
     onTouchEnd={event => { const end = event.changedTouches[0]?.clientX; if (touchStart.current !== null && end !== undefined && Math.abs(end - touchStart.current) > 45) move(end < touchStart.current ? 1 : -1); touchStart.current = null; }}>
     <div key={`${current.ad.id}-${current.imageIndex}`} className="ad-carousel__slide"><SponsorCard ad={current.ad} placement={placement} compact={compact} banner={banner} imageIndex={current.imageIndex} /></div>
-    {slides.length > 1 && <div className="ad-carousel__controls">
-      <span className="text-xs tabular-nums text-ink-600" aria-live={paused || reducedMotion ? 'polite' : 'off'}>{index % slides.length + 1} / {slides.length}</span>
-      <div className="flex items-center gap-1">
-        <button type="button" className="carousel-button" onClick={() => move(-1)} aria-label="Previous advertisement"><ChevronLeft aria-hidden className="size-4" /></button>
-        {!reducedMotion && <button type="button" className="carousel-button" onClick={() => setPaused(value => !value)} aria-label={paused ? 'Play advertisements' : 'Pause advertisements'}>{paused ? <Play aria-hidden className="size-3.5" /> : <Pause aria-hidden className="size-3.5" />}</button>}
-        <button type="button" className="carousel-button" onClick={() => move(1)} aria-label="Next advertisement"><ChevronRight aria-hidden className="size-4" /></button>
-      </div>
-    </div>}
   </section>;
 }

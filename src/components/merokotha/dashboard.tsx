@@ -984,6 +984,10 @@ function ProfilePanel({ uid, profile }: { uid: string; profile: Profile }) {
                 {
                   name: String(f.get("name")).trim(),
                   location: String(f.get("location")).trim(),
+                  ...(profile.agentStatus === "verified" ? {
+                    publicPhone: String(f.get("publicPhone") || "").trim(),
+                    whatsappNumber: String(f.get("whatsappNumber") || "").trim(),
+                  } : {}),
                   ...(contactEmail ===
                   (profile.contactEmail || profile.email || "")
                     ? {}
@@ -1104,6 +1108,7 @@ function ProfilePanel({ uid, profile }: { uid: string; profile: Profile }) {
               />
             </Field>
             {profile.agentStatus === "verified" && (
+              <>
               <Field label={tr("Agent introduction")} htmlFor="agentBio">
                 <Textarea
                   id="agentBio"
@@ -1113,6 +1118,13 @@ function ProfilePanel({ uid, profile }: { uid: string; profile: Profile }) {
                   placeholder="Tell renters where you work and how you help"
                 />
               </Field>
+              <Field className="agent-public-contact" label={t("Public phone number", "सार्वजनिक फोन नम्बर")} htmlFor="agentPublicPhone" hint={t("Optional. Shown on your agent profile and listings.", "ऐच्छिक। एजेन्ट प्रोफाइल र विज्ञापनमा देखिन्छ।")}>
+                <Input id="agentPublicPhone" name="publicPhone" type="tel" maxLength={19} pattern="\+?[0-9][0-9\s\-]{6,17}" defaultValue={profile.publicPhone || ""} />
+              </Field>
+              <Field className="agent-public-contact" label={t("Public WhatsApp number", "सार्वजनिक WhatsApp नम्बर")} htmlFor="agentWhatsApp" hint={t("Optional. Leave blank to hide WhatsApp from your public profile.", "ऐच्छिक। सार्वजनिक प्रोफाइलमा लुकाउन खाली राख्नुहोस्।")}>
+                <Input id="agentWhatsApp" name="whatsappNumber" type="tel" maxLength={19} pattern="\+?[0-9][0-9\s\-]{6,17}" defaultValue={profile.whatsappNumber || ""} />
+              </Field>
+              </>
             )}
             <Field label={tr("Phone")} htmlFor="profilePhone">
               <Input id="profilePhone" value={profile.phone} disabled />

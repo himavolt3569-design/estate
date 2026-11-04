@@ -86,8 +86,8 @@ export default function Home() {
       <div className="home-discovery__intro"><div><h1 id="home-heading">{ui.heroTitle}</h1><p>{locale === 'ne' ? 'तपाईंको ठाउँ। तपाईंको बजेट। तपाईंको नयाँ सुरुवात।' : 'Your place. Your budget. Your next chapter.'}</p></div><Link href="#saved-searches" className="home-matches-link" onClick={() => { const panel = document.getElementById('saved-search-disclosure'); if (panel instanceof HTMLDetailsElement) panel.open = true; }}>{ui.seeMyMatches}<ArrowRight aria-hidden size={16} /></Link></div>
       {heroAds.length > 0 && <div className="home-partners home-partners--discovery"><LandingPromos ads={heroAds} interval={settings.rotationSeconds} mobile={mobile} /></div>}
       <div className="property-categories" role="group" aria-label={locale === 'ne' ? 'घरजग्गाका प्रकारहरू' : 'Property types'}>
-        <button type="button" aria-pressed={!type} onClick={() => { setType(''); setLandUse(''); setRoadAccess(''); }}><LayoutGrid aria-hidden /><span>{locale === 'ne' ? 'सबै' : 'All properties'}</span></button>
         {propertyTypes.map(item => <button key={item.value} type="button" aria-pressed={type === item.value} onClick={() => { setType(item.value); setLandUse(''); setRoadAccess(''); if (item.value === 'land') setFurnishing(''); if (item.value === 'flat') { setTransactionType('rent'); setMin(''); setMax(''); } }}><item.icon aria-hidden /><span>{locale === 'ne' ? item.ne : item.label}</span></button>)}
+        <button type="button" aria-label={locale === 'ne' ? 'अन्य (सबै घरजग्गा)' : 'Others (All Properties)'} aria-pressed={!type} onClick={() => { setType(''); setLandUse(''); setRoadAccess(''); }}><LayoutGrid aria-hidden /><span>{locale === 'ne' ? 'अन्य (सबै)' : 'Others (All Properties)'}</span></button>
       </div>
     </section>
     <section id="rentals" aria-label={locale === 'ne' ? 'उपलब्ध घरजग्गा' : 'Available properties'} className="home-listings">

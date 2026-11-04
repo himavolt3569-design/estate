@@ -10,13 +10,13 @@ import type { SearchFilters } from '@/lib/listing-search';
 import { useSiteLanguage } from './site-language';
 
 export const propertyTypes = [
-  { value: 'house', label: 'Houses', ne: 'घर', icon: House },
-  { value: 'apartment', label: 'Apartments', ne: 'अपार्टमेन्ट', icon: Building2 },
-  { value: 'flat', label: 'Flats', ne: 'फ्ल्याट', icon: Building },
   { value: 'room', label: 'Rooms', ne: 'कोठा', icon: DoorOpen },
-  { value: 'office', label: 'Offices', ne: 'अफिस', icon: BriefcaseBusiness },
-  { value: 'shop', label: 'Shops', ne: 'पसल', icon: Store },
-  { value: 'land', label: 'Land', ne: 'जग्गा', icon: LandPlot },
+  { value: 'flat', label: 'Flats', ne: 'फ्ल्याट', icon: Building },
+  { value: 'house', label: 'House', ne: 'घर', icon: House },
+  { value: 'apartment', label: 'Apartments', ne: 'अपार्टमेन्ट', icon: Building2 },
+  { value: 'office', label: 'Office', ne: 'अफिस', icon: BriefcaseBusiness },
+  { value: 'shop', label: 'Shop', ne: 'पसल', icon: Store },
+  { value: 'land', label: 'Lands', ne: 'जग्गा', icon: LandPlot },
 ];
 
 type Props = {

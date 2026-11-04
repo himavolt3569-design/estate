@@ -1,7 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { activeSponsors, adArtwork, campaignAds, defaultAdSettings, normalizeAdSettings, partnerAds, partnerArtwork, sponsorHref } from './ads';
+import { activeSponsors, adArtwork, adsForDetailSlot, campaignAds, defaultAdSettings, normalizeAdSettings, partnerAds, partnerArtwork, sponsorHref } from './ads';
 
 describe('campaign eligibility', () => {
+  it('targets each detail slot independently, retains legacy campaigns and excludes the viewed property', () => {
+    const legacy = { ...partnerAds[0]!, id: 'legacy', placement: 'details' };
+    const priceOnly = { ...legacy, id: 'price-only', detailSlots: ['price'] as const };
+    const campaign = { ...priceOnly, detailSlots: [...priceOnly.detailSlots] };
+    const self = { ...legacy, id: 'self', linkType: 'listing', listingId: 'current' };
+    const ads = [legacy, campaign, self];
+    expect(adsForDetailSlot(ads, 'price', defaultAdSettings, 'current').map(ad => ad.id)).toEqual(['legacy', 'price-only']);
+    expect(adsForDetailSlot(ads, 'agent', defaultAdSettings, 'current').map(ad => ad.id)).toEqual(['legacy']);
+    expect(adsForDetailSlot([ { ...legacy, detailSlots: [] } ], 'title', defaultAdSettings)).toEqual([]);
+    for (const settings of [{ enabled: false }, { detailsEnabled: false }, { detailPriceEnabled: false }]) {
+      expect(adsForDetailSlot(ads, 'price', { ...defaultAdSettings, ...settings })).toEqual([]);
+    }
+    expect(adsForDetailSlot(ads, 'agent', { ...defaultAdSettings, detailPriceEnabled: false })).toHaveLength(2);
+    expect(normalizeAdSettings({ detailsEnabled: true }).detailAgentEnabled).toBe(true);
+    expect(normalizeAdSettings({ detailAgentEnabled: false }).detailAgentEnabled).toBe(false);
+  });
   const now = Date.UTC(2026, 9, 30);
   const ad = { ...partnerAds[0]!, id: 'campaign', startsAt: new Date(now - 1000), endsAt: new Date(now + 1000) };
   it('enforces placement, device, status and inclusive-start/exclusive-end schedule', () => {

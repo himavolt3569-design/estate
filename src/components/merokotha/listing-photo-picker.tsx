@@ -123,6 +123,7 @@ export function ListingPhotoPicker({
         <p id="photo-help" className="text-xs leading-relaxed text-ink-500">{t('Images must be under 5 MB each. Select a thumbnail to change the cover photo.', 'प्रत्येक फोटो ५ MB भन्दा सानो हुनुपर्छ। आवरण बदल्न सानो फोटो छान्नुहोस्।')}</p>
 
         <div id="photo-status" role="status" aria-live="polite" className="text-xs font-medium text-ink-600">{photos.length} {photos.length === 1 ? 'photo' : 'photos'} selected</div>
+        <p className="text-xs leading-relaxed text-ink-600">{t('A subtle MeroKotha watermark is added to every property photo when uploaded.', 'अपलोड गर्दा प्रत्येक घरजग्गाको फोटोमा मधुरो MeroKotha वाटरमार्क थपिन्छ।')}</p>
         {error && <p role="alert" className="rounded-lg bg-clay-50 px-3 py-2 text-xs text-clay-700">{error}</p>}
 
         {photos.length > 0 && <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 xl:grid-cols-3">

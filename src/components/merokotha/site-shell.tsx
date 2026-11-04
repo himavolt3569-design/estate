@@ -82,7 +82,7 @@ export function SiteShell({ children, locale: initialLocale }: { children: React
         Skip to content
       </a>
       <header className="sticky top-0 z-50 border-b border-ink-100 bg-white/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-8xl items-center gap-3 px-4 sm:h-[68px] sm:gap-6 sm:px-6 lg:px-8">
+        <div className="site-header__inner mx-auto flex h-16 max-w-8xl items-center gap-3 px-4 sm:h-[68px] sm:gap-6 sm:px-6 lg:px-8">
           <Link href="/" aria-label="MeroKotha home" className="shrink-0"><Brand /></Link>
           <nav aria-label="Main navigation" className="hidden min-w-0 items-center gap-1 lg:flex">
             <Link href="/" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-crimson-50 px-3 text-sm font-medium text-crimson-700"><Home aria-hidden className="size-4" />{copy.explore}</Link>

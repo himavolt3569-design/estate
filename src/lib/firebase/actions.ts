@@ -3,6 +3,8 @@ import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, limit, 
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { db, storage } from './client';
 import type { AgentApplication, Inquiry, Listing, Profile } from './types';
+import { watermarkPropertyPhoto } from '@/lib/image-watermark';
+import { validContactNumber } from '@/lib/contact';
 
 export async function createProfile(user: User, input: { name: string; phone: string; role: string; location: string; contactEmail?: string }) {
   const batch = writeBatch(db());
@@ -10,27 +12,36 @@ export async function createProfile(user: User, input: { name: string; phone: st
   batch.set(doc(db(), 'usersPublic', user.uid), { name: input.name, photoUrl: user.photoURL, updatedAt: serverTimestamp() });
   await batch.commit();
 }
-export async function updateProfile(uid: string, data: { name: string; location: string; photoUrl?: string; contactEmail?: string; agentBio?: string }, verifiedAgent = false) {
+export async function updateProfile(uid: string, data: { name: string; location: string; photoUrl?: string; contactEmail?: string; agentBio?: string; publicPhone?: string; whatsappNumber?: string }, verifiedAgent = false) {
+  if (![data.publicPhone || '', data.whatsappNumber || ''].every(validContactNumber)) throw new Error('Enter a valid public phone or WhatsApp number.');
   const batch = writeBatch(db());
-  const { contactEmail, agentBio, ...publicData } = data;
+  const { contactEmail, agentBio, publicPhone, whatsappNumber, ...publicData } = data;
   batch.update(doc(db(), 'users', uid), { ...publicData, ...(contactEmail === undefined ? {} : { contactEmail }), photoUrl: data.photoUrl ?? null, updatedAt: serverTimestamp() });
   batch.set(doc(db(), 'usersPublic', uid), { name: data.name, photoUrl: data.photoUrl ?? null, updatedAt: serverTimestamp() }, { merge: true });
   await batch.commit();
   if (verifiedAgent) {
     try {
-      if (agentBio !== undefined) await updateDoc(doc(db(), 'users', uid), { agentBio, updatedAt: serverTimestamp() });
-      await setDoc(doc(db(), 'agentsPublic', uid), { name: data.name, location: data.location, photoUrl: data.photoUrl ?? null, ...(agentBio === undefined ? {} : { bio: agentBio }), updatedAt: serverTimestamp() }, { merge: true });
+      const agentContacts = { ...(publicPhone === undefined ? {} : { publicPhone }), ...(whatsappNumber === undefined ? {} : { whatsappNumber }) };
+      const agentBatch = writeBatch(db());
+      agentBatch.update(doc(db(), 'users', uid), { ...(agentBio === undefined ? {} : { agentBio }), ...agentContacts, updatedAt: serverTimestamp() });
+      agentBatch.set(doc(db(), 'agentsPublic', uid), { name: data.name, location: data.location, photoUrl: data.photoUrl ?? null, ...(agentBio === undefined ? {} : { bio: agentBio }), ...agentContacts, updatedAt: serverTimestamp() }, { merge: true });
+      await agentBatch.commit();
     } catch { return { agentDirectoryUpdated: false }; }
   }
   return { agentDirectoryUpdated: true };
 }
 export async function uploadImages(path: string, files: File[]) {
-  return Promise.all(files.map(async file => {
+  // Processing serially avoids holding several full-size canvases in memory
+  // on phones. Upload order remains the cover-photo order selected by the user.
+  const urls: string[] = [];
+  for (const original of files) {
+    const file = path.startsWith('listings/') ? await watermarkPropertyPhoto(original) : original;
     const safeName = `${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const item = ref(storage(), `${path}/${safeName}`);
     await uploadBytes(item, file, { contentType: file.type });
-    return getDownloadURL(item);
-  }));
+    urls.push(await getDownloadURL(item));
+  }
+  return urls;
 }
 export async function createListing(listingId: string, uid: string, ownerName: string, input: Omit<Listing, 'id' | 'ownerId' | 'ownerName' | 'photoUrls' | 'status' | 'viewCount'>, files: File[], contact?: { name: string; phone: string }) {
   const purpose = input.transactionType || input.purpose || 'rent';

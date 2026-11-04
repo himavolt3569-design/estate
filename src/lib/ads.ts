@@ -1,6 +1,13 @@
 import { timestampMillis } from './listing-search';
 
 export type AdPlacement = 'landing' | 'listings' | 'details';
+export const detailAdSlots = [
+  { value: 'title', label: 'Below the listing title', hint: 'Below the listing / property name breadcrumb, before the photos.' },
+  { value: 'price', label: 'Below the property price', hint: 'In the main property details column.' },
+  { value: 'recommendations', label: 'Above similar properties', hint: 'Immediately before “More places that fit”.' },
+  { value: 'agent', label: 'Agent mini ad', hint: 'Beside the lister profile; visitors can dismiss it for this session.' },
+] as const;
+export type DetailAdSlot = typeof detailAdSlots[number]['value'];
 export type AdDevice = 'all' | 'mobile' | 'desktop';
 export type SponsorAd = {
   id: string;
@@ -11,6 +18,7 @@ export type SponsorAd = {
   imageUrls?: string[];
   mobileImageUrl?: string;
   placement?: string;
+  detailSlots?: DetailAdSlot[];
   priority?: number;
   status?: string;
   linkType?: string;
@@ -29,13 +37,18 @@ export type AdSettings = {
   heroEnabled: boolean;
   feedEnabled: boolean;
   detailsEnabled: boolean;
+  detailTitleEnabled: boolean;
+  detailPriceEnabled: boolean;
+  detailRecommendationsEnabled: boolean;
+  detailAgentEnabled: boolean;
   feedInterval: number;
   rotationSeconds: number;
 };
 
 export const defaultAdSettings: AdSettings = {
   enabled: true, partnerAdsEnabled: true, heroEnabled: true, feedEnabled: true,
-  detailsEnabled: true, feedInterval: 4, rotationSeconds: 6,
+  detailsEnabled: true, detailTitleEnabled: true, detailPriceEnabled: true,
+  detailRecommendationsEnabled: true, detailAgentEnabled: true, feedInterval: 4, rotationSeconds: 6,
 };
 
 export function normalizeAdSettings(value: Partial<AdSettings> = {}): AdSettings {
@@ -44,8 +57,21 @@ export function normalizeAdSettings(value: Partial<AdSettings> = {}): AdSettings
   return {
     enabled: boolean('enabled'), partnerAdsEnabled: boolean('partnerAdsEnabled'),
     heroEnabled: boolean('heroEnabled'), feedEnabled: boolean('feedEnabled'), detailsEnabled: boolean('detailsEnabled'),
+    detailTitleEnabled: boolean('detailTitleEnabled'), detailPriceEnabled: boolean('detailPriceEnabled'),
+    detailRecommendationsEnabled: boolean('detailRecommendationsEnabled'), detailAgentEnabled: boolean('detailAgentEnabled'),
     feedInterval: bounded(value.feedInterval, 4, 3, 5), rotationSeconds: bounded(value.rotationSeconds, 6, 4, 15),
   };
+}
+
+export const detailSlotSettings = {
+  title: 'detailTitleEnabled', price: 'detailPriceEnabled',
+  recommendations: 'detailRecommendationsEnabled', agent: 'detailAgentEnabled',
+} as const;
+
+export function adsForDetailSlot(ads: SponsorAd[], slot: DetailAdSlot, settings: AdSettings, listingId?: string) {
+  if (!settings.enabled || !settings.detailsEnabled || !settings[detailSlotSettings[slot]]) return [];
+  return ads.filter(ad => (!Array.isArray(ad.detailSlots) || ad.detailSlots.includes(slot))
+    && !(ad.linkType === 'listing' && ad.listingId === listingId));
 }
 
 export const partnerArtwork: Record<string, string> = {

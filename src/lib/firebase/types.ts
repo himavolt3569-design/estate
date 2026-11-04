@@ -14,6 +14,8 @@ export type Profile = RecordDoc & {
   photoUrl?: string;
   location?: string;
   agentBio?: string;
+  publicPhone?: string;
+  whatsappNumber?: string;
   isBanned?: boolean;
   agentStatus?: string;
 };
@@ -98,6 +100,10 @@ export type PublicAgent = RecordDoc & {
   location?: string;
   photoUrl?: string;
   bio?: string;
+  publicPhone?: string;
+  whatsappNumber?: string;
+  hideDisplayName?: boolean;
+  status?: string;
 };
 export type AdminDecision = RecordDoc & {
   action: string;
