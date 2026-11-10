@@ -1,0 +1,86 @@
+import assert from 'node:assert/strict';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+const require = createRequire(new URL('../../.feature-tests/package.json', import.meta.url));
+const { chromium } = require('playwright');
+const folder = '.impeccable/review/land-nepali-system';
+await mkdir(folder, { recursive: true });
+const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce', acceptDownloads: true });
+const page = await context.newPage();
+const checks = [], errors = [];
+page.on('pageerror', error => errors.push(error.message));
+page.setDefaultTimeout(30000);
+const base = process.env.LAND_CALCULATOR_BASE_URL || 'http://127.0.0.1:3028';
+const check = (name, value) => { assert.ok(value, name); checks.push(name); };
+const calc = page.locator('#measure-land');
+const converter = page.locator('section[aria-labelledby=land-converter-title]');
+const metric = (region, label) => region.locator('dl > div').filter({ has: page.getByText(label, { exact: true }) }).locator('dd');
+const values = (region, system) => region.locator('[data-land-system=' + system + '] dd span.text-base').allTextContents();
+async function capture(name) {
+  await page.evaluate(() => scrollTo(0, 0));
+  await page.evaluate(() => document.fonts.ready);
+  check(name + ': no viewport overflow', await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await page.screenshot({ path: folder + '/' + name + '.png', fullPage: true, caret: 'initial' });
+}
+async function rectangleRopani(ne = false) {
+  await calc.locator('#parcel-unit').selectOption('ft');
+  await calc.locator('#parcel-length').fill('७४'); await calc.locator('#parcel-width').fill('७४');
+  await calc.getByRole('button', { name: ne ? 'जग्गाको गणना गर्नुहोस्' : 'Calculate land', exact: true }).click();
+}
+try {
+  await page.goto(base + '/land-size');
+  await rectangleRopani();
+  check('Nepali rectangle digits calculate one exact ropani from 74 × 74 ft', (await values(calc, 'ropani')).join(',') === '1,0,0,0');
+  check('Both Nepali systems are visible in calculated land results', await calc.locator('[data-land-system]').count() === 2);
+  check('Nepali conversion retains the geometric area in square feet', await metric(calc, 'Area (square feet)').innerText() === '5,476 ft²');
+  const downloadPromise = page.waitForEvent('download');
+  await calc.getByRole('button', { name: 'Download measurements', exact: true }).click();
+  const data = JSON.parse(await readFile(await (await downloadPromise).path(), 'utf8'));
+  check('Downloads include named Nepali units and explicit square-foot convention', data.nepaliArea.ropaniAanaPaisaDaam.ropani === 1 && data.nepaliArea.ropaniAanaPaisaDaam.aana === 0 && data.nepaliArea.convention.ropaniSqFt === 5476);
+  await converter.locator('#area-unit').selectOption('ropani'); await converter.locator('#area-amount').fill('१');
+  check('Single-unit converter agrees with rectangle calculation', await metric(converter, 'Square feet').innerText() === '5,476');
+  check('Paisa and daam are available as input units', await converter.locator('#area-unit option[value=paisa], #area-unit option[value=daam]').count() === 2);
+  await converter.locator('#area-input-system').selectOption('ropani');
+  for (const [unit, value] of Object.entries({ ropani: '१', aana: '२', paisa: '३', daam: '०.५' })) await converter.locator('#area-' + unit).fill(value);
+  check('Compound Ropani–Aana–Paisa–Daam accepts Nepali numerals and fractional daam', await metric(converter, 'Square feet').innerText() === '6,427.882813' && (await values(converter, 'ropani')).join(',') === '1,2,3,0.5');
+  await capture('desktop');
+  for (const [unit, value] of Object.entries({ ropani: '०', aana: '१६', paisa: '०', daam: '०' })) await converter.locator('#area-' + unit).fill(value);
+  check('Sixteen aana carries to one ropani', (await values(converter, 'ropani')).join(',') === '1,0,0,0');
+  await converter.locator('#area-input-system').selectOption('bigha');
+  for (const [unit, value] of Object.entries({ bigha: '१', kattha: '२', dhur: '३.५' })) await converter.locator('#area-' + unit).fill(value);
+  check('Bigha–Kattha–Dhur accepts fractional dhur', await metric(converter, 'Square feet').innerText() === '80,827.875' && (await values(converter, 'bigha')).join(',') === '1,2,3.5');
+  await page.setViewportSize({ width: 390, height: 900 }); await capture('mobile');
+  await converter.locator('#area-bigha').fill('१.५');
+  check('Invalid fractional larger units clear stale converter results', await metric(converter, 'Square feet').innerText() === '—' && await converter.locator('[data-land-system]').count() === 0 && await converter.locator('#area-converter-error').getAttribute('role') === 'alert');
+  await page.setViewportSize({ width: 320, height: 900 }); await capture('small-mobile-error');
+  await converter.locator('#area-bigha').fill('१');
+  await converter.locator('#area-input-system').selectOption('single');
+  await converter.locator('#area-unit').selectOption('daam'); await converter.locator('#area-amount').fill('०.५');
+  check('Fractional single-unit input remains precise', await metric(converter, 'Square feet').innerText() === '10.695313');
+  await converter.locator('#area-amount').fill('१२abc');
+  check('Malformed numbers are rejected instead of partially parsed', await metric(converter, 'Square feet').innerText() === '—');
+  await converter.locator('#area-unit').selectOption('sqm'); await converter.locator('#area-amount').fill('1e300');
+  check('Finite but unsupported extreme inputs are rejected without Infinity or NaN outputs', await metric(converter, 'Square feet').innerText() === '—' && !(await converter.innerText()).includes('NaN'));
+  await calc.locator('#parcel-method').selectOption('diagonal'); await calc.locator('#parcel-unit').selectOption('m');
+  for (const [side, value] of Object.entries({ ab: '४', bc: '३', cd: '४', da: '३', ac: '५' })) await calc.locator('#parcel-' + side).fill(value);
+  await calc.getByRole('button', { name: 'Calculate land', exact: true }).click();
+  check('Sides and diagonal accept Nepali numerals', await metric(calc, 'Area (square metres)').innerText() === '12 m²');
+  await calc.locator('#parcel-method').selectOption('corners'); await calc.locator('#parcel-system').selectOption('gps');
+  const corners = [['२७.७', '८५.३'], ['२७.७', '८५.३००३'], ['२७.७००२', '८५.३००३'], ['२७.७००२', '८५.३']];
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) await calc.locator('fieldset').nth(i).locator('input').nth(j).fill(corners[i][j]);
+  await calc.getByRole('button', { name: 'Calculate land', exact: true }).click();
+  check('GPS corners accept Nepali numerals without changing the WGS84 result', await metric(calc, 'Area (square metres)').innerText() === '655.797713 m²');
+  await context.addCookies([{ name: 'kitta_locale', value: 'ne', domain: '127.0.0.1', path: '/' }]);
+  await page.goto(base + '/land-size'); await rectangleRopani(true);
+  await converter.locator('#area-input-system').selectOption('ropani');
+  for (const [unit, value] of Object.entries({ ropani: '१', aana: '२', paisa: '३', daam: '०.५' })) await converter.locator('#area-' + unit).fill(value);
+  check('Nepali language results use local unit names and Nepali numeral code points', (await calc.locator('[data-land-system=ropani]').innerText()).includes('रोपनी') && (await values(calc, 'ropani')).join(',') === '१,०,०,०');
+  await capture('small-mobile-nepali');
+  await page.setViewportSize({ width: 390, height: 900 }); await capture('mobile-nepali');
+  check('No uncaught browser errors', errors.length === 0);
+} finally {
+  await writeFile(folder + '/checks.json', JSON.stringify({ checks, errors }, null, 2));
+  await browser.close();
+}
+console.log(JSON.stringify({ passed: checks.length, errors }, null, 2));

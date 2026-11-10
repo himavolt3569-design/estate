@@ -1,0 +1,113 @@
+// Read-only localhost browser QA. No sign-in or Firebase data writes.
+import assert from 'node:assert/strict';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+const require = createRequire(new URL('../../.feature-tests/package.json', import.meta.url));
+const { chromium } = require('playwright');
+const folder = '.impeccable/review/land-measurement';
+await mkdir(folder, { recursive: true });
+const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+const checks = [], errors = [];
+const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce', acceptDownloads: true });
+const page = await context.newPage();
+page.on('pageerror', error => errors.push(error.message));
+page.setDefaultTimeout(30000);
+const base = process.env.LAND_CALCULATOR_BASE_URL || 'http://127.0.0.1:3028';
+const check = (label, condition) => { assert.ok(condition, label); checks.push(label); };
+const result = () => page.getByRole('heading', { name: 'Calculated boundary', exact: true });
+const calculate = () => page.getByRole('button', { name: 'Calculate land', exact: true }).click();
+const output = label => page.locator('#measure-land dl > div').filter({ has: page.getByText(label, { exact: true }) }).locator('dd');
+async function capture(name) {
+  await page.evaluate(() => scrollTo(0, 0));
+  await page.evaluate(() => document.fonts.ready);
+  await page.addStyleTag({ content: 'nextjs-portal {display:none!important}' });
+  check(`${name}: no viewport overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await page.screenshot({ path: `${folder}/${name}.png`, fullPage: true, caret: 'initial' });
+}
+async function fillCorners(values) {
+  const rows = page.locator('#measure-land fieldset');
+  while (await rows.count() < values.length) await page.getByRole('button', { name: 'Add corner', exact: true }).click();
+  while (await rows.count() > values.length) await rows.last().getByRole('button').click();
+  for (let i = 0; i < values.length; i++) {
+    await rows.nth(i).locator('input').nth(0).fill(String(values[i][0]));
+    await rows.nth(i).locator('input').nth(1).fill(String(values[i][1]));
+  }
+}
+try {
+  await page.goto(base + '/land-size');
+  await page.getByRole('heading', { name: 'Land measurement & size', exact: true }).waitFor();
+  await capture('desktop-empty');
+  await calculate();
+  await page.locator('#measure-land [role=alert]').waitFor();
+  check('Blank measurements produce an actionable focused error', await page.locator('#measure-land [role=alert]').evaluate(el => el === document.activeElement));
+  await page.getByRole('button', { name: 'Load example', exact: true }).click();
+  check('Examples are explicitly loaded and do not masquerade as calculated user data', await result().count() === 0);
+  await calculate();
+  check('30 × 20 m rectangle has area 600 m²', await output('Area (square metres)').innerText() === '600 m²');
+  await page.getByRole('button', { name: 'Calculate land', exact: true }).hover();
+  await page.waitForTimeout(250);
+  check('Calculate hover has accessible white-on-dark-crimson contrast', await page.getByRole('button', { name: 'Calculate land', exact: true }).evaluate(el => getComputedStyle(el).backgroundColor) === 'rgb(182, 17, 58)');
+  check('Rectangle perimeter is 100 m', await output('Perimeter').innerText() === '100 m');
+  check('Four corners, both diagonals and a scaled boundary are visible', await page.locator('#measure-land tbody tr').count() === 4 && await output('Diagonal AC').count() === 1 && await output('Diagonal BD').count() === 1 && await page.getByRole('img', { name: 'Scaled boundary preview' }).count() === 1);
+  check('Dimensions do not invent a geographic location', await page.getByText('Geographic location needs GPS coordinates.', { exact: false }).count() === 1 && await page.getByRole('link', { name: /Open corner A/ }).count() === 0);
+  await capture('desktop');
+  await page.setViewportSize({ width: 390, height: 900 });
+  await capture('mobile');
+  await page.locator('#parcel-diagonal').fill('35');
+  check('Editing immediately removes stale results', await result().count() === 0);
+  await calculate();
+  check('An inconsistent rectangle diagonal is rejected', (await page.locator('#measure-land [role=alert]').innerText()).includes('does not match'));
+  await capture('mobile-error');
+  await page.locator('#parcel-unit').selectOption('ft');
+  await page.locator('#parcel-length').fill('40'); await page.locator('#parcel-width').fill('30'); await page.locator('#parcel-diagonal').fill('50');
+  await calculate();
+  check('Feet convert accurately to 111.483648 m²', await output('Area (square metres)').innerText() === '111.483648 m²');
+  const localDownloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download measurements', exact: true }).click();
+  const localDownload = await localDownloadPromise;
+  const localData = JSON.parse(await readFile(await localDownload.path(), 'utf8'));
+  check('Measurement download preserves raw metre coordinates and numeric precision', Math.abs(localData.areaSqm - 111.483648) < 1e-9 && localData.lengthUnit === 'm' && localData.corners.length === 4);
+  await page.locator('#parcel-method').selectOption('diagonal'); await page.locator('#parcel-unit').selectOption('m');
+  for (const [id, value] of Object.entries({ ab: 4, bc: Math.sqrt(10), cd: Math.sqrt(26), da: 4, ac: Math.sqrt(34) })) await page.locator(`#parcel-${id}`).fill(String(value));
+  await calculate();
+  check('Irregular four-side/diagonal calculation returns 16 m²', await output('Area (square metres)').innerText() === '16 m²');
+  await page.locator('#parcel-ac').fill('100'); await calculate();
+  check('Impossible triangle measurements are rejected', (await page.locator('#measure-land [role=alert]').innerText()).includes('two valid triangles'));
+  await page.locator('#parcel-method').selectOption('corners');
+  await fillCorners([[0, 0], [4, 0], [4, 1], [1, 1], [1, 4], [0, 4]]); await calculate();
+  check('All-corners mode handles six-corner concave land', await output('Area (square metres)').innerText() === '7 m²' && await page.locator('#measure-land tbody tr').count() === 6);
+  await fillCorners([[0, 0], [4, 4], [4, 0], [0, 4]]); await calculate();
+  check('Crossed local boundaries are rejected', (await page.locator('#measure-land [role=alert]').innerText()).includes('cross'));
+  await fillCorners([[0, 0], [4, 0], [0, 3]]); await calculate();
+  check('Triangle corners work and cannot be removed below three', await output('Area (square metres)').innerText() === '6 m²' && await page.locator('#measure-land fieldset button:disabled').count() === 3);
+  await page.locator('#parcel-system').selectOption('gps');
+  check('Changing coordinate systems clears inputs and stale results', await page.locator('#measure-land fieldset input').first().inputValue() === '' && await result().count() === 0);
+  await page.getByRole('button', { name: 'Load example', exact: true }).click(); await calculate();
+  check('GPS area matches independent reference in the UI', await output('Area (square metres)').innerText() === '655.797713 m²');
+  check('Map location points to the entered corner A', (await page.getByRole('link', { name: 'Open corner A on map', exact: true }).getAttribute('href')).includes('query=27.7,85.3'));
+  await capture('mobile-gps');
+  await page.setViewportSize({ width: 1440, height: 1000 }); await capture('desktop-gps');
+  const geoDownloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download measurements', exact: true }).click();
+  const geoDownload = await geoDownloadPromise;
+  const geoData = JSON.parse(await readFile(await geoDownload.path(), 'utf8'));
+  check('GPS JSON preserves ordered lat/lon vertices, explicit WGS84 geodesic model and full area precision', geoData.reference === 'WGS84' && geoData.edgeModel === 'Shortest WGS84 ellipsoidal geodesics' && geoData.corners.length === 4 && geoData.corners[0].lat === 27.7 && geoData.corners[0].lon === 85.3 && !geoData.geometry && Math.abs(geoData.areaSqm - 655.7977133691311) < 1e-5);
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.locator('#measure-land fieldset input').first().fill('90'); await calculate();
+  check('GPS range errors are actionable', (await page.locator('#measure-land [role=alert]').innerText()).includes('between −85° and 85°'));
+  await capture('small-mobile-error');
+  await context.addCookies([{ name: 'kitta_locale', value: 'ne', domain: '127.0.0.1', path: '/' }]);
+  await page.goto(base + '/land-size');
+  await page.getByRole('heading', { name: 'जग्गाको मापन र क्षेत्रफल', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'उदाहरण राख्नुहोस्', exact: true }).click();
+  await page.getByRole('button', { name: 'जग्गाको गणना गर्नुहोस्', exact: true }).click();
+  check('Nepali labels and results render correctly', (await page.locator('#measure-land dl').first().innerText()).includes('६००'));
+  await capture('small-mobile-nepali');
+  await page.setViewportSize({ width: 390, height: 900 }); await capture('mobile-nepali');
+  check('Existing area converter remains usable', await page.locator('#area-amount').count() === 1);
+  check('No uncaught browser errors', errors.length === 0);
+} finally {
+  await writeFile(`${folder}/checks.json`, JSON.stringify({ checks, errors }, null, 2));
+  await browser.close();
+}
+console.log(JSON.stringify({ passed: checks.length, errors }, null, 2));
