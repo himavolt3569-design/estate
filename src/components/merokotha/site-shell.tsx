@@ -46,6 +46,26 @@ export function SiteShell({ children, locale: initialLocale }: { children: React
   useEffect(() => { document.documentElement.lang = locale; }, [locale]);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+    const isLegacyWorker = (reg: ServiceWorkerRegistration) =>
+      [reg.active?.scriptURL, reg.waiting?.scriptURL, reg.installing?.scriptURL].some((scriptUrl) => {
+        if (!scriptUrl) return false;
+        return new URL(scriptUrl, window.location.origin).pathname === '/sw.js';
+      });
+
+    void (async () => {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      const legacy = registrations.filter(isLegacyWorker);
+      await Promise.all(legacy.map((reg) => reg.unregister()));
+
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.filter((key) => key.startsWith('kitta-')).map((key) => caches.delete(key)));
+      }
+    })().catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (!user || !configured) return;
     let stopped = false;
     let unsubscribe = () => {};
