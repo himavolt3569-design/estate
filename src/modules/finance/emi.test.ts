@@ -127,6 +127,6 @@ describe('affordability helpers', () => {
     expect(formatTerm(240)).toBe('20 years');
     expect(formatTerm(1)).toBe('1 month');
     expect(formatTerm(15)).toBe('1 year 3 months');
-    expect(formatTerm(0)).toBe('—');
+    expect(formatTerm(0)).toBe('-');
   });
 });

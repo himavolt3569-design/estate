@@ -4,7 +4,7 @@
  * The hosted database was built by pasting SQL into the Supabase editor, so it
  * has every object migrations 0001–0019 create, and no record that they ran.
  * Point `prisma migrate deploy` at it and the first thing it does is try to
- * create the extensions and enums again, which fails — correctly, but
+ * create the extensions and enums again, which fails correctly, but
  * unhelpfully.
  *
  * Baselining is the documented answer: mark the migrations that are already
@@ -16,7 +16,7 @@
  *
  * It is safe to run twice: a migration Prisma already has a record of is
  * reported and skipped rather than duplicated. It changes no schema and touches
- * no data — the only thing it writes is rows in _prisma_migrations.
+ * no data; the only thing it writes is rows in _prisma_migrations.
  *
  * Getting `--through` wrong in the optimistic direction is the one real risk:
  * naming a migration that has NOT been applied marks it as done, and its SQL
@@ -34,7 +34,7 @@ const TARGET = path.join('prisma', 'migrations');
  * The Prisma CLI is run as `node node_modules/prisma/build/index.js`, not as
  * `npx prisma`. Since the fix for CVE-2024-27980, Node refuses to spawn a .cmd
  * or .bat file without `shell: true`, so on Windows `npx.cmd` fails before it
- * starts — and it fails with an `error` on the result rather than output on
+ * starts, and it fails with an `error` on the result rather than output on
  * stderr, which is how this script first reported "FAILED" with nothing under
  * it. Calling the entry point with the current interpreter sidesteps both the
  * shell and its quoting rules.
@@ -120,4 +120,4 @@ for (const name of upTo) {
 
 console.log('');
 console.log(`Done: ${recorded} recorded, ${already} already known.`);
-console.log('Next: npm run db:status:remote — anything after this point is still pending.');
+console.log('Next: npm run db:status:remote - anything after this point is still pending.');

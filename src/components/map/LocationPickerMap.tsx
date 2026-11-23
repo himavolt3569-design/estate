@@ -84,7 +84,7 @@ export default function LocationPickerMap({
       fadeAnimation: true,
     });
 
-    // OpenStreetMap standard tiles — reliable, high details, free
+    // OpenStreetMap standard tiles: reliable, high details, free
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',

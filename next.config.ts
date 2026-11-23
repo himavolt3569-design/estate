@@ -31,6 +31,8 @@ const securityHeaders = [
     ].join(', '),
   },
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+  { key: 'Cross-Origin-Resource-Policy', value: 'same-site' },
+  { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
 ];
 
 const nextConfig: NextConfig = {
@@ -44,8 +46,8 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion'],
 
     /*
-     * Default is 1 MB, and the hero image upload used to sail past it — the
-     * admin saw a raw Next.js "Body exceeded 1 MB limit" error.
+     * Default is 1 MB, and the hero image upload used to sail past it, causing
+     * a raw Next.js "Body exceeded 1 MB limit" error during uploads.
      *
      * That upload now resizes in the browser first and lands well under a
      * megabyte, so this is headroom rather than the fix: an unusually detailed

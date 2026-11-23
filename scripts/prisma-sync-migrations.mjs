@@ -13,7 +13,7 @@
  *
  * The copy is byte for byte. Prisma stores a checksum of migration.sql in
  * _prisma_migrations and refuses to run if a previously applied migration's
- * contents have changed, which is a feature worth keeping intact — reformatting
+ * contents have changed, which is a feature worth keeping intact; reformatting
  * the copy would set that alarm off on every developer's machine.
  *
  * Ordering is lexicographic on the folder name, which is why the numeric prefix

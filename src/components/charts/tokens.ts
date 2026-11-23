@@ -8,13 +8,13 @@
  * contrast against the white card) and the failing steps were replaced.
  *
  *   marigold-400 and ink-300 were the first choices for "being checked" and
- *   "not finished". Both sit too light against white — under 2:1 — and the
+ *   "not finished". Both sit too light against white (under 2:1) and the
  *   marigold/emerald pair was inseparable under protanopia. Stepping to
  *   marigold-600 and reordering the stack so emerald and marigold never touch
  *   fixes both.
  *
  * The one deliberate exception is `draft`: ink-500 is a near-neutral grey, and
- * grey is the point — "nothing has happened to this one yet". It never carries
+ * grey is the point: "nothing has happened to this one yet". It never carries
  * meaning alone; every segment that uses it is labelled with its name and count.
  */
 
@@ -30,7 +30,7 @@ export const CHART = {
   live: '#148e5a', // emerald-600
   closed: '#1d4ed8', // royal-700
   checking: '#d76d06', // marigold-600
-  draft: '#64748b', // ink-500 — the deliberate neutral
+  draft: '#64748b', // ink-500 (deliberate neutral)
 
   /** Chrome. Recessive by design: the data is the only loud thing. */
   grid: '#e2e8f0', // ink-200
@@ -68,7 +68,7 @@ export function niceScale(max: number, ticks = 3): { max: number; values: number
 /* Formatting                                                                  */
 /* -------------------------------------------------------------------------- */
 
-/** 1,284 — grouped the way the rest of the product groups numbers. */
+/** 1,284: grouped the way the rest of the product groups numbers. */
 export function tick(value: number): string {
   return value.toLocaleString('en-IN');
 }
@@ -84,7 +84,7 @@ export function dayLabel(key: string): string {
   }).format(date);
 }
 
-/** "Mon 2 Aug" — the tooltip has room for the weekday, the axis does not. */
+/** "Mon 2 Aug": the tooltip has room for the weekday, the axis does not. */
 export function dayLabelLong(key: string): string {
   const [year, month, day] = key.split('-').map(Number);
   const date = new Date(Date.UTC(year!, (month ?? 1) - 1, day ?? 1));

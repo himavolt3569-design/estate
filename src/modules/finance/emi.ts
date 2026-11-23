@@ -2,7 +2,7 @@
  * Home-loan arithmetic.
  *
  * Kept free of React and of formatting so the numbers can be tested directly and
- * reused by anything that needs them — the calculator on the home page, a figure
+ * reused by anything that needs them - the calculator on the home page, a figure
  * on a listing, a future affordability filter.
  *
  * Everything here works in RUPEES, not paisa. The calculator is a planning tool
@@ -67,8 +67,8 @@ export type YearSummary = {
 /**
  * The standard amortised instalment.
  *
- * A zero rate is not a rounding edge here — it is what an interest-free family
- * loan looks like, and people do model those — so it divides rather than
+ * A zero rate is not a rounding edge here - it is what an interest-free family
+ * loan looks like, and people do model those - so it divides rather than
  * dividing by zero inside the annuity formula.
  */
 export function monthlyInstalment(
@@ -116,7 +116,7 @@ export function buildSchedule(input: EmiInput): EmiSchedule {
     const interest = balance * r;
 
     // The contractual payment cannot exceed what is left plus this month's
-    // interest — that is the final, smaller instalment.
+    // interest; that is the final, smaller instalment.
     const instalment = Math.min(emi, balance + interest);
     let principalPaid = instalment - interest;
 
@@ -219,7 +219,7 @@ export function affordableInstalment(monthlyIncome: number): number {
 
 /** Term in months as "18 years 4 months", skipping whichever part is zero. */
 export function formatTerm(months: number): string {
-  if (months <= 0) return '—';
+  if (months <= 0) return '-';
   const years = Math.floor(months / 12);
   const rest = months % 12;
   const parts: string[] = [];

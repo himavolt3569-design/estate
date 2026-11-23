@@ -178,9 +178,9 @@ export function AreaConverter({ t }: { t: Dictionary["converter"] }) {
             {[
               [
                 t.squareFeet,
-                sqm === null ? "—" : number(sqm / NEPALI_AREA_IN_SQM.sqft),
+                sqm === null ? "-" : number(sqm / NEPALI_AREA_IN_SQM.sqft),
               ],
-              [t.squareMetres, sqm === null ? "—" : number(sqm)],
+              [t.squareMetres, sqm === null ? "-" : number(sqm)],
             ].map(([label, value]) => (
               <div
                 key={label}

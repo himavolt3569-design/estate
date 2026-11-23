@@ -57,7 +57,7 @@ type Copy = {
   findWithin: string;
 };
 
-/** "Rs 85,00,000" — always the exact figure, because this is a money tool. */
+/** "Rs 85,00,000": always the exact figure, because this is a money tool. */
 function rs(value: number): string {
   return `Rs ${formatIndianDigits(Math.round(value))}`;
 }
@@ -70,7 +70,7 @@ type Verdict = { tone: 'good' | 'ok' | 'caution'; headline: string; body: string
  * Four numbers that each mean something on their own do not add up to a
  * decision, and a first-time buyer has no reference for whether 58% interest
  * over 20 years is normal. This reads the same inputs and says the one thing a
- * careful friend would say — never "yes, buy it", because that is not ours to
+ * careful friend would say: never "yes, buy it", because that is not ours to
  * say, but which part of the plan is the weak one.
  *
  * Ordered by severity: the worst true thing is the thing worth hearing.
@@ -582,7 +582,7 @@ function MoneyField({
              * The field holds the raw string while it is being edited and is
              * only clamped on blur. Clamping on every keystroke meant deleting
              * a digit from "1,00,00,000" snapped it straight back to the
-             * minimum, so the box could not be cleared and retyped at all —
+             * minimum, so the box could not be cleared and retyped at all:
              * backspace simply did nothing.
              */
             setDraft(digits === '' ? '' : formatIndianDigits(Number(digits)));

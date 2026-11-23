@@ -2,7 +2,7 @@
 
 This is a copy of `estate/` using its Poppins typography, colors, buttons, inputs, surfaces, hero image, floating search panel, listing cards, and dashboard navigation. The visible pages are adapted for MeroKotha rentals while the active Next.js routes use the **same Firebase Auth, Firestore, and Storage project as the Android app**. The earlier Supabase routes are preserved in `src/legacy-app/` for reference.
 
-## Current work — October 31, 2026
+## Current work - October 31, 2026
 
 The website now includes the requested ad campaigns, revised navigation and collapsed matches, responsive map browsing, public property engagement, photo zoom, content-based recommendations, and Rent/Sell offers (flats remain rental-only). See [the implementation and release handoff](docs/advertising-and-discovery-handoff.md) for the exact schema, verification and remaining deployment steps. No Flutter source content or production Firebase data/rules was changed.
 

@@ -97,7 +97,7 @@ console.log('');
 // Migration 0019_remove_admin_mfa dropped the aal2 requirement from is_admin(),
 // so the control centre opens on the first sign-in. This used to say the
 // opposite, which sent operators looking for a lock that is no longer there.
-console.log('Sign in at /login and the control centre is open — two-factor is');
+console.log('Sign in at /login and the control centre is open - two-factor is');
 console.log('no longer required for admin functions (migration 0019).');
 console.log('Enrol it anyway under Settings -> Security: this account can read');
 console.log('and change every listing and every profile on the platform.');

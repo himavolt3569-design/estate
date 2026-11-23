@@ -9,7 +9,7 @@ _prisma_migrations (table)                         ← what each database has ha
 ```
 
 Prisma is here for one reason: to know which migrations a database has already
-had, and to apply the rest. It does **not** own the schema — see the comment at
+had, and to apply the rest. It does **not** own the schema: see the comment at
 the top of `schema.prisma` for why letting it own the schema would delete the
 RLS policies and triggers.
 
@@ -30,7 +30,7 @@ npm run db:baseline:remote -- --through 0019_remove_admin_mfa
 
 That marks 0001 through 0019 as applied and leaves everything after them
 pending. It writes rows in `_prisma_migrations` and changes nothing else. Read
-the list it prints — naming a migration that has *not* actually been applied
+the list it prints; naming a migration that has *not* actually been applied
 means its SQL will never run.
 
 ## Day to day
@@ -46,7 +46,7 @@ against local Supabase.
 
 ## Adding a migration
 
-1. Write `supabase/migrations/00NN_short_name.sql`. Zero-pad the number —
+1. Write `supabase/migrations/00NN_short_name.sql`. Zero-pad the number:
    ordering is lexicographic, so `0009` sorts before `0010` and `9` would not.
 2. `npm run db:status:remote` to see it listed as pending.
 3. `npm run db:migrate:remote` to apply it.
@@ -57,7 +57,7 @@ statement that cannot run in a transaction (`CREATE INDEX CONCURRENTLY` and
 friends); if you add one, it needs its own migration and a note here.
 
 Never edit a migration that has already been applied. Prisma stores a checksum
-and will refuse to continue — correctly, because the databases that already ran
+and will refuse to continue, correctly, because the databases that already ran
 the old text will not agree with the new. Write another migration instead.
 
 ## The other direction

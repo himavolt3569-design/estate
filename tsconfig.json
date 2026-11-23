@@ -43,15 +43,15 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     ".next-ad-tests/types/**/*.ts",
-    ".next-ad-tests/dev/types/**/*.ts"
+    ".next-ad-tests/dev/types/**/*.ts",
+    ".next-property-detail-tests/types/**/*.ts",
+    ".next-property-detail-tests/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     ".next",
     "**/.next-saved-search-*/**",
     "**/.next-duplicate-tests/**",
-    "out",
-    "src/legacy-app",
-    "src/legacy-proxy.ts"
+    "out"
   ]
 }

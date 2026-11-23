@@ -5,7 +5,7 @@ import { defineConfig } from 'prisma/config';
 /**
  * Prisma's configuration.
  *
- * The database URL is not read from here — the npm scripts run the CLI through
+ * The database URL is not read from here; the npm scripts run the CLI through
  * `dotenv -e <file>`, the same way `dev:remote` runs Next, so one env file
  * decides which database every command in a session talks to. That keeps
  * "which database am I about to migrate" answerable by reading the command
@@ -26,7 +26,7 @@ export default defineConfig({
     // Prisma 7 no longer accepts `url` in schema.prisma, so this is the only
     // place it can live. Empty is allowed on purpose: `db:sync` and the other
     // offline commands work without a database, and only the ones that connect
-    // should complain — see the message below.
+    // should complain; see the message below.
     url: process.env.DATABASE_URL ?? '',
   },
 });

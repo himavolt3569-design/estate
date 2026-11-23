@@ -1,4 +1,4 @@
-# Optional land validation release — November 1, 2026
+# Optional land validation release - November 1, 2026
 
 Project: `mero-kotha-1f4f3`.
 

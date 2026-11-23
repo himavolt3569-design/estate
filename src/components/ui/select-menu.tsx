@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
  * single most visible break in the design.
  *
  * This renders the list itself. It keeps the parts that make the native control
- * good — typeahead, arrow keys, Escape, screen-reader semantics — because Radix
+ * good (typeahead, arrow keys, Escape, screen-reader semantics) because Radix
  * implements the listbox pattern properly; what it replaces is only the paint.
  *
  * `name` submits a hidden input, so this still works inside a plain GET form

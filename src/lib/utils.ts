@@ -54,7 +54,7 @@ export function decodeCursor(
  * The site's own origin.
  *
  * Every source here is operator-supplied and any of them can arrive without a
- * protocol — `kitta-estate.vercel.app` is a perfectly natural thing to paste
+ * protocol: `kitta-estate.vercel.app` is a perfectly natural thing to paste
  * into an env var, and it is what was actually configured. `new URL()` rejects
  * it, and because metadataBase is evaluated at module scope in the root layout,
  * that single throw took down every route in the app with a 500. So the origin

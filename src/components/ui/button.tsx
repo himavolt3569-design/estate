@@ -21,8 +21,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         /*
-         * Crimson, not navy. Navy is the colour of the structure — the header,
-         * the links, the panels — so when it was also the colour of every
+         * Crimson, not navy. Navy is the colour of the structure (the header,
+         * the links, the panels), so when it was also the colour of every
          * button, nothing on a page looked more clickable than anything else.
          * Moving the primary action onto crimson gives the eye one place to
          * land per screen, and is where most of the warmth in the product now

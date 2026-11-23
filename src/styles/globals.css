@@ -27,7 +27,7 @@
 }
 
 /* =============================================================================
-   Kitta design tokens — Premium Luxury Edition
+   Kitta design tokens - Premium Luxury Edition
 
    The system is built to convey trust, luxury, and premium user experience.
    We use deep rich colors (Navy, Emerald) combined with warm Champagne accents.
@@ -71,7 +71,7 @@
   --color-emerald-900: #104933;
 
   /* --- Crimson: the action colour. -----------------------------------------
-     Taken from the crimson of the flag and of tika — the most recognisably
+     Taken from the crimson of the flag and of tika: the most recognisably
      Nepali red there is, pulled back from pure #DC143C so it sits calmly next
      to navy instead of vibrating against it. Every primary call to action on
      the site is this colour, which is what stops the product reading as two
@@ -89,7 +89,7 @@
 
   /* --- Marigold: the highlight. --------------------------------------------
      Sayapatri, the flower strung over every doorway at Tihar. Carries warmth
-     into surfaces and counts, and never carries meaning on its own — if a
+     into surfaces and counts, and never carries meaning on its own; if a
      colour has to say "this is confirmed", that is emerald's job. */
   --color-marigold-50: #fffaeb;
   --color-marigold-100: #fef0c7;
@@ -224,15 +224,15 @@
   /* The last line of defence against a sideways scrollbar on a phone.
      `clip` rather than `hidden`: `hidden` turns the element into a scroll
      container, which silently breaks every `position: sticky` header under it.
-     This is a net, not a fix — anything that actually overflows is still a bug
+     This is a net, not a fix: anything that actually overflows is still a bug
      and is fixed at the element. */
   html,
   body {
     overflow-x: clip;
   }
 
-  /* Long unbroken strings — a reference code, a pasted URL in an enquiry, an
-     email address in a table cell — are the single most common source of a
+  /* Long unbroken strings: a reference code, a pasted URL in an enquiry, an
+     email address in a table cell; they are the single most common source of a
      blown-out mobile layout. Wrapping them is always better than a scrollbar. */
   body {
     overflow-wrap: break-word;
@@ -348,7 +348,7 @@ html body[data-scroll-locked] { overflow: clip !important; margin-right: 0 !impo
   }
 
   /* A marker only. The hidden state is set by GSAP in useLayoutEffect, which
-     runs before paint, so there is no flash — and a blocked or failed bundle
+     runs before paint, so there is no flash, and a blocked or failed bundle
      leaves the content visible rather than invisible. Nothing here hides it. */
   .reveal { will-change: opacity, transform; }
 
@@ -357,8 +357,8 @@ html body[data-scroll-locked] { overflow: clip !important; margin-right: 0 !impo
 
      One motif, crimson running into marigold, and the only place two accent
      colours are allowed to touch. It marks the top edge of a surface that is
-     asking for a decision — the calculator, a step in the listing wizard, the
-     admin's own panels — so the warmth in the palette always means the same
+     asking for a decision (the calculator, a step in the listing wizard, the
+     admin's own panels), so the warmth in the palette always means the same
      thing rather than being sprinkled around for texture.
      --------------------------------------------------------------------------- */
   .thread {

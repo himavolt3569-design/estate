@@ -16,7 +16,7 @@ import {
 export type TrendPoint = { date: string; value: number };
 
 /**
- * One measure over time — views per day, enquiries per day, new accounts per
+ * One measure over time: views per day, enquiries per day, new accounts per
  * week.
  *
  * Deliberately one series per chart. Views run in the hundreds and enquiries in
@@ -25,7 +25,7 @@ export type TrendPoint = { date: string; value: number };
  * scales. Two charts side by side say the same thing and cannot lie.
  *
  * The SVG is drawn at the container's real pixel width rather than scaled from
- * a fixed viewBox, because a scaled viewBox shrinks the axis text with it — at
+ * a fixed viewBox, because a scaled viewBox shrinks the axis text with it: at
  * 340px on a phone the labels end up around 6px and unreadable.
  */
 export function TrendChart({
@@ -51,7 +51,7 @@ export function TrendChart({
 
   // Until the container has been measured the chart is drawn into a viewBox at
   // a sensible default and scaled to fit, so a chart is never a narrow stub in
-  // a wide card — including for anyone whose JavaScript never arrives.
+  // a wide card, including for anyone whose JavaScript never arrives.
   const measured = box > 0;
   const width = measured ? box : 640;
   const pad = { top: 16, right: 14, bottom: 26, left: 44 };
