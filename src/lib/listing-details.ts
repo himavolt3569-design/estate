@@ -255,8 +255,8 @@ export function generateListingDetails(
         : `Available from: ${draft.availableFrom}.`,
     );
   const titleLocation = address.split(",").slice(0, 3).join(",").trim();
-  const title = sale ? (ne ? `${label} बिक्रीमा${titleLocation ? ` — ${titleLocation}` : ''}` : `${label} for sale${titleLocation ? ` in ${titleLocation}` : ''}`) : ne
-    ? `${label} भाडामा${titleLocation ? ` — ${titleLocation}` : ""}`
+  const title = sale ? (ne ? `${label} बिक्रीमा${titleLocation ? ` - ${titleLocation}` : ''}` : `${label} for sale${titleLocation ? ` in ${titleLocation}` : ''}`) : ne
+    ? `${label} भाडामा${titleLocation ? ` - ${titleLocation}` : ""}`
     : `${label} for rent${titleLocation ? ` in ${titleLocation}` : landmark ? ` near ${landmark}` : ""}`;
   return {
     title,

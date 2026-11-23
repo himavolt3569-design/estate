@@ -61,7 +61,7 @@ export function ListingAnalytics({
     [t("Accepted inquiries", "स्वीकृत सोधपुछ"), result.accepted],
     [
       t("Inquiry / visit ratio", "सोधपुछ / भ्रमण अनुपात"),
-      result.inquiryRate === null ? "—" : `${result.inquiryRate.toFixed(1)}%`,
+      result.inquiryRate === null ? "-" : `${result.inquiryRate.toFixed(1)}%`,
     ],
     [t("Lifetime listing views", "जम्मा विज्ञापन हेराइ"), result.lifetimeViews],
   ];
@@ -183,7 +183,7 @@ export function ListingAnalytics({
               (visits.loading || visits.error)
                 ? visits.loading
                   ? "…"
-                  : "—"
+                  : "-"
                 : value}
             </p>
           </Surface>

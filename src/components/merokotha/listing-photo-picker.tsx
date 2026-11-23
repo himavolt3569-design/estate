@@ -71,7 +71,7 @@ export function ListingPhotoPicker({
 
   const formattedRent = Number(draft.rent) > 0
     ? `Rs. ${new Intl.NumberFormat('en-NP').format(Number(draft.rent))}`
-    : 'Rs. —';
+    : 'Rs. -';
 
   return (
     <aside aria-labelledby="listing-photo-heading" className="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-soft xl:sticky xl:top-24">
