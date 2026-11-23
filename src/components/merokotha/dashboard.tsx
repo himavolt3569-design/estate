@@ -64,6 +64,7 @@ import { SavedSearchPanel } from "./saved-search-panel";
 import { useAuth } from "./auth-provider";
 import { useSiteLanguage, useSiteText } from "./site-language";
 import { useSignedInText } from "./signed-in-copy";
+import { SOLE_SUPERADMIN_EMAIL } from "@/lib/superadmin";
 import type { Locale } from "@/i18n/config";
 
 const dashboardItems = [
@@ -133,16 +134,29 @@ function DashboardTabs({
     <nav className="dashboard-nav" aria-label="Dashboard">
       {dashboardItems
         .filter((item) => !["admin", "ads"].includes(item.key) || role === "superAdmin")
-        .map((item) => (
-          <Link
-            key={item.key}
-            href={`/dashboard?tab=${item.key}`}
-            aria-current={tab === item.key ? "page" : undefined}
-          >
-            <item.icon aria-hidden className="size-4.5 shrink-0 text-ink-400" />
-            {dashboardCopy[locale][item.key]}
-          </Link>
-        ))}
+        .map((item) => {
+          const isSuperTab = item.key === "admin" || item.key === "ads";
+          return (
+            <Link
+              key={item.key}
+              href={`/dashboard?tab=${item.key}`}
+              aria-current={tab === item.key ? "page" : undefined}
+              className={
+                isSuperTab && tab !== item.key
+                  ? "!font-semibold !text-royal-800 bg-royal-50/70"
+                  : undefined
+              }
+            >
+              <item.icon
+                aria-hidden
+                className={`size-4.5 shrink-0 ${
+                  isSuperTab && tab !== item.key ? "text-royal-700" : "text-ink-400"
+                }`}
+              />
+              {dashboardCopy[locale][item.key]}
+            </Link>
+          );
+        })}
     </nav>
   );
 }
@@ -152,8 +166,9 @@ export function Dashboard() {
   const { user, profile, loading } = useAuth();
   const { locale } = useSiteLanguage();
   const params = useSearchParams();
-  const tab = params.get("tab") || "overview";
-  const uid = user && profile ? user.uid : "";
+  const isSuperAdmin = profile?.role === "superAdmin";
+  const tab = params.get("tab") || (isSuperAdmin ? "admin" : "overview");
+  const uid = user && profile && !isSuperAdmin ? user.uid : "";
   const own = useDocs<Listing>(uid ? "listings" : "", "ownerId", uid);
   const favorites = useDocs<RecordDoc>(uid ? `users/${uid}/favourites` : "");
   const outgoing = useDocs<Inquiry>(uid ? "inquiries" : "", "customerId", uid);
@@ -197,6 +212,53 @@ export function Dashboard() {
         {tr("Your account is suspended. Please contact the administrator.")}
       </Surface>
     );
+  if (isSuperAdmin) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-ink-200 pb-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-royal-700">
+              {locale === "ne" ? "एकमात्र सुपर एडमिन" : "Sole Superadmin"} ·{" "}
+              {SOLE_SUPERADMIN_EMAIL}
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-ink-900 sm:text-3xl">
+              {dashboardCopy[locale].hello}, {profile.name}
+            </h1>
+          </div>
+          <nav
+            aria-label={locale === "ne" ? "प्रशासन नेभिगेसन" : "Superadmin navigation"}
+            className="flex flex-wrap gap-2"
+          >
+            <Link
+              href="/dashboard?tab=admin"
+              aria-current={tab !== "ads" ? "page" : undefined}
+              className={`inline-flex min-h-10 items-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors ${
+                tab !== "ads"
+                  ? "border-royal-700 bg-royal-700 text-white"
+                  : "border-ink-200 bg-white text-ink-700 hover:border-ink-300 hover:bg-ink-50"
+              }`}
+            >
+              <ShieldCheck aria-hidden className="size-4" />
+              {locale === "ne" ? "प्लेटफर्म व्यवस्थापन" : "Platform Management"}
+            </Link>
+            <Link
+              href="/dashboard?tab=ads"
+              aria-current={tab === "ads" ? "page" : undefined}
+              className={`inline-flex min-h-10 items-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors ${
+                tab === "ads"
+                  ? "border-royal-700 bg-royal-700 text-white"
+                  : "border-ink-200 bg-white text-ink-700 hover:border-ink-300 hover:bg-ink-50"
+              }`}
+            >
+              <Megaphone aria-hidden className="size-4" />
+              {locale === "ne" ? "विज्ञापन" : "Advertising"}
+            </Link>
+          </nav>
+        </div>
+        {tab === "ads" ? <AdminAds /> : <AdminPanel />}
+      </div>
+    );
+  }
   const chats = [
     ...new Map(
       [...ownerChats.items, ...customerChats.items].map((chat) => [

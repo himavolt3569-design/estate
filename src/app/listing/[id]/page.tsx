@@ -1,39 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
   CalendarDays,
+  CheckCircle2,
   ExternalLink,
   Eye,
   Heart,
   Layers3,
   MapPin,
-  Phone,
+  Megaphone,
+  Pencil,
+  ShieldCheck,
   Sofa,
+  Trash2,
   Wallet,
   Home,
+  XCircle,
 } from "lucide-react";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { toast } from "sonner";
 import { Seal } from "@/components/brand/Seal";
 import { Button } from "@/components/ui/button";
+import { Badge, Input, Select, Surface } from "@/components/ui/primitives";
 import {
-  Badge,
-  Field,
-  Input,
-  Surface,
-  Textarea,
-} from "@/components/ui/primitives";
-import { sendInquiry, toggleFavorite } from "@/lib/firebase/actions";
+  adminDeleteListing,
+  adminSetListingStatus,
+  decideListingVerification,
+  toggleFavorite,
+} from "@/lib/firebase/actions";
 import { configured, db } from "@/lib/firebase/client";
 import type { Listing } from "@/lib/firebase/types";
 import { useAuth } from "@/components/merokotha/auth-provider";
 import { money } from "@/components/merokotha/listing-card";
 import { useSiteLanguage } from "@/components/merokotha/site-language";
-import { listingContact, whatsAppNumber } from "@/lib/contact";
 import { recordListingVisit } from "@/lib/firebase/property-features";
 import { ListingTour } from "@/components/merokotha/listing-tour";
 import { DetailAd } from '@/components/merokotha/detail-ad';
@@ -44,6 +47,7 @@ import { ListingRecommendations } from '@/components/merokotha/listing-recommend
 import { landFacts } from '@/lib/land';
 import { isForSale, listingPrice } from '@/lib/listing-commerce';
 import { ListingGallery } from '@/components/merokotha/listing-gallery';
+import { ListingContactPanel } from '@/components/merokotha/listing-contact-panel';
 import { ListingReportForm } from "@/components/merokotha/listing-report";
 
 export default function ListingPage() {
@@ -53,9 +57,9 @@ export default function ListingPage() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
-  const [busy, setBusy] = useState(false);
   const listerId = listingListerId(listing);
   const { person: agent, loading: agentLoading } = usePublicLister(listerId);
+  const isSuperAdmin = profile?.role === "superAdmin";
 
   useEffect(() => {
     if (!configured || !id) {
@@ -117,7 +121,6 @@ export default function ListingPage() {
 
   const position = listing.geoPoint;
   const photos = listing.photoUrls || [];
-  const contact = listingContact(listing);
   const details = [
     {
       label: ui.propertyTypeLabel,
@@ -169,6 +172,13 @@ export default function ListingPage() {
 
   return (
     <div className="pb-12">
+      {isSuperAdmin && user && (
+        <SuperadminListingControls
+          listing={listing}
+          actorId={user.uid}
+          locale={locale}
+        />
+      )}
       <nav
         aria-label="Breadcrumb"
         className="mb-6 flex items-center gap-2 text-sm text-ink-500"
@@ -316,115 +326,243 @@ export default function ListingPage() {
             <div className="mt-5 border-t border-ink-100 pt-5"><AgentSummary agent={agent} loading={agentLoading} profileId={listerId} listingId={listing.id} fallbackName={listing.contactIsAnonymous ? ui.privateLister : listingListerName(listing, listerId) || (listing.agentId ? (locale === 'ne' ? 'एजेन्ट' : 'Agent') : (locale === 'ne' ? 'विज्ञापनदाता' : 'Property lister'))} /></div>
           </Surface>
           <DetailAd key={`agent-${listing.id}`} slot="agent" listingId={listing.id} dismissKey={listing.agentId || listing.id} />
-          {contact.call || contact.whatsapp ? (
-            <Surface className="p-6">
-              <p className="label text-crimson-700">{ui.contact}</p>
-              <div className="mt-4 space-y-3">
-                {contact.call && (
-                  <a
-                    className="flex items-center gap-2 font-semibold text-royal-800 hover:underline"
-                    href={`tel:${contact.call.replace(/[^+\d]/g, "")}`}
-                  >
-                    <Phone aria-hidden className="size-4" />
-                    {ui.call}: {contact.call}
-                  </a>
-                )}
-                {contact.whatsapp && (
-                  <a
-                    className="flex items-center gap-2 font-semibold text-royal-800 hover:underline"
-                    href={`https://wa.me/${whatsAppNumber(contact.whatsapp)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {ui.whatsapp}: {contact.whatsapp}
-                  </a>
-                )}
-              </div>
-            </Surface>
-          ) : (
-            <Surface className="p-6 text-sm text-ink-500">
-              {ui.noDirectNumber}
-            </Surface>
-          )}
-          {user?.uid !== listing.ownerId && (
-            <Surface className="p-6">
-              <p className="label text-crimson-700">{ui.contact}</p>
-              <h2 className="mt-2 text-xl font-semibold text-ink-900">
-                {ui.ask}
-              </h2>
-              {!user ? (
-                <Button asChild className="mt-5 w-full">
-                  <Link
-                    href={`/sign-in?next=${encodeURIComponent(`/listing/${listing.id}`)}`}
-                  >
-                    {ui.signInInquire}
-                  </Link>
-                </Button>
-              ) : !profile ? (
-                <Button asChild className="mt-5 w-full">
-                  <Link href="/dashboard">{ui.completeProfile}</Link>
-                </Button>
-              ) : (
-                <form
-                  className="mt-5 space-y-4"
-                  onSubmit={async (event) => {
-                    event.preventDefault();
-                    if (busy) return;
-                    setBusy(true);
-                    const form = event.currentTarget;
-                    const data = new FormData(form);
-                    try {
-                      await sendInquiry(
-                        listing,
-                        user,
-                        profile.name,
-                        String(data.get("message")),
-                        new Date(String(data.get("moveInDate"))),
-                      );
-                      toast.success("Inquiry sent");
-                      form.reset();
-                    } catch (error) {
-                      toast.error(
-                        error instanceof Error
-                          ? error.message
-                          : "Could not send inquiry",
-                      );
-                    } finally {
-                      setBusy(false);
-                    }
-                  }}
-                >
-                  <Field label={ui.message} htmlFor="message">
-                    <Textarea
-                      id="message"
-                      name="message"
-                      required
-                      maxLength={1000}
-                    />
-                  </Field>
-                  <Field label={isForSale(listing) ? (locale === 'ne' ? 'हेर्न चाहेको मिति' : 'Preferred viewing date') : ui.moveInDate} htmlFor="moveInDate">
-                    <Input
-                      id="moveInDate"
-                      name="moveInDate"
-                      type="date"
-                      required
-                    />
-                  </Field>
-                  <Button
-                    className="w-full"
-                    disabled={busy || profile.isBanned}
-                  >
-                    {ui.sendInquiry}
-                  </Button>
-                </form>
-              )}
-            </Surface>
-          )}
+          <ListingContactPanel key={listing.id} listing={listing} />
           <ListingReportForm key={listing.id} listing={listing} />
         </aside>
       </div>
       <div className="mt-10"><DetailAd slot="recommendations" listingId={listing.id} /></div>
       <ListingRecommendations listing={listing} />
     </div>
+  );
+}
+
+function SuperadminListingControls({
+  listing,
+  actorId,
+  locale,
+}: {
+  listing: Listing;
+  actorId: string;
+  locale: "en" | "ne";
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const verification = listing.verificationStatus || "unreviewed";
+  const tr = (enText: string, neText: string) =>
+    locale === "ne" ? neText : enText;
+
+  const run = async (fn: () => Promise<unknown>, successMessage: string) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await fn();
+      toast.success(successMessage);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Action failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Surface
+      aria-label={tr("Superadmin Quick Controls", "सुपर एडमिन द्रुत नियन्त्रण")}
+      className="thread-top mb-6 overflow-hidden border-royal-200 bg-royal-50/40 p-4 sm:p-5"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-royal-900">
+              <ShieldCheck aria-hidden className="size-4 text-royal-700" />
+              {tr("Superadmin Quick Controls", "सुपर एडमिन द्रुत नियन्त्रण")}
+            </span>
+            <Badge
+              tone={
+                verification === "verified"
+                  ? "verified"
+                  : verification === "rejected"
+                    ? "rejected"
+                    : "pending"
+              }
+            >
+              {verification === "verified"
+                ? tr("Verified", "प्रमाणित")
+                : verification === "rejected"
+                  ? tr("Rejected", "अस्वीकृत")
+                  : tr("Waiting for check", "जाँच बाँकी")}
+            </Badge>
+            <Badge tone={listing.status === "active" ? "royal" : "neutral"}>
+              {listing.status === "active"
+                ? tr("Active (Live)", "सक्रिय (लाइभ)")
+                : listing.status === "paused"
+                  ? tr("Paused (Hidden)", "रोकिएको")
+                  : tr("Rented", "भाडामा गएको")}
+            </Badge>
+          </div>
+          <p className="text-xs text-ink-600">
+            {tr(
+              "Posted by",
+              "राख्ने व्यक्ति",
+            )}{" "}
+            <span className="font-medium text-ink-900">
+              {listing.ownerName || "Owner"}
+            </span>
+            .{" "}
+            {tr(
+              "You can verify, edit, pause, promote, or remove this property directly.",
+              "तपाईं यो घरजग्गा सिधै प्रमाणित, सम्पादन, रोक्न, प्रचार वा हटाउन सक्नुहुन्छ।",
+            )}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {verification !== "verified" && (
+            <Button
+              type="button"
+              size="sm"
+              variant="approve"
+              disabled={busy}
+              onClick={() =>
+                void run(
+                  () => decideListingVerification(listing, true, actorId),
+                  tr("Property verified", "घरजग्गा प्रमाणित भयो"),
+                )
+              }
+            >
+              <CheckCircle2 aria-hidden className="size-4" />
+              {tr("Verify Property", "प्रमाणित गर्नुहोस्")}
+            </Button>
+          )}
+          {verification !== "rejected" && (
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              disabled={busy}
+              onClick={() => setRejectOpen((open) => !open)}
+            >
+              <XCircle aria-hidden className="size-4" />
+              {tr("Reject Property", "अस्वीकार गर्नुहोस्")}
+            </Button>
+          )}
+          <Button asChild size="sm" variant="secondary">
+            <Link href={`/listing/${listing.id}/edit`}>
+              <Pencil aria-hidden className="size-4" />
+              {tr("Edit Property", "सम्पादन गर्नुहोस्")}
+            </Link>
+          </Button>
+          <Select
+            aria-label={tr("Change property status", "घरजग्गा अवस्था बदल्नुहोस्")}
+            value={listing.status}
+            disabled={busy}
+            className="h-9 w-36 text-xs"
+            onChange={(event) => {
+              const next = event.target.value as "active" | "paused" | "rented";
+              void run(
+                () => adminSetListingStatus(listing, next, actorId),
+                tr("Property status updated", "अवस्था अद्यावधिक भयो"),
+              );
+            }}
+          >
+            <option value="active">{tr("Active (Live)", "सक्रिय (लाइभ)")}</option>
+            <option value="paused">{tr("Paused (Hidden)", "रोकिएको")}</option>
+            <option value="rented">{tr("Rented", "भाडामा गएको")}</option>
+          </Select>
+          <Button asChild size="sm" variant="royal">
+            <Link href="/dashboard?tab=ads">
+              <Megaphone aria-hidden className="size-4" />
+              {tr("Sponsor in Ads", "विज्ञापनमा राख्नुहोस्")}
+            </Link>
+          </Button>
+          {!confirmDelete ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              disabled={busy}
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 aria-hidden className="size-4" />
+              {tr("Delete", "हटाउनुहोस्")}
+            </Button>
+          ) : (
+            <div className="flex items-center gap-1.5 rounded-lg border border-clay-200 bg-white px-2 py-1">
+              <span className="text-xs font-medium text-clay-700">
+                {tr("Delete permanently?", "सधैँका लागि हटाउने?")}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                disabled={busy}
+                onClick={() =>
+                  void run(async () => {
+                    await adminDeleteListing(listing, actorId);
+                    router.push("/dashboard?tab=admin");
+                  }, tr("Property deleted", "घरजग्गा हटाइयो"))
+                }
+              >
+                {tr("Yes, Delete", "हो, हटाउनुहोस्")}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={busy}
+                onClick={() => setConfirmDelete(false)}
+              >
+                {tr("Cancel", "रद्द")}
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {rejectOpen && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-royal-200 pt-3">
+          <Input
+            aria-label={tr("Reason for rejection", "अस्वीकार गर्नुको कारण")}
+            value={rejectReason}
+            onChange={(event) => setRejectReason(event.target.value)}
+            placeholder={tr(
+              "Write a short note explaining why this property was rejected…",
+              "यो घरजग्गा किन अस्वीकार गरियो छोटकरीमा लेख्नुहोस्…",
+            )}
+            className="h-10 min-w-[220px] flex-1"
+          />
+          <Button
+            type="button"
+            size="sm"
+            variant="destructive"
+            disabled={busy || !rejectReason.trim()}
+            onClick={() =>
+              void run(async () => {
+                await decideListingVerification(
+                  listing,
+                  false,
+                  actorId,
+                  rejectReason.trim(),
+                );
+                setRejectReason("");
+                setRejectOpen(false);
+              }, tr("Property rejected", "घरजग्गा अस्वीकृत भयो"))
+            }
+          >
+            {tr("Confirm Rejection", "अस्वीकार पक्का गर्नुहोस्")}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setRejectOpen(false)}
+          >
+            {tr("Cancel", "रद्द")}
+          </Button>
+        </div>
+      )}
+    </Surface>
   );
 }

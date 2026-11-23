@@ -2,10 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Flag } from "lucide-react";
+import { ExternalLink, Flag } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Field, Select, Surface, Textarea } from "@/components/ui/primitives";
+import {
+  Badge,
+  Field,
+  Select,
+  Surface,
+  Textarea,
+} from "@/components/ui/primitives";
 import {
   moderateListingReport,
   useListingReports,
@@ -36,10 +42,18 @@ export function AdminReports() {
       aria-label={t("Report moderation", "उजुरी समीक्षा")}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="flex items-center gap-2 text-xl font-semibold">
-          <Flag aria-hidden className="size-5 text-clay-700" />
-          {t("Report moderation", "उजुरी समीक्षा")}
-        </h3>
+        <div>
+          <h3 className="flex items-center gap-2 text-xl font-semibold">
+            <Flag aria-hidden className="size-5 text-clay-700" />
+            {t("Report moderation", "उजुरी समीक्षा")}
+          </h3>
+          <p className="mt-1 text-sm text-ink-500">
+            {t(
+              "Complaints from users appear here (oldest first). Write a short note below any report and choose an action.",
+              "प्रयोगकर्ताका उजुरीहरू यहाँ (पुरानो पहिले) देखिन्छन्। छोटो टिप्पणी लेखेर निर्णय लिनुहोस्।",
+            )}
+          </p>
+        </div>
         <Select
           aria-label={t("Report status filter", "उजुरी अवस्था फिल्टर")}
           value={status}
@@ -54,12 +68,6 @@ export function AdminReports() {
           <option value="all">{t("All reports", "सबै उजुरी")}</option>
         </Select>
       </div>
-      <p className="text-sm text-ink-500">
-        {t(
-          "Open reports are oldest first. Review the evidence, record a decision, and pause misleading rentals when needed.",
-          "खुला उजुरी पुरानो क्रमबाट देखिन्छ। प्रमाण जाँचेर निर्णय लेख्नुहोस् र आवश्यक भए गलत विज्ञापन रोक्नुहोस्।",
-        )}
-      </p>
       {reports.loading && (
         <p role="status">{t("Loading reports…", "उजुरी लोड हुँदैछ…")}</p>
       )}
@@ -77,9 +85,9 @@ export function AdminReports() {
         </p>
       )}
       {!reports.loading && !reports.error && !reports.items.length && (
-        <p className="text-sm text-ink-500">
+        <Surface className="p-5 text-sm text-ink-500">
           {t("No reports in this view.", "यस दृश्यमा उजुरी छैन।")}
-        </p>
+        </Surface>
       )}
       {reports.items.map((report) => (
         <ReportReview
@@ -105,6 +113,14 @@ function ReportReview({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const open = report.status === "open" || report.status === "reviewing";
+  const tone =
+    report.status === "resolved"
+      ? "verified"
+      : report.status === "reviewing"
+        ? "royal"
+        : report.status === "dismissed"
+          ? "neutral"
+          : "pending";
   const decide = async (action: "review" | "resolve" | "dismiss" | "pause") => {
     if (busy) return;
     const result = decisionSchema.safeParse(note);
@@ -134,35 +150,45 @@ function ReportReview({
   };
   return (
     <Surface className="space-y-3 p-5">
-      <div className="flex flex-wrap justify-between gap-2">
-        <Link
-          href={`/listing/${report.listingId}`}
-          className="font-semibold text-royal-700 hover:underline"
-        >
-          {report.listingTitle}
-        </Link>
-        <span className="rounded-full bg-ink-50 px-3 py-1 text-xs font-medium">
-          {t(
-            reportStatuses[report.status][0],
-            reportStatuses[report.status][1],
-          )}
-        </span>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/listing/${report.listingId}`}
+              className="inline-flex items-center gap-1 font-semibold text-royal-700 hover:underline"
+            >
+              {report.listingTitle}
+              <ExternalLink aria-hidden className="size-3.5" />
+            </Link>
+            <Badge tone={tone}>
+              {t(
+                reportStatuses[report.status][0],
+                reportStatuses[report.status][1],
+              )}
+            </Badge>
+          </div>
+          <p className="text-xs text-ink-500">
+            <span className="font-medium text-ink-700">
+              {reportReasons[report.reason]
+                ? t(
+                    reportReasons[report.reason][0],
+                    reportReasons[report.reason][1],
+                  )
+                : report.reason}
+            </span>{" "}
+            ·{" "}
+            {new Date(timestampMillis(report.createdAt)).toLocaleString(
+              locale === "ne" ? "ne-NP" : "en-NP",
+              { timeZone: "Asia/Kathmandu" },
+            )}
+          </p>
+        </div>
       </div>
-      <p className="text-xs text-ink-500">
-        {reportReasons[report.reason]
-          ? t(reportReasons[report.reason][0], reportReasons[report.reason][1])
-          : report.reason}{" "}
-        ·{" "}
-        {new Date(timestampMillis(report.createdAt)).toLocaleString(
-          locale === "ne" ? "ne-NP" : "en-NP",
-          { timeZone: "Asia/Kathmandu" },
-        )}
-      </p>
-      <p className="whitespace-pre-line text-sm text-ink-700">
+      <p className="whitespace-pre-line rounded-lg bg-ink-50 p-3 text-sm text-ink-800">
         {report.details}
       </p>
       <p className="break-all text-xs text-ink-500">
-        Reporter ID: {report.reporterId}
+        {t("Reporter ID", "उजुरीकर्ता आईडी")}: {report.reporterId}
       </p>
       {report.decisionReason && (
         <p className="whitespace-pre-line border-l-2 border-royal-200 pl-3 text-sm text-ink-600">
@@ -180,6 +206,10 @@ function ReportReview({
               value={note}
               maxLength={1000}
               disabled={busy}
+              placeholder={t(
+                "Explain briefly what you checked and decided (at least 5 characters)…",
+                "तपाईंले के जाँच्नुभयो र के निर्णय लिनुभयो छोटकरीमा लेख्नुहोस्…",
+              )}
               onChange={(event) => setNote(event.target.value)}
             />
           </Field>
@@ -226,6 +256,12 @@ function ReportReview({
               )}
             </Button>
           </div>
+          <p className="text-xs leading-relaxed text-ink-500">
+            {t(
+              "Guide: Start review (you are checking it) · Resolve (issue fixed, property stays live) · Dismiss (nothing wrong) · Pause rental & resolve (hides property immediately).",
+              "सहायता: समीक्षा सुरु (जाँच गर्दै) · समाधान (विज्ञापन लाइभ नै रहन्छ) · खारेज (समस्या छैन) · विज्ञापन रोक्नुहोस् (तुरुन्त सार्वजनिक खोजबाट लुक्छ)।",
+            )}
+          </p>
         </>
       )}
       {error && (

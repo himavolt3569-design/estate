@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Heart, Home, LogOut, MapPin, MessageSquare, Plus, UserRound } from 'lucide-react';
+import { Heart, Home, LogOut, MapPin, Megaphone, MessageSquare, Plus, ShieldCheck, UserRound } from 'lucide-react';
 import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { ParcelMark } from '@/components/brand/Seal';
@@ -40,6 +40,7 @@ export function SiteShell({ children, locale: initialLocale }: { children: React
   const pathname = usePathname();
   const t = locale === 'ne' ? ne : en;
   const copy = siteUi[locale];
+  const isSuperAdmin = profile?.role === 'superAdmin';
 
   useEffect(() => { setLocale(initialLocale); }, [initialLocale]);
   useEffect(() => { document.documentElement.lang = locale; }, [locale]);
@@ -87,8 +88,23 @@ export function SiteShell({ children, locale: initialLocale }: { children: React
           <nav aria-label="Main navigation" className="hidden min-w-0 items-center gap-1 lg:flex">
             <Link href="/" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-crimson-50 px-3 text-sm font-medium text-crimson-700"><Home aria-hidden className="size-4" />{copy.explore}</Link>
             <HeaderTools />
-            <Link href="/dashboard?tab=favorites" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-ink-700 hover:bg-royal-50"><Heart aria-hidden className="size-4" />{copy.saved}</Link>
-            <Link href="/dashboard?tab=chats" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-ink-700 hover:bg-royal-50"><MessageSquare aria-hidden className="size-4" />{copy.messages}</Link>
+            {isSuperAdmin ? (
+              <>
+                <Link href="/dashboard?tab=admin" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-royal-50 px-3 text-sm font-semibold text-royal-800 hover:bg-royal-100">
+                  <ShieldCheck aria-hidden className="size-4" />
+                  {locale === 'ne' ? 'प्रशासन' : 'Manage Platform'}
+                </Link>
+                <Link href="/dashboard?tab=ads" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-ink-700 hover:bg-royal-50">
+                  <Megaphone aria-hidden className="size-4" />
+                  {locale === 'ne' ? 'विज्ञापन' : 'Advertising'}
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/dashboard?tab=favorites" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-ink-700 hover:bg-royal-50"><Heart aria-hidden className="size-4" />{copy.saved}</Link>
+                <Link href="/dashboard?tab=chats" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-ink-700 hover:bg-royal-50"><MessageSquare aria-hidden className="size-4" />{copy.messages}</Link>
+              </>
+            )}
           </nav>
           <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
             <HeaderSearch />
@@ -104,19 +120,37 @@ export function SiteShell({ children, locale: initialLocale }: { children: React
                 <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Sign out" onClick={() => void logOut()}><LogOut aria-hidden className="size-4" /></Button>
               </>
             ) : <Button asChild variant="secondary" size="sm"><Link href="/sign-in">{copy.signIn}</Link></Button>}
-            {user && <Button asChild size="sm" className="hidden shrink-0 sm:inline-flex"><Link href="/dashboard?tab=post">{copy.post}</Link></Button>}
+            {user && !isSuperAdmin && <Button asChild size="sm" className="hidden shrink-0 sm:inline-flex"><Link href="/dashboard?tab=post">{copy.post}</Link></Button>}
+            {user && isSuperAdmin && <Button asChild variant="royal" size="sm" className="hidden shrink-0 sm:inline-flex"><Link href="/dashboard?tab=admin">{locale === 'ne' ? 'प्रशासन' : 'Control Center'}</Link></Button>}
           </div>
         </div>
       </header>
-      <nav aria-label="Browse" className={`browse-nav ${pathname === '/' ? 'browse-nav--home' : ''} grid gap-1 border-b border-ink-100 bg-white px-4 py-2 sm:px-6 lg:hidden`} style={{ gridTemplateColumns: `repeat(${user ? 5 : 4}, minmax(0, 1fr))` }}>
-        {user && <Link href="/dashboard?tab=post" className="browse-nav__link"><span className="flex size-9 items-center justify-center rounded-full bg-crimson-50 text-crimson-600"><Plus aria-hidden className="size-4.5" /></span><span className="text-[11px] font-medium leading-tight">{locale === 'ne' ? 'राख्नुहोस्' : 'Post'}</span></Link>}
+      <nav aria-label="Browse" className={`browse-nav ${pathname === '/' ? 'browse-nav--home' : ''} grid gap-1 border-b border-ink-100 bg-white px-4 py-2 sm:px-6 lg:hidden`} style={{ gridTemplateColumns: `repeat(${user && !isSuperAdmin ? 5 : 4}, minmax(0, 1fr))` }}>
+        {user && !isSuperAdmin && <Link href="/dashboard?tab=post" className="browse-nav__link"><span className="flex size-9 items-center justify-center rounded-full bg-crimson-50 text-crimson-600"><Plus aria-hidden className="size-4.5" /></span><span className="text-[11px] font-medium leading-tight">{locale === 'ne' ? 'राख्नुहोस्' : 'Post'}</span></Link>}
         <HeaderTools compact />
-        {browseLinks.map(item => (
-          <Link key={item.href} href={item.href} className="browse-nav__link">
-            <span className="flex size-9 items-center justify-center rounded-full bg-crimson-50 text-crimson-600"><item.icon aria-hidden className="size-4.5" /></span>
-            <span className="text-[11px] font-medium leading-tight">{item.href === '/' ? copy.explore : item.href.includes('favorites') ? copy.saved : copy.messages}</span>
-          </Link>
-        ))}
+        {isSuperAdmin ? (
+          <>
+            <Link href="/" className="browse-nav__link">
+              <span className="flex size-9 items-center justify-center rounded-full bg-crimson-50 text-crimson-600"><Home aria-hidden className="size-4.5" /></span>
+              <span className="text-[11px] font-medium leading-tight">{copy.explore}</span>
+            </Link>
+            <Link href="/dashboard?tab=admin" className="browse-nav__link">
+              <span className="flex size-9 items-center justify-center rounded-full bg-royal-50 text-royal-700"><ShieldCheck aria-hidden className="size-4.5" /></span>
+              <span className="text-[11px] font-medium leading-tight">{locale === 'ne' ? 'प्रशासन' : 'Admin'}</span>
+            </Link>
+            <Link href="/dashboard?tab=ads" className="browse-nav__link">
+              <span className="flex size-9 items-center justify-center rounded-full bg-royal-50 text-royal-700"><Megaphone aria-hidden className="size-4.5" /></span>
+              <span className="text-[11px] font-medium leading-tight">{locale === 'ne' ? 'विज्ञापन' : 'Ads'}</span>
+            </Link>
+          </>
+        ) : (
+          browseLinks.map(item => (
+            <Link key={item.href} href={item.href} className="browse-nav__link">
+              <span className="flex size-9 items-center justify-center rounded-full bg-crimson-50 text-crimson-600"><item.icon aria-hidden className="size-4.5" /></span>
+              <span className="text-[11px] font-medium leading-tight">{item.href === '/' ? copy.explore : item.href.includes('favorites') ? copy.saved : copy.messages}</span>
+            </Link>
+          ))
+        )}
       </nav>
       {!configured && <div className="bg-ochre-50 px-4 py-3 text-center text-sm text-ochre-700">Firebase setup is needed. Add the Web App values from .env.example to .env.local.</div>}
       {profile?.isBanned && <div className="bg-clay-50 px-4 py-3 text-center text-sm text-clay-700">This account is suspended. Contact the MeroKotha administrator.</div>}
@@ -126,8 +160,8 @@ export function SiteShell({ children, locale: initialLocale }: { children: React
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             <div><Link href="/" aria-label="MeroKotha home"><Brand light /></Link><p className="mt-4 max-w-xs text-sm leading-relaxed text-royal-300">{locale === 'ne' ? 'घरजग्गा खोज्नुहोस्, विज्ञापनदातासँग कुरा गर्नुहोस् र सन्देशहरू एकै ठाउँमा राख्नुहोस्।' : 'Find a place, speak with owners and agents, and keep your conversations in one place.'}</p></div>
             <div><h2 className="label label-light">{copy.browse}</h2><div className="mt-3 flex flex-col gap-2 text-sm text-royal-200"><Link href="/#rentals" className="hover:text-white">{copy.listingsTitle}</Link><Link href="/emi" className="hover:text-white">{t.headerNav.emi}</Link><Link href="/land-size" className="hover:text-white">{t.headerNav.landSize}</Link></div></div>
-            <div><h2 className="label label-light">{locale === 'ne' ? 'खाता' : 'Account'}</h2><div className="mt-3 flex flex-col gap-2 text-sm text-royal-200">{user ? <><Link href="/dashboard?tab=post" className="hover:text-white">{copy.post}</Link><Link href="/dashboard?tab=favorites" className="hover:text-white">{copy.saved}</Link><Link href="/dashboard?tab=chats" className="hover:text-white">{copy.messages}</Link></> : <Link href="/sign-in" className="hover:text-white">{copy.signIn}</Link>}</div></div>
-            <div><h2 className="label label-light">MeroKotha</h2><div className="mt-3 flex flex-col gap-2 text-sm text-royal-200"><Link href="/agents" className="hover:text-white">{locale === 'ne' ? 'प्रमाणित एजेन्टहरू' : 'Verified agents'}</Link>{user && <><Link href="/dashboard?tab=agent" className="hover:text-white">{locale === 'ne' ? 'एजेन्ट प्रमाणीकरण' : 'Agent verification'}</Link><Link href="/dashboard?tab=profile" className="hover:text-white">{locale === 'ne' ? 'तपाईंको प्रोफाइल' : 'Your profile'}</Link></>}{profile?.role === 'superAdmin' && <Link href="/dashboard?tab=admin" className="hover:text-white">{locale === 'ne' ? 'प्रशासन' : 'Administration'}</Link>}</div></div>
+            <div><h2 className="label label-light">{isSuperAdmin ? (locale === 'ne' ? 'प्रशासन' : 'Superadmin') : (locale === 'ne' ? 'खाता' : 'Account')}</h2><div className="mt-3 flex flex-col gap-2 text-sm text-royal-200">{isSuperAdmin ? <><Link href="/dashboard?tab=admin" className="hover:text-white">{locale === 'ne' ? 'प्लेटफर्म व्यवस्थापन' : 'Manage Platform'}</Link><Link href="/dashboard?tab=ads" className="hover:text-white">{locale === 'ne' ? 'विज्ञापन' : 'Advertising'}</Link></> : user ? <><Link href="/dashboard?tab=post" className="hover:text-white">{copy.post}</Link><Link href="/dashboard?tab=favorites" className="hover:text-white">{copy.saved}</Link><Link href="/dashboard?tab=chats" className="hover:text-white">{copy.messages}</Link></> : <Link href="/sign-in" className="hover:text-white">{copy.signIn}</Link>}</div></div>
+            <div><h2 className="label label-light">MeroKotha</h2><div className="mt-3 flex flex-col gap-2 text-sm text-royal-200"><Link href="/agents" className="hover:text-white">{locale === 'ne' ? 'प्रमाणित एजेन्टहरू' : 'Verified agents'}</Link>{user && !isSuperAdmin && <><Link href="/dashboard?tab=agent" className="hover:text-white">{locale === 'ne' ? 'एजेन्ट प्रमाणीकरण' : 'Agent verification'}</Link><Link href="/dashboard?tab=profile" className="hover:text-white">{locale === 'ne' ? 'तपाईंको प्रोफाइल' : 'Your profile'}</Link></>}{isSuperAdmin && <Link href="/dashboard?tab=admin" className="hover:text-white">{locale === 'ne' ? 'प्रशासन' : 'Administration'}</Link>}</div></div>
           </div>
           <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-royal-800 pt-6 text-xs text-royal-400"><p>© {new Date().getFullYear()} MeroKotha</p><p className="flex items-center gap-1"><MapPin aria-hidden className="size-3.5" /> Built for renters in Nepal</p></div>
         </div>
