@@ -1,3 +1,3 @@
-import { PublicPersonProfile } from '@/components/merokotha/public-person-profile';
+import { PublicPersonProfile } from '@/components/hamrokotha/public-person-profile';
 
 export default PublicPersonProfile;

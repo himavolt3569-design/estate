@@ -3,6 +3,7 @@
 export const NEPALI_AREA_IN_SQM = {
   sqm: 1,
   sqft: 0.09290304,
+  hectare: 10000,
   ropani: 5476 * 0.09290304,
   aana: 342.25 * 0.09290304,
   paisa: 85.5625 * 0.09290304,
@@ -97,6 +98,35 @@ export function nepaliAreaParts(
     remaining -= count * radix;
     return count;
   });
+}
+
+export function metresToFeet(metres: number): number {
+  if (!Number.isFinite(metres)) {
+    throw new RangeError("Length must be a finite number.");
+  }
+  return metres / 0.3048;
+}
+
+export type MetricAreaBreakdown = {
+  sqm: number;
+  hectare: number;
+  are: number;
+  sqft: number;
+  equivalentSideM: number;
+  equivalentSideFt: number;
+};
+
+export function metricAreaBreakdown(sqm: number): MetricAreaBreakdown {
+  const validated = validArea(sqm);
+  const equivalentSideM = Math.sqrt(validated);
+  return {
+    sqm: validated,
+    hectare: validated / 10000,
+    are: validated / 100,
+    sqft: validated / NEPALI_AREA_IN_SQM.sqft,
+    equivalentSideM,
+    equivalentSideFt: metresToFeet(equivalentSideM),
+  };
 }
 
 export function nepaliAreaReport(sqm: number) {

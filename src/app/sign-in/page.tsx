@@ -7,8 +7,8 @@ import { EmailAuthProvider, GoogleAuthProvider, createUserWithEmailAndPassword, 
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Surface } from '@/components/ui/primitives';
-import { useAuth } from '@/components/merokotha/auth-provider';
-import { useSiteText } from '@/components/merokotha/site-language';
+import { useAuth } from '@/components/hamrokotha/auth-provider';
+import { useSiteText } from '@/components/hamrokotha/site-language';
 import { auth, configured } from '@/lib/firebase/client';
 import { createProfile, updateProfile, uploadImages } from '@/lib/firebase/actions';
 
@@ -122,10 +122,10 @@ function SignInForm() {
   };
 
   return <Surface className="mx-auto max-w-lg space-y-6 p-6 sm:p-8">
-    <div><h1 className="text-2xl font-semibold">{user ? t('Your sign-in methods', 'साइन इन गर्ने तरिकाहरू') : mode === 'sign-up' ? t('Create a MeroKotha account', 'MeroKotha खाता बनाउनुहोस्') : mode === 'reset' ? t('Reset your password', 'पासवर्ड बदल्नुहोस्') : t('Sign in to MeroKotha', 'MeroKotha मा साइन इन गर्नुहोस्')}</h1><p className="mt-2 text-sm text-ink-600">{user ? t('Add another method to this account to keep your listings and messages together.', 'अर्को तरिका यही खातामा जोडेर विज्ञापन र सन्देशहरू एकै ठाउँमा राख्नुहोस्।') : t('Choose email and password or Google. Sign-in starts only when you select a method.', 'इमेल र पासवर्ड वा Google छान्नुहोस्। तपाईंले तरिका छानेपछि मात्र साइन इन सुरु हुन्छ।')}</p></div>
+    <div><h1 className="text-2xl font-semibold">{user ? t('Your sign-in methods', 'साइन इन गर्ने तरिकाहरू') : mode === 'sign-up' ? t('Create a HamroKotha account', 'HamroKotha खाता बनाउनुहोस्') : mode === 'reset' ? t('Reset your password', 'पासवर्ड बदल्नुहोस्') : t('Sign in to HamroKotha', 'HamroKotha मा साइन इन गर्नुहोस्')}</h1><p className="mt-2 text-sm text-ink-600">{user ? t('Add another method to this account to keep your listings and messages together.', 'अर्को तरिका यही खातामा जोडेर विज्ञापन र सन्देशहरू एकै ठाउँमा राख्नुहोस्।') : t('Choose email and password or Google. Sign-in starts only when you select a method.', 'इमेल र पासवर्ड वा Google छान्नुहोस्। तपाईंले तरिका छानेपछि मात्र साइन इन सुरु हुन्छ।')}</p></div>
     {!configured && <p role="alert" className="text-sm text-clay-700">{t('Firebase is not configured for this website.', 'यस वेबसाइटमा Firebase कन्फिगर गरिएको छैन।')}</p>}
     {(!user || !hasGoogle) && <Button type="button" className="w-full" disabled={busy || loading || !configured} onClick={() => void useGoogle()}>{user ? t('Link Google to this account', 'यो खातामा Google जोड्नुहोस्') : t('Continue with Google', 'Google बाट अगाडि बढ्नुहोस्')}</Button>}
-    {!user && <p className="text-xs text-ink-500">{t('Already use MeroKotha on Android? Use the same Google account to keep your existing profile and listings.', 'Android मा MeroKotha चलाउनुहुन्छ? आफ्नो पुरानो प्रोफाइल र विज्ञापन पाउन उही Google खाता प्रयोग गर्नुहोस्।')}</p>}
+    {!user && <p className="text-xs text-ink-500">{t('Already use HamroKotha on Android? Use the same Google account to keep your existing profile and listings.', 'Android मा HamroKotha चलाउनुहुन्छ? आफ्नो पुरानो प्रोफाइल र विज्ञापन पाउन उही Google खाता प्रयोग गर्नुहोस्।')}</p>}
     {(!user || !hasPassword) && <div className="border-t border-ink-100 pt-5">
       {!user && mode !== 'reset' && <div className="flex gap-2"><Button type="button" variant={mode === 'sign-in' ? 'secondary' : 'ghost'} onClick={() => changeMode('sign-in')}>{t('Sign in', 'साइन इन')}</Button><Button type="button" variant={mode === 'sign-up' ? 'secondary' : 'ghost'} onClick={() => changeMode('sign-up')}>{t('Create account', 'खाता बनाउनुहोस्')}</Button></div>}
       {user && <h2 className="font-semibold">{t('Add email and password', 'इमेल र पासवर्ड थप्नुहोस्')}</h2>}

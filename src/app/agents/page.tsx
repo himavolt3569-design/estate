@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { BadgeCheck, MapPin, UserRound } from 'lucide-react';
 import { Badge, Input, Surface } from '@/components/ui/primitives';
-import { useSignedInText } from '@/components/merokotha/signed-in-copy';
+import { useSignedInText } from '@/components/hamrokotha/signed-in-copy';
 import { useDocs } from '@/lib/firebase/hooks';
 import type { PublicAgent } from '@/lib/firebase/types';
 import { useState } from 'react';
-import { useAuth } from '@/components/merokotha/auth-provider';
+import { useAuth } from '@/components/hamrokotha/auth-provider';
 
 export default function AgentsPage() {
   const tr = useSignedInText();

@@ -44,7 +44,7 @@ try {
     const ownerPanel = owner.getByRole('region', { name: 'Manage this listing' }); await ownerPanel.waitFor();
     check(`${width}px owner gets useful management actions`, await ownerPanel.getByRole('link', { name: 'Edit contact options' }).count() === 1 && await ownerPanel.getByRole('link', { name: 'View inquiries' }).count() === 1);
     check(`${width}px owner cannot send a self-inquiry`, await owner.locator('#message').count() === 0);
-    check(`${width}px placeholder replaced`, await owner.getByText('This lister accepts inquiries through MeroKotha.', { exact: true }).count() === 0);
+    check(`${width}px placeholder replaced`, await owner.getByText('This lister accepts inquiries through HamroKotha.', { exact: true }).count() === 0);
     await capture(owner, ownerPanel, `owner-${width}`, true);
     await ownerPanel.getByRole('link', { name: 'Edit contact options' }).click(); await owner.waitForURL('**/edit#edit-call'); await owner.locator('#edit-call').waitFor();
     await owner.waitForFunction(() => document.activeElement?.id === 'edit-call');
@@ -55,7 +55,7 @@ try {
 
     const visitor = await makePage(width, 'renter'); await visitor.goto(base + '/listing/demo-0');
     const panel = visitor.getByRole('region', { name: 'Ask about this property', exact: true }); await panel.waitFor();
-    check(`${width}px one integrated contact form`, await visitor.locator('#message').count() === 1 && await visitor.getByText('This lister accepts inquiries through MeroKotha.', { exact: true }).count() === 0);
+    check(`${width}px one integrated contact form`, await visitor.locator('#message').count() === 1 && await visitor.getByText('This lister accepts inquiries through HamroKotha.', { exact: true }).count() === 0);
     await panel.getByRole('button', { name: 'Availability', exact: true }).click();
     const availability = await visitor.locator('#message').inputValue();
     check(`${width}px suggestion fills and focuses message`, availability.includes('still available') && await visitor.locator('#message').evaluate(element => document.activeElement === element));

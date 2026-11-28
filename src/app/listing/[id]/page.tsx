@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ArrowRight,
   CalendarDays,
   CheckCircle2,
   ExternalLink,
@@ -12,8 +13,10 @@ import {
   Heart,
   Layers3,
   MapPin,
+  Maximize2,
   Megaphone,
   Pencil,
+  Ruler,
   ShieldCheck,
   Sofa,
   Trash2,
@@ -34,21 +37,29 @@ import {
 } from "@/lib/firebase/actions";
 import { configured, db } from "@/lib/firebase/client";
 import type { Listing } from "@/lib/firebase/types";
-import { useAuth } from "@/components/merokotha/auth-provider";
-import { money } from "@/components/merokotha/listing-card";
-import { useSiteLanguage } from "@/components/merokotha/site-language";
+import { useAuth } from "@/components/hamrokotha/auth-provider";
+import { money } from "@/components/hamrokotha/listing-card";
+import { useSiteLanguage } from "@/components/hamrokotha/site-language";
 import { recordListingVisit } from "@/lib/firebase/property-features";
-import { ListingTour } from "@/components/merokotha/listing-tour";
-import { DetailAd } from '@/components/merokotha/detail-ad';
-import { AgentSummary, usePublicLister } from '@/components/merokotha/agent-summary';
+import { ListingTour } from "@/components/hamrokotha/listing-tour";
+import { DetailAd } from '@/components/hamrokotha/detail-ad';
+import { AgentSummary, usePublicLister } from '@/components/hamrokotha/agent-summary';
 import { listingListerId, listingListerName } from '@/lib/public-lister';
-import { ListingEngagement } from '@/components/merokotha/listing-engagement';
-import { ListingRecommendations } from '@/components/merokotha/listing-recommendations';
-import { landFacts } from '@/lib/land';
+import { ListingEngagement } from '@/components/hamrokotha/listing-engagement';
+import { ListingRecommendations } from '@/components/hamrokotha/listing-recommendations';
+import {
+  landAreaDual,
+  landAreaSqm,
+  landFacts,
+  landMeasurementFacts,
+} from '@/lib/land';
+import { createProportionalPlot } from '@/lib/land-3d';
+import { DualUnitAreaPanel } from '@/components/hamrokotha/dual-unit-area';
+import { LandPlot3D } from '@/components/hamrokotha/land-plot-3d';
 import { isForSale, listingPrice } from '@/lib/listing-commerce';
-import { ListingGallery } from '@/components/merokotha/listing-gallery';
-import { ListingContactPanel } from '@/components/merokotha/listing-contact-panel';
-import { ListingReportForm } from "@/components/merokotha/listing-report";
+import { ListingGallery } from '@/components/hamrokotha/listing-gallery';
+import { ListingContactPanel } from '@/components/hamrokotha/listing-contact-panel';
+import { ListingReportForm } from "@/components/hamrokotha/listing-report";
 
 export default function ListingPage() {
   const { ui, locale } = useSiteLanguage();
@@ -170,6 +181,23 @@ export default function ListingPage() {
   ].filter(item => (!isForSale(listing) || item.label !== ui.deposit) && (listing.roomType !== 'land' || ![ui.floor, ui.furnishing].includes(item.label)));
   if (listing.roomType === 'land') details.splice(1, 0, ...landFacts(listing.land, locale).map(fact => ({ ...fact, icon: MapPin })));
 
+  const isLandWithDetails = listing.roomType === 'land' && Boolean(listing.land);
+  const landSqm = isLandWithDetails ? landAreaSqm(listing.land) : null;
+  const landDual = isLandWithDetails ? landAreaDual(listing.land, locale) : null;
+  const measurementFacts = isLandWithDetails ? landMeasurementFacts(listing.land, locale) : [];
+  const frontageM =
+    isLandWithDetails && listing.land?.frontage
+      ? listing.land.lengthUnit === 'm'
+        ? listing.land.frontage
+        : listing.land.frontage * 0.3048
+      : 0;
+  const plotAspectRatio =
+    frontageM > 0 && landSqm && landSqm > 0
+      ? Math.min(3, Math.max(0.4, (frontageM * frontageM) / landSqm))
+      : 4 / 3;
+  const proportionalPlot =
+    landSqm && landSqm > 0 ? createProportionalPlot(landSqm, plotAspectRatio) : null;
+
   return (
     <div className="pb-12">
       {isSuperAdmin && user && (
@@ -267,6 +295,100 @@ export default function ListingPage() {
             ))}
           </dl>
 
+          {isLandWithDetails && (
+            <>
+              {landSqm !== null && landSqm > 0 && (
+                <section
+                  aria-labelledby="listing-land-size-title"
+                  className="space-y-4 rounded-2xl border border-ink-200 bg-ink-50/50 p-5 sm:p-7"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2
+                      id="listing-land-size-title"
+                      className="flex items-center gap-2 text-xl font-semibold text-ink-900"
+                    >
+                      <Maximize2 aria-hidden className="size-5 text-royal-700" />
+                      <span>{locale === 'ne' ? 'जग्गाको क्षेत्रफल' : 'Land Size'}</span>
+                    </h2>
+                    <Link
+                      href={`/land-size?sqm=${encodeURIComponent(String(landSqm))}`}
+                      className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-royal-700 underline underline-offset-4 hover:text-royal-800"
+                    >
+                      <span>{locale === 'ne' ? 'एकाइ रूपान्तरकमा खोल्नुहोस्' : 'Open in Land Size Converter'}</span>
+                      <ArrowRight aria-hidden className="size-4" />
+                    </Link>
+                  </div>
+                  <DualUnitAreaPanel sqm={landSqm} entered={landDual?.entered} />
+                </section>
+              )}
+
+              {(measurementFacts.length > 0 || proportionalPlot) && (
+                <section
+                  aria-labelledby="listing-land-measurements-title"
+                  className="space-y-5 rounded-2xl border border-ink-200 bg-white p-5 sm:p-7"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2
+                      id="listing-land-measurements-title"
+                      className="flex items-center gap-2 text-xl font-semibold text-ink-900"
+                    >
+                      <Ruler aria-hidden className="size-5 text-royal-700" />
+                      <span>
+                        {locale === 'ne'
+                          ? 'जग्गाको मापन र सीमाना'
+                          : 'Land Measurements & Boundaries'}
+                      </span>
+                    </h2>
+                    <Link
+                      href="/land-measurement"
+                      className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-royal-700 underline underline-offset-4 hover:text-royal-800"
+                    >
+                      <span>{locale === 'ne' ? '3D मा सीमाना नाप्नुहोस्' : 'Measure boundaries in 3D'}</span>
+                      <ArrowRight aria-hidden className="size-4" />
+                    </Link>
+                  </div>
+
+                  {measurementFacts.length > 0 && (
+                    <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {measurementFacts.map((fact) => (
+                        <div
+                          key={fact.label}
+                          className="rounded-xl border border-ink-100 bg-ink-50/70 px-4 py-3"
+                        >
+                          <dt className="text-xs font-medium uppercase tracking-wide text-ink-500">
+                            {fact.label}
+                          </dt>
+                          <dd className="mt-1 text-sm font-semibold text-ink-900 tabular-nums">
+                            {fact.value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+
+                  {proportionalPlot && (
+                    <LandPlot3D
+                      geometry={proportionalPlot}
+                      compact
+                      isProportional
+                      initialImageUrl={photos[0] || null}
+                      title={
+                        locale === 'ne'
+                          ? 'आनुपातिक जग्गाको सीमाना दृश्य'
+                          : 'Proportional boundary preview'
+                      }
+                      subtitle={
+                        locale === 'ne'
+                          ? 'राखिएको क्षेत्रफल र मोहडाअनुसारको नमुना दृश्य; यकिन कित्ता नापी होइन।'
+                          : 'Proportional footprint from listed area & frontage; confirm exact boundary survey with the lister.'
+                      }
+                    />
+                  )}
+                </section>
+              )}
+            </>
+          )}
+
           <section className="rounded-2xl border border-ink-100 bg-white p-5 sm:p-7">
             <h2 className="mt-2 text-2xl font-semibold text-ink-900">
               {ui.about}
@@ -326,8 +448,8 @@ export default function ListingPage() {
             <div className="mt-5 border-t border-ink-100 pt-5"><AgentSummary agent={agent} loading={agentLoading} profileId={listerId} listingId={listing.id} fallbackName={listing.contactIsAnonymous ? ui.privateLister : listingListerName(listing, listerId) || (listing.agentId ? (locale === 'ne' ? 'एजेन्ट' : 'Agent') : (locale === 'ne' ? 'विज्ञापनदाता' : 'Property lister'))} /></div>
           </Surface>
           <DetailAd key={`agent-${listing.id}`} slot="agent" listingId={listing.id} dismissKey={listing.agentId || listing.id} />
-          <ListingContactPanel key={listing.id} listing={listing} />
-          <ListingReportForm key={listing.id} listing={listing} />
+          <ListingContactPanel key={`contact-${listing.id}`} listing={listing} />
+          <ListingReportForm key={`report-${listing.id}`} listing={listing} />
         </aside>
       </div>
       <div className="mt-10"><DetailAd slot="recommendations" listingId={listing.id} /></div>

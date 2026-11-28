@@ -28,7 +28,7 @@ function Brand({ light = false }: { light?: boolean }) {
     <span className="inline-flex items-center gap-2.5">
       <ParcelMark className={light ? 'text-white' : 'text-royal-700'} />
       <span className={`text-[1.0625rem] font-semibold leading-none tracking-[-0.035em] ${light ? 'text-white' : 'text-ink-900'}`}>
-        MeroKotha
+        HamroKotha
       </span>
     </span>
   );
@@ -104,7 +104,7 @@ export function SiteShell({ children, locale: initialLocale }: { children: React
       </a>
       <header className="sticky top-0 z-50 border-b border-ink-100 bg-white/70 backdrop-blur-xl">
         <div className="site-header__inner mx-auto flex h-16 max-w-8xl items-center gap-3 px-4 sm:h-[68px] sm:gap-6 sm:px-6 lg:px-8">
-          <Link href="/" aria-label="MeroKotha home" className="shrink-0"><Brand /></Link>
+          <Link href="/" aria-label="HamroKotha home" className="shrink-0"><Brand /></Link>
           <nav aria-label="Main navigation" className="hidden min-w-0 items-center gap-1 lg:flex">
             <Link href="/" className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-crimson-50 px-3 text-sm font-medium text-crimson-700"><Home aria-hidden className="size-4" />{copy.explore}</Link>
             <HeaderTools />
@@ -173,17 +173,17 @@ export function SiteShell({ children, locale: initialLocale }: { children: React
         )}
       </nav>
       {!configured && <div className="bg-ochre-50 px-4 py-3 text-center text-sm text-ochre-700">Firebase setup is needed. Add the Web App values from .env.example to .env.local.</div>}
-      {profile?.isBanned && <div className="bg-clay-50 px-4 py-3 text-center text-sm text-clay-700">This account is suspended. Contact the MeroKotha administrator.</div>}
+      {profile?.isBanned && <div className="bg-clay-50 px-4 py-3 text-center text-sm text-clay-700">This account is suspended. Contact the HamroKotha administrator.</div>}
       <main id="main" className={pathname === '/' ? 'min-h-[60vh]' : 'mx-auto min-h-[60vh] max-w-8xl px-4 py-8 sm:px-6 lg:px-8'}>{children}</main>
       <footer className="border-t border-royal-800 bg-royal-950 text-white">
         <div className="mx-auto max-w-8xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-            <div><Link href="/" aria-label="MeroKotha home"><Brand light /></Link><p className="mt-4 max-w-xs text-sm leading-relaxed text-royal-300">{locale === 'ne' ? 'घरजग्गा खोज्नुहोस्, विज्ञापनदातासँग कुरा गर्नुहोस् र सन्देशहरू एकै ठाउँमा राख्नुहोस्।' : 'Find a place, speak with owners and agents, and keep your conversations in one place.'}</p></div>
-            <div><h2 className="label label-light">{copy.browse}</h2><div className="mt-3 flex flex-col gap-2 text-sm text-royal-200"><Link href="/#rentals" className="hover:text-white">{copy.listingsTitle}</Link><Link href="/emi" className="hover:text-white">{t.headerNav.emi}</Link><Link href="/land-size" className="hover:text-white">{t.headerNav.landSize}</Link></div></div>
+            <div><Link href="/" aria-label="HamroKotha home"><Brand light /></Link><p className="mt-4 max-w-xs text-sm leading-relaxed text-royal-300">{locale === 'ne' ? 'घरजग्गा खोज्नुहोस्, विज्ञापनदातासँग कुरा गर्नुहोस् र सन्देशहरू एकै ठाउँमा राख्नुहोस्।' : 'Find a place, speak with owners and agents, and keep your conversations in one place.'}</p></div>
+            <div><h2 className="label label-light">{copy.browse}</h2><div className="mt-3 flex flex-col gap-2 text-sm text-royal-200"><Link href="/#rentals" className="hover:text-white">{copy.listingsTitle}</Link><Link href="/emi" className="hover:text-white">{t.headerNav.emi}</Link><Link href="/land-measurement" className="hover:text-white">{t.headerNav.landMeasurement}</Link><Link href="/land-size" className="hover:text-white">{t.headerNav.landSize}</Link></div></div>
             <div><h2 className="label label-light">{isSuperAdmin ? (locale === 'ne' ? 'प्रशासन' : 'Superadmin') : (locale === 'ne' ? 'खाता' : 'Account')}</h2><div className="mt-3 flex flex-col gap-2 text-sm text-royal-200">{isSuperAdmin ? <><Link href="/dashboard?tab=admin" className="hover:text-white">{locale === 'ne' ? 'प्लेटफर्म व्यवस्थापन' : 'Manage Platform'}</Link><Link href="/dashboard?tab=ads" className="hover:text-white">{locale === 'ne' ? 'विज्ञापन' : 'Advertising'}</Link></> : user ? <><Link href="/dashboard?tab=post" className="hover:text-white">{copy.post}</Link><Link href="/dashboard?tab=favorites" className="hover:text-white">{copy.saved}</Link><Link href="/dashboard?tab=chats" className="hover:text-white">{copy.messages}</Link></> : <Link href="/sign-in" className="hover:text-white">{copy.signIn}</Link>}</div></div>
-            <div><h2 className="label label-light">MeroKotha</h2><div className="mt-3 flex flex-col gap-2 text-sm text-royal-200"><Link href="/agents" className="hover:text-white">{locale === 'ne' ? 'प्रमाणित एजेन्टहरू' : 'Verified agents'}</Link>{user && !isSuperAdmin && <><Link href="/dashboard?tab=agent" className="hover:text-white">{locale === 'ne' ? 'एजेन्ट प्रमाणीकरण' : 'Agent verification'}</Link><Link href="/dashboard?tab=profile" className="hover:text-white">{locale === 'ne' ? 'तपाईंको प्रोफाइल' : 'Your profile'}</Link></>}{isSuperAdmin && <Link href="/dashboard?tab=admin" className="hover:text-white">{locale === 'ne' ? 'प्रशासन' : 'Administration'}</Link>}</div></div>
+            <div><h2 className="label label-light">HamroKotha</h2><div className="mt-3 flex flex-col gap-2 text-sm text-royal-200"><Link href="/agents" className="hover:text-white">{locale === 'ne' ? 'प्रमाणित एजेन्टहरू' : 'Verified agents'}</Link>{user && !isSuperAdmin && <><Link href="/dashboard?tab=agent" className="hover:text-white">{locale === 'ne' ? 'एजेन्ट प्रमाणीकरण' : 'Agent verification'}</Link><Link href="/dashboard?tab=profile" className="hover:text-white">{locale === 'ne' ? 'तपाईंको प्रोफाइल' : 'Your profile'}</Link></>}{isSuperAdmin && <Link href="/dashboard?tab=admin" className="hover:text-white">{locale === 'ne' ? 'प्रशासन' : 'Administration'}</Link>}</div></div>
           </div>
-          <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-royal-800 pt-6 text-xs text-royal-400"><p>© {new Date().getFullYear()} MeroKotha</p><p className="flex items-center gap-1"><MapPin aria-hidden className="size-3.5" /> Built for renters in Nepal</p></div>
+          <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-royal-800 pt-6 text-xs text-royal-400"><p>© {new Date().getFullYear()} HamroKotha</p><p className="flex items-center gap-1"><MapPin aria-hidden className="size-3.5" /> Built for renters in Nepal</p></div>
         </div>
       </footer>
     </SiteLanguageContext.Provider>

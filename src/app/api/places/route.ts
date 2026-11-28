@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
-        "User-Agent": "MeroKotha-PropertySearch/1.0",
+        "User-Agent": "HamroKotha-PropertySearch/1.0",
       },
       signal: AbortSignal.timeout(8000),
       next: { revalidate: 86400 },

@@ -23,7 +23,7 @@ export const ne: Dictionary = {
     listPropertyShort: 'राख्नुहोस्',
     dashboard: 'मेरो खाता',
     browseListings: 'घरजग्गा हेर्नुहोस्',
-    home: 'कित्ता होम',
+    home: 'HamroKotha होम',
     language: 'भाषा',
   },
 
@@ -92,6 +92,7 @@ export const ne: Dictionary = {
       dhur: 'धुर',
       sqft: 'वर्ग फिट',
       sqm: 'वर्ग मिटर',
+      hectare: 'हेक्टर',
     },
   },
 
@@ -240,7 +241,7 @@ export const ne: Dictionary = {
       viewsSubtitle: 'एक जनाले एक दिनमा जति पटक हेरे पनि एक पटक मात्र गनिन्छ।',
       enquiriesTitle: 'तपाईंले पाएका सोधपुछ',
       enquiriesSubtitle: 'किन्नेहरूले पठाएका सन्देश, आएको दिनअनुसार।',
-      platformViewsTitle: 'किट्टाभरि घरजग्गा हेरिएको',
+      platformViewsTitle: 'HamroKotha भरि घरजग्गा हेरिएको',
       newListingsTitle: 'नयाँ थपिएका घरजग्गा',
       newPeopleTitle: 'नयाँ जोडिएका मानिस',
       pipelineTitle: 'तपाईंका घरजग्गा कहाँ छन्',
@@ -295,7 +296,9 @@ export const ne: Dictionary = {
     commercialNe: 'Commercial',
     emi: 'किस्ता',
     emiNe: 'EMI',
-    landSize: 'नाप',
+    landMeasurement: 'जग्गाको मापन',
+    landMeasurementNe: 'Measure',
+    landSize: 'जग्गाको क्षेत्रफल',
     landSizeNe: 'Size'
   },
 

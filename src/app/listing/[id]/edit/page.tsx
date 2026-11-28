@@ -22,19 +22,19 @@ import {
   Textarea,
 } from "@/components/ui/primitives";
 import { SelectMenu } from "@/components/ui/select-menu";
-import { useAuth } from "@/components/merokotha/auth-provider";
-import { LandFields } from "@/components/merokotha/land-fields";
-import { ListingLocationSearch } from "@/components/merokotha/listing-location-search";
+import { useAuth } from "@/components/hamrokotha/auth-provider";
+import { LandFields } from "@/components/hamrokotha/land-fields";
+import { ListingLocationSearch } from "@/components/hamrokotha/listing-location-search";
 import {
   ListingPhotoEditor,
   type EditablePhoto,
-} from "@/components/merokotha/listing-photo-editor";
-import { ListingTourEditor } from "@/components/merokotha/listing-tour-editor";
-import { useSignedInText } from "@/components/merokotha/signed-in-copy";
+} from "@/components/hamrokotha/listing-photo-editor";
+import { ListingTourEditor } from "@/components/hamrokotha/listing-tour-editor";
+import { useSignedInText } from "@/components/hamrokotha/signed-in-copy";
 import {
   useSiteLanguage,
   useSiteText,
-} from "@/components/merokotha/site-language";
+} from "@/components/hamrokotha/site-language";
 import {
   cleanContactNumber,
   listingContact,

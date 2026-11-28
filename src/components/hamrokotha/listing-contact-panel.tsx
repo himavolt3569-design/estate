@@ -29,7 +29,7 @@ export function ListingContactPanel({ listing }: { listing: Listing }) {
 
   if (user?.uid === listing.ownerId) return <section aria-labelledby="listing-owner-actions" className="rounded-2xl bg-royal-50 p-5 text-royal-950 sm:p-6">
     <div className="flex items-center gap-2.5"><Settings2 aria-hidden className="size-5 shrink-0 text-royal-700" /><h2 id="listing-owner-actions" className="text-lg font-semibold">{tr('Manage this listing', 'यो विज्ञापन व्यवस्थापन गर्नुहोस्')}</h2></div>
-    <p className="mt-3 text-sm leading-relaxed text-royal-800">{tr('Choose how people reach you. Add a public phone or WhatsApp number, or keep inquiries in MeroKotha.', 'मानिसहरूले तपाईंलाई कसरी सम्पर्क गर्ने छनोट गर्नुहोस्। सार्वजनिक फोन वा WhatsApp नम्बर थप्नुहोस्, वा MeroKotha मै सोधपुछ प्राप्त गर्नुहोस्।')}</p>
+    <p className="mt-3 text-sm leading-relaxed text-royal-800">{tr('Choose how people reach you. Add a public phone or WhatsApp number, or keep inquiries in HamroKotha.', 'मानिसहरूले तपाईंलाई कसरी सम्पर्क गर्ने छनोट गर्नुहोस्। सार्वजनिक फोन वा WhatsApp नम्बर थप्नुहोस्, वा HamroKotha मै सोधपुछ प्राप्त गर्नुहोस्।')}</p>
     <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-royal-800">
       <span className="inline-flex items-center gap-1.5"><Check aria-hidden className="size-3.5" />{tr('Inquiries in your dashboard', 'ड्यासबोर्डमा सोधपुछ')}</span>
       {(contact.call || contact.whatsapp) && <span className="inline-flex items-center gap-1.5"><Phone aria-hidden className="size-3.5" />{tr('Public contact added', 'सार्वजनिक सम्पर्क थपिएको छ')}</span>}

@@ -27,8 +27,8 @@ export async function watermarkPropertyPhoto(file: File): Promise<File> {
     context.strokeStyle = 'rgba(15, 23, 42, 0.12)';
     context.fillStyle = 'rgba(255, 255, 255, 0.19)';
     const maxWidth = canvas.width * 0.65;
-    context.strokeText('MeroKotha', canvas.width / 2, canvas.height / 2, maxWidth);
-    context.fillText('MeroKotha', canvas.width / 2, canvas.height / 2, maxWidth);
+    context.strokeText('HamroKotha', canvas.width / 2, canvas.height / 2, maxWidth);
+    context.fillText('HamroKotha', canvas.width / 2, canvas.height / 2, maxWidth);
     const encode = (quality: number) => new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Could not prepare this photo. Please try again.')), 'image/webp', quality);
     });

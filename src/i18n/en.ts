@@ -19,7 +19,7 @@ export const en = {
     listPropertyShort: 'Post',
     dashboard: 'My account',
     browseListings: 'See properties',
-    home: 'Kitta home',
+    home: 'HamroKotha home',
     language: 'Language',
   },
 
@@ -88,6 +88,7 @@ export const en = {
       dhur: 'Dhur',
       sqft: 'Square feet',
       sqm: 'Square metres',
+      hectare: 'Hectare',
     },
   },
 
@@ -241,7 +242,7 @@ export const en = {
       viewsSubtitle: 'One person on one day counts once, so refreshing a page does not inflate it.',
       enquiriesTitle: 'Enquiries you received',
       enquiriesSubtitle: 'Every message a buyer sent you, by the day it arrived.',
-      platformViewsTitle: 'Property views across Kitta',
+      platformViewsTitle: 'Property views across HamroKotha',
       newListingsTitle: 'New properties added',
       newPeopleTitle: 'New people joining',
       pipelineTitle: 'Where your properties stand',
@@ -296,6 +297,8 @@ export const en = {
     commercialNe: 'पसल र अफिस',
     emi: 'EMI',
     emiNe: 'किस्ता',
+    landMeasurement: 'Land measurement',
+    landMeasurementNe: 'मापन',
     landSize: 'Land size',
     landSizeNe: 'नाप'
   },

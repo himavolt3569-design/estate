@@ -46,8 +46,10 @@ export async function recordListingVisit(listing: Listing, viewerUid?: string) {
   if (!visitorId) {
     try {
       visitorId =
-        localStorage.getItem("merokotha_visitor") || crypto.randomUUID();
-      localStorage.setItem("merokotha_visitor", visitorId);
+        localStorage.getItem("hamrokotha_visitor") ||
+        localStorage.getItem("merokotha_visitor") ||
+        crypto.randomUUID();
+      localStorage.setItem("hamrokotha_visitor", visitorId);
     } catch {
       visitorId = crypto.randomUUID();
     }

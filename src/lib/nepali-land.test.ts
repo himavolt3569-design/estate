@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   compoundAreaToSqm,
+  metricAreaBreakdown,
+  metresToFeet,
   NEPALI_AREA_IN_SQM as units,
   NEPALI_AREA_SYSTEMS,
   nepaliAreaParts,
@@ -109,5 +111,36 @@ describe("Nepali land systems", () => {
       daam: 0.5,
     });
     expect(result.convention).toEqual({ ropaniSqFt: 5476, bighaSqFt: 72900 });
+  });
+
+  it("supports hectares, metresToFeet, and metricAreaBreakdown with validation", () => {
+    expect(units.hectare).toBe(10000);
+    expect(nepaliAreaToSqm(1.5, "hectare")).toBe(15000);
+    expect(metresToFeet(0.3048)).toBeCloseTo(1, 12);
+    expect(metresToFeet(10)).toBeCloseTo(10 / 0.3048, 12);
+    expect(metresToFeet(0)).toBe(0);
+    expect(() => metresToFeet(NaN)).toThrow(RangeError);
+    expect(() => metresToFeet(Infinity)).toThrow(RangeError);
+
+    const ha = metricAreaBreakdown(10000);
+    expect(ha.sqm).toBe(10000);
+    expect(ha.hectare).toBe(1);
+    expect(ha.are).toBe(100);
+    expect(ha.sqft).toBeCloseTo(10000 / 0.09290304, 10);
+    expect(ha.equivalentSideM).toBe(100);
+    expect(ha.equivalentSideFt).toBeCloseTo(100 / 0.3048, 10);
+
+    expect(metricAreaBreakdown(0)).toEqual({
+      sqm: 0,
+      hectare: 0,
+      are: 0,
+      sqft: 0,
+      equivalentSideM: 0,
+      equivalentSideFt: 0,
+    });
+
+    expect(() => metricAreaBreakdown(-1)).toThrow(RangeError);
+    expect(() => metricAreaBreakdown(NaN)).toThrow(RangeError);
+    expect(() => metricAreaBreakdown(1e16)).toThrow(RangeError);
   });
 });

@@ -1,6 +1,6 @@
-# MeroKotha website copy
+# HamroKotha website
 
-This is a copy of `estate/` using its Poppins typography, colors, buttons, inputs, surfaces, hero image, floating search panel, listing cards, and dashboard navigation. The visible pages are adapted for MeroKotha rentals while the active Next.js routes use the **same Firebase Auth, Firestore, and Storage project as the Android app**. The earlier Supabase routes are preserved in `src/legacy-app/` for reference.
+This is a copy of `estate/` using its Poppins typography, colors, buttons, inputs, surfaces, hero image, floating search panel, listing cards, and dashboard navigation. The visible pages are adapted for HamroKotha rentals, sales, and land while the active Next.js routes use the **same Firebase Auth, Firestore, and Storage project (`mero-kotha-1f4f3`) as the Android app**. The earlier Supabase routes are preserved in `src/legacy-app/` for reference.
 
 ## Current work - October 31, 2026
 
@@ -21,9 +21,10 @@ The shipped assets total 353304 bytes at 1672 x 941px each. See [asset provenanc
 ## Set up locally
 
 1. Sign in to [Firebase Console for `mero-kotha-1f4f3`](https://console.firebase.google.com/project/mero-kotha-1f4f3/settings/general) and verify it is the Android app's live project. In Project settings > Your apps, register a Web App (or use an existing Web App for this site). Name it `estate-merokotha-website`, then copy the generated public config into `.env.local` using `.env.example` as the field list. You can do this yourself if your account can manage the project. The existing `.env.example` does not need to come from the Android developer. Do not use a service account key here.
-2. Enable Google and Email/Password sign-in in Firebase Authentication, and add the web domain to authorized domains. Review existing phone-only accounts before disabling the Phone provider in Firebase; this website no longer offers phone sign-in.
+2. Enable Google and Email/Password sign-in in Firebase Authentication, and add the production domains (`hamrokotha.com` and `www.hamrokotha.com`) plus any Vercel preview domains to Authorized domains. Review existing phone-only accounts before disabling the Phone provider in Firebase; this website no longer offers phone sign-in.
 3. If App Check is enforced, register a web reCAPTCHA v3 provider and set `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY`. If using browser push, set the Web Push VAPID public key and use HTTPS in production.
-4. Run `pnpm install`, `pnpm typecheck`, `pnpm build`, then `pnpm dev`. The `pnpm-workspace.yaml` file records explicit build-script decisions so pnpm 12 does not stop at its approval prompt. If this checkout was installed before those decisions were added, rerun `pnpm install` so the allowed package setup scripts can run.
+4. Set `NEXT_PUBLIC_SITE_URL="https://hamrokotha.com"` in production (`.env.vercel` and Vercel Project Settings → Environment Variables) so `siteOrigin()`, canonical metadata, `/robots.txt`, `/sitemap.xml`, and `/manifest.webmanifest` resolve to `https://hamrokotha.com` (with `src/app/icon.svg` served at `/icon.svg`).
+5. Run `pnpm install`, `pnpm typecheck`, `pnpm build`, then `pnpm dev`. The `pnpm-workspace.yaml` file records explicit build-script decisions so pnpm 12 does not stop at its approval prompt. If this checkout was installed before those decisions were added, rerun `pnpm install` so the allowed package setup scripts can run.
 
 The lockfile includes the Firebase Web SDK. Typecheck, production build, existing unit tests, and local HTTP smoke checks passed on 2026-10-13. Browser sign-in and live Firestore/Storage flows still need testing against Firebase. The Android source in this workspace currently signs in through Google only; its onboarding phone field is profile data. To preserve an existing Android account's UID and data, sign in with the same Google account on web, then add an email/password method from the web profile if desired. Poppins is now served locally from public/fonts/poppins.css, including Latin and Devanagari subsets and the bundled open font license.
 

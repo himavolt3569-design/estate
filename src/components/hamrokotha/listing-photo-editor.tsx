@@ -207,7 +207,7 @@ export function ListingPhotoEditor({
         </button>
 
         <p className="text-xs leading-relaxed text-ink-600">
-          {tr('New property photos receive a subtle MeroKotha watermark when uploaded.')}
+          {tr('New property photos receive a subtle HamroKotha watermark when uploaded.')}
         </p>
 
         {error && (

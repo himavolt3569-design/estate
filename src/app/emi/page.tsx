@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { getTranslation } from '@/i18n';
 import { EmiCalculator } from '@/modules/finance/components/EmiCalculator';
 
-export const metadata: Metadata = { title: 'EMI | MeroKotha', description: 'Estimate monthly home loan payments in Nepal.' };
+export const metadata: Metadata = { title: 'EMI Calculator', description: 'Estimate monthly home loan payments in Nepal.' };
 
 export default async function EmiPage() {
   const { t } = await getTranslation();

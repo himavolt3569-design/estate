@@ -1,12 +1,22 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Download, MapPin, Plus, Ruler, Trash2 } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Download,
+  MapPin,
+  Plus,
+  Ruler,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/primitives";
-import { NEPALI_AREA_IN_SQM as AREA_IN_SQM } from "@/lib/nepali-land";
-import { NepaliAreaResults } from "./nepali-area-results";
-import { landLabel } from "@/lib/land";
+import { computePolygon3DMetrics } from "@/lib/land-3d";
+import {
+  NEPALI_AREA_IN_SQM as AREA_IN_SQM,
+  metresToFeet,
+} from "@/lib/nepali-land";
 import {
   geographicPolygon,
   landMeasurementReport,
@@ -19,15 +29,30 @@ import {
   type LandGeometry,
   type LengthUnit,
 } from "@/lib/land-geometry";
+import { DualUnitAreaPanel } from "./dual-unit-area";
+import { LandPlot3D } from "./land-plot-3d";
+import { formatLandNumber } from "./nepali-area-results";
 import { useSiteLanguage, useSiteText } from "./site-language";
 
 type Method = "rectangle" | "diagonal" | "corners";
 type CoordinateSystem = "local" | "gps";
 type CornerInput = { id: number; x: string; y: string };
+
 const cornerName = (index: number) =>
   index < 26 ? String.fromCharCode(65 + index) : `P${index + 1}`;
+
 const blankCorners = (): CornerInput[] =>
   Array.from({ length: 4 }, (_, id) => ({ id, x: "", y: "" }));
+
+const L_SHAPED_CORNERS: [string, string][] = [
+  ["0", "0"],
+  ["20", "0"],
+  ["20", "8"],
+  ["8", "8"],
+  ["8", "18"],
+  ["0", "18"],
+];
+
 const messages: Record<GeometryErrorCode, [string, string]> = {
   number: [
     "Enter a complete, finite number in every required field using English or Nepali digits. Local coordinates must be within ±1 billion units.",
@@ -91,22 +116,27 @@ export function LandCalculator() {
   const [result, setResult] = useState<LandGeometry | null>(null);
   const [error, setError] = useState<GeometryErrorCode | null>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
+
   const clearResult = () => {
     setResult(null);
     setError(null);
   };
+
   const gps = method === "corners" && system === "gps";
   const displayUnit = gps ? "m" : unit;
   const metresPerUnit = displayUnit === "ft" ? 0.3048 : 1;
+
   const number = (value: number, digits = 6) =>
-    new Intl.NumberFormat(locale === "ne" ? "ne-NP" : "en-NP", {
-      numberingSystem: locale === "ne" ? "deva" : "latn",
-      ...(value !== 0 && Math.abs(value) < 10 ** -digits
-        ? { maximumSignificantDigits: 8 }
-        : { maximumFractionDigits: digits }),
-    }).format(value);
-  const distance = (value: number) =>
-    `${number(value / metresPerUnit)} ${displayUnit}`;
+    formatLandNumber(value, locale, digits);
+
+  const dualDistance = (metres: number) =>
+    `${number(metres)} m · ${number(metresToFeet(metres), 4)} ft`;
+
+  const metrics3D = useMemo(
+    () => (result ? computePolygon3DMetrics(result.corners) : null),
+    [result],
+  );
+
   function calculate() {
     try {
       const read = (key: string) => parseMeasurement(dimensions[key] || "");
@@ -146,6 +176,7 @@ export function LandCalculator() {
       requestAnimationFrame(() => errorRef.current?.focus());
     }
   }
+
   function example() {
     clearResult();
     if (method === "rectangle")
@@ -176,6 +207,21 @@ export function LandCalculator() {
         ).map(([x, y]) => ({ id: nextCornerId.current++, x: x!, y: y! })),
       );
   }
+
+  function loadLShapedExample() {
+    clearResult();
+    setMethod("corners");
+    setSystem("local");
+    setUnit("m");
+    setCorners(
+      L_SHAPED_CORNERS.map(([x, y]) => ({
+        id: nextCornerId.current++,
+        x,
+        y,
+      })),
+    );
+  }
+
   function download() {
     if (!result) return;
     const url = URL.createObjectURL(
@@ -189,6 +235,7 @@ export function LandCalculator() {
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+
   const dimensionField = (key: string, label: string, optional = false) => (
     <Field
       key={key}
@@ -215,7 +262,7 @@ export function LandCalculator() {
     <section
       aria-labelledby="parcel-title"
       id="measure-land"
-      className="mt-8 rounded-xl border border-ink-200 bg-white"
+      className="mt-8 overflow-hidden rounded-xl border border-ink-200 bg-white shadow-soft"
     >
       <div className="border-b border-ink-200 px-5 py-5 sm:px-7">
         <h2 id="parcel-title" className="text-xl font-semibold text-ink-900">
@@ -223,12 +270,14 @@ export function LandCalculator() {
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-600">
           {text(
-            "Enter horizontal measurements or surveyed corners to calculate the boundary, area and perimeter.",
-            "सीमाना, क्षेत्रफल र परिधि निकाल्न समतल मापन वा सर्वेक्षण गरिएका कुनाहरू राख्नुहोस्।",
+            "Enter horizontal measurements or surveyed corners to inspect the 3D boundary, area in Nepali and metric units, and every side and angle.",
+            "3D सीमाना, नेपाली र मेट्रिक एकाइमा क्षेत्रफल तथा हरेक भुजा र कोण हेर्न समतल मापन वा सर्वेक्षण गरिएका कुनाहरू राख्नुहोस्।",
           )}
         </p>
       </div>
-      <div className="grid min-w-0 lg:grid-cols-2">
+
+      {/* Primary Form + 3D Boundary Stage */}
+      <div className="grid min-w-0 lg:grid-cols-[minmax(0,410px)_minmax(0,1fr)]">
         <form
           noValidate
           onSubmit={(event) => {
@@ -256,6 +305,7 @@ export function LandCalculator() {
               <option value="corners">{text("All corners", "सबै कुना")}</option>
             </Select>
           </Field>
+
           {method === "corners" && (
             <Field
               label={text("Coordinate system", "निर्देशाङ्क प्रणाली")}
@@ -282,6 +332,7 @@ export function LandCalculator() {
               </Select>
             </Field>
           )}
+
           {!gps && (
             <Field
               label={text("Length unit", "लम्बाइको एकाइ")}
@@ -300,6 +351,7 @@ export function LandCalculator() {
               </Select>
             </Field>
           )}
+
           {method === "rectangle" && (
             <div className="grid gap-4 sm:grid-cols-2">
               {dimensionField(
@@ -325,6 +377,7 @@ export function LandCalculator() {
               </div>
             </div>
           )}
+
           {method === "diagonal" && (
             <>
               <p className="text-sm leading-relaxed text-ink-600">
@@ -349,6 +402,7 @@ export function LandCalculator() {
               </div>
             </>
           )}
+
           {method === "corners" && (
             <>
               <p className="text-sm leading-relaxed text-ink-600">
@@ -442,6 +496,7 @@ export function LandCalculator() {
               </Button>
             </>
           )}
+
           {error && (
             <p
               ref={errorRef}
@@ -452,15 +507,30 @@ export function LandCalculator() {
               {text(...messages[error])}
             </p>
           )}
+
           <div className="flex flex-wrap gap-2">
             <Button type="submit" size="lg" className="hover:bg-crimson-700">
               <Ruler aria-hidden />
               {text("Calculate land", "जग्गाको गणना गर्नुहोस्")}
             </Button>
-            <Button type="button" variant="ghost" size="lg" onClick={example}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              onClick={example}
+            >
               {text("Load example", "उदाहरण राख्नुहोस्")}
             </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              onClick={loadLShapedExample}
+            >
+              {text("Load L-shaped example", "L-आकारको उदाहरण")}
+            </Button>
           </div>
+
           <p className="text-xs leading-relaxed text-ink-600">
             {text(
               "Results use the measurements you enter. Sloping distances must be reduced to horizontal distances before entry. Display values are rounded; downloads retain full numeric precision.",
@@ -468,45 +538,134 @@ export function LandCalculator() {
             )}
           </p>
         </form>
+
+        {/* Primary 3D Boundary Stage */}
         <div
           className="min-w-0 border-t border-ink-200 bg-ink-50 p-5 sm:p-7 lg:border-t-0 lg:border-l"
           aria-live="polite"
           aria-atomic="true"
         >
           {!result ? (
-            <div className="flex h-full min-h-72 flex-col items-center justify-center text-center">
+            <div className="flex h-full min-h-80 flex-col items-center justify-center rounded-xl border border-dashed border-ink-300 bg-white/70 p-6 text-center">
               <Ruler aria-hidden className="size-10 text-royal-700" />
-              <h3 className="mt-4 text-lg font-semibold">
+              <h3 className="mt-4 text-lg font-semibold text-ink-900">
                 {text("Your measured boundary", "तपाईंले नापेको सीमाना")}
               </h3>
-              <p className="mt-2 max-w-xs text-sm leading-relaxed text-ink-600">
+              <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-600">
                 {text(
-                  "Calculate to see a scaled plot, its area, perimeter and every corner.",
-                  "मापनअनुसारको नक्सा, क्षेत्रफल, परिधि र हरेक कुना हेर्न गणना गर्नुहोस्।",
+                  "Calculate to inspect an interactive 3D boundary model, dual Nepali & metric land size, interior angles, and optional cadastral image overlay.",
+                  "अन्तर्क्रियात्मक 3D सीमाना दृश्य, नेपाली र मेट्रिक क्षेत्रफल, भित्री कोण तथा वैकल्पिक नक्सा तह हेर्न गणना गर्नुहोस्।",
                 )}
               </p>
             </div>
           ) : (
-            <>
-              <h3 className="text-lg font-semibold">
-                {text("Calculated boundary", "गणना गरिएको सीमाना")}
-              </h3>
-              <ParcelPlot
-                result={result}
-                label={text("Scaled boundary preview", "मापनअनुसारको सीमाना")}
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="text-lg font-semibold text-ink-900">
+                  {text("Calculated boundary", "गणना गरिएको सीमाना")}
+                </h3>
+                <span className="text-xs text-ink-600">
+                  {gps
+                    ? text(
+                        "WGS84 geodesic area & sides; local preview projected",
+                        "WGS84 जियोडेसिक क्षेत्रफल र भुजा",
+                      )
+                    : text(
+                        "Local Cartesian coordinates",
+                        "स्थानीय निर्देशाङ्क सीमाना",
+                      )}
+                </span>
+              </div>
+
+              <LandPlot3D
+                geometry={result}
+                allowImageUpload
+                ariaLabel={text(
+                  "Scaled 3D boundary preview",
+                  "मापनअनुसारको 3D सीमाना दृश्य",
+                )}
               />
-              <p className="mt-2 text-xs leading-relaxed text-ink-600">
-                {gps
-                  ? text(
-                      "Projected preview. Area and distances are calculated on WGS84.",
-                      "प्रक्षेपित दृश्य। क्षेत्रफल र दूरी WGS84 अनुसार निकालिन्छन्।",
-                    )
-                  : text(
-                      "Local drawing coordinates; orientation on Earth is not specified.",
-                      "स्थानीय रेखाचित्र निर्देशाङ्क; पृथ्वीमा दिशा तोकिएको छैन।",
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Separated Land Size & Boundary Measurements below */}
+      {result && metrics3D && (
+        <div className="space-y-8 border-t border-ink-200 bg-ink-50/40 p-5 sm:p-7">
+          {/* 1. Calculated Land Size */}
+          <section aria-labelledby="calc-land-size-title" className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3
+                  id="calc-land-size-title"
+                  className="text-lg font-semibold text-ink-900"
+                >
+                  {text("Calculated Land Size", "गणना गरिएको क्षेत्रफल")}
+                </h3>
+                <p className="text-xs text-ink-600">
+                  {text(
+                    "Nepal convention: 1 ropani = 16 aana = 5,476 ft²; 1 bigha = 20 kattha = 72,900 ft².",
+                    "नेपाली मानक: १ रोपनी = १६ आना = ५,४७६ वर्ग फुट; १ बिघा = २० कट्ठा = ७२,९०० वर्ग फुट।",
+                  )}
+                </p>
+              </div>
+              <Button asChild variant="secondary" size="sm">
+                <Link
+                  href={`/land-size?sqm=${encodeURIComponent(String(result.areaSqm))}`}
+                >
+                  <span>
+                    {text(
+                      "Open in Land Size Converter",
+                      "जग्गा क्षेत्रफल रूपान्तरकमा खोल्नुहोस्",
                     )}
-              </p>
-              <dl className="mt-5 divide-y divide-ink-200 text-sm tabular-nums">
+                  </span>
+                  <ArrowRight aria-hidden className="size-3.5" />
+                </Link>
+              </Button>
+            </div>
+            <DualUnitAreaPanel sqm={result.areaSqm} />
+          </section>
+
+          {/* 2. Boundary Measurements */}
+          <section
+            aria-labelledby="calc-boundary-measurements-title"
+            className="space-y-4 border-t border-ink-200 pt-6"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3
+                id="calc-boundary-measurements-title"
+                className="text-lg font-semibold text-ink-900"
+              >
+                {text("Boundary Measurements", "सीमाना र भुजाका मापन")}
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                {result.geographic && (
+                  <Button asChild variant="secondary" size="sm">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${result.geographic[0]!.lat},${result.geographic[0]!.lon}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <MapPin aria-hidden />
+                      {text("Open corner A on map", "नक्सामा A कुना खोल्नुहोस्")}
+                    </a>
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={download}
+                >
+                  <Download aria-hidden />
+                  {text("Download measurements", "मापन डाउनलोड गर्नुहोस्")}
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-ink-200 bg-white p-4 sm:p-5">
+              <dl className="grid gap-x-8 gap-y-2 divide-y divide-ink-100 text-sm tabular-nums md:grid-cols-2 md:divide-y-0">
                 {[
                   [
                     text("Area (square metres)", "क्षेत्रफल (वर्ग मिटर)"),
@@ -516,36 +675,48 @@ export function LandCalculator() {
                     text("Area (square feet)", "क्षेत्रफल (वर्ग फुट)"),
                     `${number(result.areaSqm / AREA_IN_SQM.sqft)} ft²`,
                   ],
-                  [text("Perimeter", "परिधि"), distance(result.perimeterM)],
-                  ...(["aana", "kattha"] as const).map((u) => [
-                    landLabel(u, locale),
-                    number(result.areaSqm / AREA_IN_SQM[u]),
-                  ]),
+                  [text("Perimeter", "परिधि"), dualDistance(result.perimeterM)],
+                  [
+                    text("Bounding box (span X × Y)", "बाहिरी घेरा (X × Y)"),
+                    `${number(metrics3D.bounds.spanX)} × ${number(metrics3D.bounds.spanY)} m (${number(metresToFeet(metrics3D.bounds.spanX), 4)} × ${number(metresToFeet(metrics3D.bounds.spanY), 4)} ft)`,
+                  ],
                   ...result.diagonalsM.map((d) => [
                     `${text("Diagonal", "विकर्ण")} ${cornerName(d.from)}${cornerName(d.to)}`,
-                    distance(d.length),
+                    dualDistance(d.length),
                   ]),
                 ].map(([label, value]) => (
                   <div
                     key={label}
-                    className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 py-2.5"
+                    className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-ink-100 py-2 md:border-b"
                   >
                     <dt className="text-ink-600">{label}</dt>
                     <dd className="font-semibold text-ink-900">{value}</dd>
                   </div>
                 ))}
               </dl>
-              <NepaliAreaResults sqm={result.areaSqm} />
-              <p className="mt-2 text-xs leading-relaxed text-ink-600">
-                {text(
-                  "Nepal convention: 1 ropani = 16 aana = 5,476 ft²; 1 bigha = 20 kattha = 72,900 ft². Fractions are retained in daam and dhur.",
-                  "नेपाली मानक: १ रोपनी = १६ आना = ५,४७६ वर्ग फुट; १ बिघा = २० कट्ठा = ७२,९०० वर्ग फुट। दाम र धुरमा दशमलव अंश राखिन्छ।",
-                )}
-              </p>
-              <h4 className="mt-6 font-semibold">
+
+              {!gps ? (
+                <p className="mt-3 text-xs text-ink-600">
+                  {text("Area centroid", "क्षेत्रफलको केन्द्र")}: X{" "}
+                  {number(result.centroid.x / metresPerUnit)}, Y{" "}
+                  {number(result.centroid.y / metresPerUnit)} {displayUnit} ·{" "}
+                  {text(
+                    "Geographic location needs GPS coordinates.",
+                    "भौगोलिक स्थानका लागि GPS निर्देशाङ्क चाहिन्छ।",
+                  )}
+                </p>
+              ) : null}
+
+              <h4 className="mt-5 text-sm font-semibold text-ink-900">
                 {result.geographic
-                  ? text("Location · WGS84 corners", "स्थान · WGS84 कुना")
-                  : text("Local corner positions", "स्थानीय कुनाको स्थान")}
+                  ? text(
+                      "Location · WGS84 corners, angles & edges",
+                      "स्थान · WGS84 कुना, कोण र भुजा",
+                    )
+                  : text(
+                      "Corner positions, interior angles & edges",
+                      "कुनाको स्थान, भित्री कोण र भुजा",
+                    )}
               </h4>
               <div
                 tabIndex={0}
@@ -559,162 +730,80 @@ export function LandCalculator() {
                 <table className="w-full text-left text-xs tabular-nums">
                   <caption className="sr-only">
                     {text(
-                      "Calculated corner coordinates and outgoing boundary edges",
-                      "गणना गरिएका कुनाका निर्देशाङ्क र अगाडिको भुजा",
+                      "Calculated corner coordinates, interior angles and outgoing boundary edges",
+                      "गणना गरिएका कुनाका निर्देशाङ्क, भित्री कोण र अगाडिको भुजा",
                     )}
                   </caption>
                   <thead>
-                    <tr className="border-b border-ink-200 text-ink-600">
-                      <th scope="col" className="p-2">
+                    <tr className="border-b border-ink-200 bg-ink-50 text-ink-600">
+                      <th scope="col" className="p-2.5">
                         {text("Corner", "कुना")}
                       </th>
-                      <th scope="col" className="p-2">
+                      <th scope="col" className="p-2.5">
                         {gps
                           ? text("Latitude", "अक्षांश")
                           : `X (${displayUnit})`}
                       </th>
-                      <th scope="col" className="p-2">
+                      <th scope="col" className="p-2.5">
                         {gps
                           ? text("Longitude", "देशान्तर")
                           : `Y (${displayUnit})`}
                       </th>
-                      <th scope="col" className="p-2">
-                        {text("Next edge", "अगाडिको भुजा")}
+                      <th scope="col" className="p-2.5">
+                        {text("Interior angle", "भित्री कोण")}
+                      </th>
+                      <th scope="col" className="p-2.5">
+                        {text("Next edge (m · ft)", "अगाडिको भुजा (m · ft)")}
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {result.corners.map((p, i) => (
-                      <tr
-                        key={i}
-                        className="border-b border-ink-100 last:border-0"
-                      >
-                        <th scope="row" className="p-2">
-                          {cornerName(i)}
-                        </th>
-                        <td className="p-2">
-                          {number(
-                            result.geographic?.[i]?.lat ?? p.x / metresPerUnit,
-                            gps ? 10 : 6,
-                          )}
-                        </td>
-                        <td className="p-2">
-                          {number(
-                            result.geographic?.[i]?.lon ?? p.y / metresPerUnit,
-                            gps ? 10 : 6,
-                          )}
-                        </td>
-                        <td className="whitespace-nowrap p-2">
-                          {cornerName(i)}
-                          {cornerName((i + 1) % result.corners.length)}:{" "}
-                          {distance(result.sidesM[i]!)}
-                        </td>
-                      </tr>
-                    ))}
+                    {result.corners.map((p, i) => {
+                      const angleDeg =
+                        metrics3D.interiorAnglesDeg[i] ??
+                        metrics3D.interiorAnglesDeg[
+                          metrics3D.orderedVertices[i]?.index ?? i
+                        ] ??
+                        0;
+                      const sideM = result.sidesM[i]!;
+                      return (
+                        <tr
+                          key={i}
+                          className="border-b border-ink-100 last:border-0"
+                        >
+                          <th scope="row" className="p-2.5 font-semibold">
+                            {cornerName(i)}
+                          </th>
+                          <td className="p-2.5">
+                            {number(
+                              result.geographic?.[i]?.lat ?? p.x / metresPerUnit,
+                              gps ? 10 : 6,
+                            )}
+                          </td>
+                          <td className="p-2.5">
+                            {number(
+                              result.geographic?.[i]?.lon ?? p.y / metresPerUnit,
+                              gps ? 10 : 6,
+                            )}
+                          </td>
+                          <td className="whitespace-nowrap p-2.5">
+                            {number(angleDeg, 2)}°
+                          </td>
+                          <td className="whitespace-nowrap p-2.5">
+                            {cornerName(i)}
+                            {cornerName((i + 1) % result.corners.length)}:{" "}
+                            {dualDistance(sideM)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
-              {result.geographic ? (
-                <Button asChild variant="secondary" className="mt-4">
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${result.geographic[0]!.lat},${result.geographic[0]!.lon}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <MapPin aria-hidden />
-                    {text("Open corner A on map", "नक्सामा A कुना खोल्नुहोस्")}
-                  </a>
-                </Button>
-              ) : (
-                <p className="mt-3 text-sm leading-relaxed text-ink-600">
-                  {text(
-                    "Geographic location needs GPS coordinates. Lengths alone determine size, but cannot determine where the land is on Earth.",
-                    "भौगोलिक स्थानका लागि GPS निर्देशाङ्क चाहिन्छ। लम्बाइबाट आकार निस्कन्छ, तर पृथ्वीमा जग्गाको स्थान निस्कँदैन।",
-                  )}
-                </p>
-              )}
-              {!gps && (
-                <p className="mt-3 text-xs text-ink-600">
-                  {text("Area centroid", "क्षेत्रफलको केन्द्र")}: X{" "}
-                  {number(result.centroid.x / metresPerUnit)}, Y{" "}
-                  {number(result.centroid.y / metresPerUnit)} {displayUnit}
-                </p>
-              )}
-              <Button
-                type="button"
-                variant="secondary"
-                className="mt-4"
-                onClick={download}
-              >
-                <Download aria-hidden />
-                {text("Download measurements", "मापन डाउनलोड गर्नुहोस्")}
-              </Button>
-            </>
-          )}
+            </div>
+          </section>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function ParcelPlot({
-  result,
-  label,
-}: {
-  result: LandGeometry;
-  label: string;
-}) {
-  const minX = Math.min(...result.corners.map((p) => p.x)),
-    maxX = Math.max(...result.corners.map((p) => p.x));
-  const minY = Math.min(...result.corners.map((p) => p.y)),
-    maxY = Math.max(...result.corners.map((p) => p.y));
-  const scale = Math.min(280 / (maxX - minX || 1), 190 / (maxY - minY || 1));
-  const points = result.corners.map((p) => ({
-    x: 180 + (p.x - (minX + maxX) / 2) * scale,
-    y: 125 - (p.y - (minY + maxY) / 2) * scale,
-  }));
-  return (
-    <svg
-      viewBox="0 0 360 250"
-      role="img"
-      aria-label={label}
-      className="mt-4 w-full rounded-lg bg-white text-royal-700"
-    >
-      <polygon
-        points={points.map((p) => `${p.x},${p.y}`).join(" ")}
-        fill="currentColor"
-        fillOpacity="0.08"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      {points.length === 4 && (
-        <line
-          x1={points[0]!.x}
-          y1={points[0]!.y}
-          x2={points[2]!.x}
-          y2={points[2]!.y}
-          stroke="currentColor"
-          strokeDasharray="5 4"
-          strokeWidth="1"
-        />
       )}
-      {points.map((p, i) => (
-        <g key={i}>
-          <circle cx={p.x} cy={p.y} r="3" fill="currentColor" />
-          {(points.length <= 16 || i % Math.ceil(points.length / 16) === 0) && (
-            <text
-              x={p.x}
-              y={p.y + (p.y < 125 ? -12 : 19)}
-              textAnchor="middle"
-              fontSize="12"
-              fontWeight="600"
-              fill="currentColor"
-            >
-              {cornerName(i)}
-            </text>
-          )}
-        </g>
-      ))}
-    </svg>
+    </section>
   );
 }

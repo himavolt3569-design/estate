@@ -37,7 +37,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   // Isolated browser checks can run alongside the normal development server.
-  distDir: process.env.MEROKOTHA_TEST_DIST_DIR || '.next',
+  distDir: process.env.HAMROKOTHA_TEST_DIST_DIR || process.env.MEROKOTHA_TEST_DIST_DIR || '.next',
   reactStrictMode: true,
   poweredByHeader: false,
 

@@ -190,7 +190,7 @@ export function Dashboard() {
   if (!user)
     return (
       <Surface className="space-y-4 p-8">
-        <h1 className="text-2xl font-semibold">{tr("Sign in to MeroKotha")}</h1>
+        <h1 className="text-2xl font-semibold">{tr("Sign in to HamroKotha")}</h1>
         <p className="text-ink-500">
           {tr(
             "Choose email and password or Google to continue. If you already use the Android app, choose the same Google account to keep your listings.",

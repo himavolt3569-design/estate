@@ -83,6 +83,6 @@ export function SavedSearchResults({ search, uid, listings, loading, error }: { 
       <p className="mx-auto mt-2 max-w-md text-sm text-ink-500">{tr(newOnly ? 'There are no new rentals since your last visit. You can still browse all matches.' : 'This search is saved. Matching rentals will appear here as they become available. Try adjusting the area or budget to broaden it.')}</p>
       <Button type="button" variant="secondary" className="mt-5" onClick={() => newOnly ? setNewOnly(false) : setEditing(true)}>{tr(newOnly ? 'See all matches' : 'Adjust criteria')}</Button>
     </div>}
-    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 pt-4"><p className="text-xs text-ink-500">{tr('Matches update while MeroKotha is open.')}</p><Link href={searchUrl(criteria)} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-royal-700 hover:underline">{tr('Explore this search')} <ArrowRight aria-hidden className="size-4" /></Link></div>
+    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 pt-4"><p className="text-xs text-ink-500">{tr('Matches update while HamroKotha is open.')}</p><Link href={searchUrl(criteria)} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-royal-700 hover:underline">{tr('Explore this search')} <ArrowRight aria-hidden className="size-4" /></Link></div>
   </Surface></div>;
 }

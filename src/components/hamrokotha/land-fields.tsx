@@ -13,7 +13,14 @@ export function LandFields({ value, required = true, onChange }: { value?: LandD
   const options = (values: readonly string[]) => values.map(value => <option key={value} value={value}>{landLabel(value, locale)}</option>);
   return <fieldset className="col-span-full grid min-w-0 gap-4 rounded-xl bg-ink-50 p-4 sm:grid-cols-2" onChange={event => { if (onChange && event.currentTarget.form) onChange(new FormData(event.currentTarget.form)); }}>
     <legend className="px-1 text-base font-semibold text-ink-900">{ne ? 'जग्गाको विवरण' : 'Land details'}</legend>
-    <Link href="/land-size#measure-land" target="_blank" rel="noreferrer" className="col-span-full min-h-11 py-2 text-sm font-medium text-royal-700 underline underline-offset-4">{ne ? 'भुजा, विकर्ण वा कुनाबाट क्षेत्रफल निकाल्नुहोस् (नयाँ ट्याब)' : 'Calculate area from dimensions or corners (opens a new tab)'}</Link>
+    <div className="col-span-full flex flex-wrap items-center gap-x-5 gap-y-2 py-1 text-sm font-medium">
+      <Link href="/land-measurement" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center text-royal-700 underline underline-offset-4">
+        {ne ? '3D मा सीमाना नाप्नुहोस् (नयाँ ट्याब)' : 'Measure boundaries in 3D'}
+      </Link>
+      <Link href="/land-size" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center text-royal-700 underline underline-offset-4">
+        {ne ? 'जग्गाको क्षेत्रफल एकाइ बदल्नुहोस् (नयाँ ट्याब)' : 'Convert land size units'}
+      </Link>
+    </div>
     <Field label={ne ? 'क्षेत्रफल' : 'Land area'} htmlFor="land-area" required={required}><Input id="land-area" name="landArea" type="number" step="any" min="0.000001" required={required} defaultValue={value?.area ?? ''} placeholder="4" /></Field>
     <Field label={ne ? 'क्षेत्रफलको एकाइ' : 'Area unit'} htmlFor="land-area-unit"><Select id="land-area-unit" name="landAreaUnit" defaultValue={value?.areaUnit || 'aana'}>{options(LAND_AREA_UNITS)}</Select></Field>
     <Field label={ne ? 'जग्गाको प्रयोग' : 'Land use'} htmlFor="land-use"><Select id="land-use" name="landUse" defaultValue={value?.landUse || ''}><option value="">{ne ? 'नखुलेको' : 'Not specified'}</option>{options(LAND_USES)}</Select></Field>

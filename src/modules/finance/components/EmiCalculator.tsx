@@ -2,7 +2,7 @@
 
 import { ChevronDown, TriangleAlert, Wallet } from 'lucide-react';
 import Link from 'next/link';
-import { useSiteLanguage } from '@/components/merokotha/site-language';
+import { useSiteLanguage } from '@/components/hamrokotha/site-language';
 import { useId, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';

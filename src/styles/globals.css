@@ -555,7 +555,7 @@ html body[data-scroll-locked] { overflow: clip !important; margin-right: 0 !impo
   .dashboard-nav > a { width: 100%; }
 }
 
-/* Rental discovery and campaign surfaces share the existing MeroKotha tokens. */
+/* Rental discovery and campaign surfaces share the existing HamroKotha tokens. */
 .home-hero { background: var(--color-ink-50); border-bottom: 1px solid var(--color-ink-200); }
 .home-hero__inner { max-width: 1440px; margin: 0 auto; padding: 2.5rem 2rem 2rem; }
 .home-hero__intro { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; gap: 4rem; margin-bottom: 2rem; }

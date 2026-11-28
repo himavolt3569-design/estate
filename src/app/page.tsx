@@ -7,23 +7,23 @@ import { ArrowRight, Home as HomeIcon, LayoutGrid, MapPin, ShieldCheck, UserChec
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/primitives';
-import { ListingCard, money } from '@/components/merokotha/listing-card';
-import { FeedAdRail } from '@/components/merokotha/feed-ad-rail';
-import { useCampaigns } from '@/components/merokotha/ad-provider';
-import { LandingPromos } from '@/components/merokotha/landing-promos';
-import { HomeMotion } from '@/components/merokotha/home-motion';
-import { RentalFilters, propertyTypes } from '@/components/merokotha/rental-filters';
-import { useSiteLanguage } from '@/components/merokotha/site-language';
-import { SavedSearchPanel } from '@/components/merokotha/saved-search-panel';
+import { ListingCard, money } from '@/components/hamrokotha/listing-card';
+import { FeedAdRail } from '@/components/hamrokotha/feed-ad-rail';
+import { useCampaigns } from '@/components/hamrokotha/ad-provider';
+import { LandingPromos } from '@/components/hamrokotha/landing-promos';
+import { HomeMotion } from '@/components/hamrokotha/home-motion';
+import { RentalFilters, propertyTypes } from '@/components/hamrokotha/rental-filters';
+import { useSiteLanguage } from '@/components/hamrokotha/site-language';
+import { SavedSearchPanel } from '@/components/hamrokotha/saved-search-panel';
 import { useDocs } from '@/lib/firebase/hooks';
 import type { Listing } from '@/lib/firebase/types';
 import { emptySearch, listingCreatedAt, matchesSearch, searchFromUrl, type SearchFilters } from '@/lib/listing-search';
 import { uniqueCampaigns } from '@/lib/sponsored-listings';
 import { listingFeed } from '@/lib/listing-feed';
 import { isForSale, listingPrice } from '@/lib/listing-commerce';
-import type { MapArea } from '@/components/merokotha/map-view';
+import type { MapArea } from '@/components/hamrokotha/map-view';
 
-const MapView = dynamic(() => import('@/components/merokotha/map-view'), { ssr: false, loading: () => <Skeleton className="h-[340px] w-full rounded-xl" /> });
+const MapView = dynamic(() => import('@/components/hamrokotha/map-view'), { ssr: false, loading: () => <Skeleton className="h-[340px] w-full rounded-xl" /> });
 
 export default function Home() {
   const { ui, locale } = useSiteLanguage();

@@ -3,9 +3,9 @@ self.addEventListener('push', event => {
   let payload = {};
   try { payload = event.data.json(); } catch { payload = { notification: { body: event.data.text() } }; }
   const notice = payload.notification || payload.data || {};
-  event.waitUntil(self.registration.showNotification(notice.title || 'MeroKotha', {
+  event.waitUntil(self.registration.showNotification(notice.title || 'HamroKotha', {
     body: notice.body || 'You have a new update.',
-    icon: '/favicon.ico',
+    icon: '/icon.svg',
     data: { url: payload.data?.chatId ? `/chat/${encodeURIComponent(payload.data.chatId)}` : '/dashboard?tab=chats' },
   }));
 });

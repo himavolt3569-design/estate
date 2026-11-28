@@ -1,4 +1,4 @@
-# MeroKotha
+# HamroKotha
 
 <!-- impeccable:product-schema 1 -->
 
@@ -30,7 +30,7 @@ Property advertising has four independently controlled slots: below the listing-
 
 The latest user directive removes visible advertisement navigation controls everywhere, including shared property-detail carousels and the administration image preview: no previous/next arrows, play/pause, counters, control footers or numbered preview-image selectors. It supersedes the earlier visible-carousel/44px-arrow requirement; historical correction evidence remains a record of that earlier state. Swipe and focusable ArrowLeft/ArrowRight/Home/End browsing remain, with reduced motion, hover handling and autoplay stopping after manual pointer, wheel, keyboard or focus interaction. The mini-ad dismiss action, destination links and superadmin campaign/image editing, scheduling, targeting, device preview and save/activate/pause controls remain available.
 
-Public agent summaries show the available directory photo, verified status, name, location, introduction, explicitly public phone/WhatsApp and a complete-profile link. The profile shows actual active property counts/listings and excludes anonymous properties. Anonymous listing owners and private account phone/email remain protected; inactive or unavailable directory entries do not acquire verified badges. Verified agents edit their public introduction/contact numbers from Account. Newly uploaded website property photos, including create/edit/tour uploads, receive a large minimal low-opacity MeroKotha mark baked into the stored raster before upload. Processing preserves aspect ratio, runs serially, checks the size limit and rejects unreadable input with a recoverable error. Existing stored photos, ad creatives, chat attachments, account avatars and native Dart uploads are outside this change. The bounded composition and implementation details are recorded in `.impeccable/surfaces/property-detail-ads.md`.
+Public agent summaries show the available directory photo, verified status, name, location, introduction, explicitly public phone/WhatsApp and a complete-profile link. The profile shows actual active property counts/listings and excludes anonymous properties. Anonymous listing owners and private account phone/email remain protected; inactive or unavailable directory entries do not acquire verified badges. Verified agents edit their public introduction/contact numbers from Account. Newly uploaded website property photos, including create/edit/tour uploads, receive a large minimal low-opacity HamroKotha mark baked into the stored raster before upload. Processing preserves aspect ratio, runs serially, checks the size limit and rejects unreadable input with a recoverable error. Existing stored photos, ad creatives, chat attachments, account avatars and native Dart uploads are outside this change. The bounded composition and implementation details are recorded in `.impeccable/surfaces/property-detail-ads.md`.
 
 
 Person-specific profile links remain available when a directory entry is missing: the Listed by photo/name and complete-profile action open `/profile/{id}` using the exact `agentId`, otherwise `ownerId`. Existing `/agents/{id}` URLs share the same profile implementation. Resolve an active public agent entry first, then the same-ID `usersPublic` projection for signed-in visitors under existing permissions; never read private profiles or infer verification. Only an active directory entry supplies verified status. The page shows that person's available shared identity, explicit public contacts and exact active non-anonymous listings. Guests without a directory entry see identity already public on matching listings and a sign-in action for additional shared details. Anonymous listings have no identity links; inactive directory entries cannot reappear through fallback.
@@ -39,7 +39,7 @@ The listing contact area replaces the inert inquiry-only message and duplicate p
 
 ## Brand Commitments
 
-MeroKotha name and the established royal blue, crimson and white identity. Use the existing Poppins family and English/Nepali switching. The user delegated implementation and motion design, including GSAP.
+HamroKotha name (`hamrokotha.com`) and the established royal blue, crimson and white identity. Use the existing Poppins family and English/Nepali switching. The user delegated implementation and motion design, including GSAP.
 
 ## Evidence on Hand
 

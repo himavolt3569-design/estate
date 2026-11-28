@@ -93,7 +93,7 @@ export function Wordmark({
             tone === 'light' ? 'text-white' : 'text-ink-900',
           )}
         >
-          Kitta
+          HamroKotha
         </span>
         <span
           aria-hidden
@@ -102,7 +102,7 @@ export function Wordmark({
             tone === 'light' ? 'text-royal-300' : 'text-ink-400',
           )}
         >
-          कित्ता
+          हाम्रो कोठा
         </span>
       </span>
     </span>
